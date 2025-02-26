@@ -24,9 +24,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Регистрация Сервисов
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<GameService>();
 
 // Регистрация репозиториев
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddSingleton<WebSocketService>();
 
 // Логгирование
 builder.Services.AddLogging(config =>
