@@ -1,2 +1,5 @@
 appsettings.json
 .idea
+bin
+*/obj
+obj
