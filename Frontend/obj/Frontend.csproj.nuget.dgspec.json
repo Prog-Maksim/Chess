@@ -1,37 +1,38 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Program C#\\Chess\\Frontend\\Frontend.csproj": {}
+    "C:\\Users\\Vanya\\RiderProjects\\Chess\\Frontend\\Frontend.csproj": {}
   },
   "projects": {
-    "D:\\Program C#\\Chess\\Frontend\\Frontend.csproj": {
+    "C:\\Users\\Vanya\\RiderProjects\\Chess\\Frontend\\Frontend.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Program C#\\Chess\\Frontend\\Frontend.csproj",
+        "projectUniqueName": "C:\\Users\\Vanya\\RiderProjects\\Chess\\Frontend\\Frontend.csproj",
         "projectName": "Frontend",
-        "projectPath": "D:\\Program C#\\Chess\\Frontend\\Frontend.csproj",
-        "packagesPath": "C:\\Users\\maksi\\.nuget\\packages\\",
-        "outputPath": "D:\\Program C#\\Chess\\Frontend\\obj\\",
+        "projectPath": "C:\\Users\\Vanya\\RiderProjects\\Chess\\Frontend\\Frontend.csproj",
+        "packagesPath": "C:\\Users\\Vanya\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Vanya\\RiderProjects\\Chess\\Frontend\\obj\\",
         "projectStyle": "PackageReference",
+        "UsingMicrosoftNETSdk": false,
         "fallbackFolders": [
-          "D:\\VisualStudio\\SDK\\NuGetPackages"
+          "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages",
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
         ],
         "configFilePaths": [
-          "C:\\Users\\maksi\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Vanya\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net9.0-windows"
+          "net8.0-windows"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net9.0-windows7.0": {
-            "targetAlias": "net9.0-windows",
+          "net8.0-windows7.0": {
+            "targetAlias": "net8.0-windows",
             "projectReferences": {}
           }
         },
@@ -43,12 +44,12 @@
         "restoreAuditProperties": {
           "enableAudit": "true",
           "auditLevel": "low",
-          "auditMode": "all"
+          "auditMode": "direct"
         }
       },
       "frameworks": {
-        "net9.0-windows7.0": {
-          "targetAlias": "net9.0-windows",
+        "net8.0-windows7.0": {
+          "targetAlias": "net8.0-windows",
           "imports": [
             "net461",
             "net462",
@@ -68,7 +69,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.100/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\9.0.200/PortableRuntimeIdentifierGraph.json"
         }
       }
     }
