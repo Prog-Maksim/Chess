@@ -5,3 +5,5 @@ bin
 obj
 Logs
 .env
+**/bin
+**/obj
