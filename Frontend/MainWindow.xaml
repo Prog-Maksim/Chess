@@ -6,6 +6,16 @@
         xmlns:local="clr-namespace:Frontend"
         xmlns:auth="clr-namespace:Frontend.Windows"
         mc:Ignorable="d"
-        Title="MainWindow" Height="1080" Width="1920">
-        <Frame NavigationUIVisibility="Hidden" x:Name="MainFrame"></Frame>
+        Title="Chess"
+        Height="700"
+        Width="1300"
+        MinWidth="1000"
+        MinHeight="550"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <Frame 
+            x:Name="MainFrame"
+            NavigationUIVisibility="Hidden">
+        </Frame>
+    </Grid>
 </Window>
