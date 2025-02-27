@@ -6,3 +6,5 @@ Logs
 /.vs
 **/.env
 Backend/obj/*
+Frontend/obj/*
+obj
