@@ -3,6 +3,7 @@
 public enum GameState
 {
     WaitingForPlayers,
+    Countdown,
     InProgress,
     Finished,
 }

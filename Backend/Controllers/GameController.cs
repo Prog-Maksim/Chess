@@ -3,6 +3,7 @@ using Backend.Models.Response;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace Backend.Controllers;
 
@@ -10,18 +11,28 @@ namespace Backend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api/v{version:apiVersion}/[controller]")]
-public class GameController(WebSocketService webSocketService, GameService gameService): ControllerBase
+public class GameController(WebSocketService webSocketService, GameService gameService, ILogger<GameController> logger): ControllerBase
 {
     [Authorize]
     [HttpGet("connect")]
-    public async Task<IActionResult> ConnectChat()
+    public async Task<IActionResult> ConnectChess()
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
+
+        logger.LogInformation($"Подключение к webSocket");
+        if (HttpContext.WebSockets.IsWebSocketRequest)
+        {
+            using WebSocket ws = await HttpContext.WebSockets.AcceptWebSocketAsync();
+            logger.LogInformation("Получение ws");
         
-        await webSocketService.HandleConnectionAsync(HttpContext, dataToken.PersonId);
-        return Ok("Connected!");
+            await webSocketService.HandleConnectionAsync(ws, dataToken.PersonId);
+            logger.LogInformation("Игрок добавлен в список");
+            
+            return Ok("Connected!");
+        }
+        return BadRequest();
     }
     
     [Authorize]
@@ -51,12 +62,50 @@ public class GameController(WebSocketService webSocketService, GameService gameS
         var dataToken = JwtService.GetJwtTokenData(token);
 
         WebSocket ws = webSocketService.GetWebSocket(dataToken.PersonId);
-        gameService.JoinGame(gameId, dataToken.PersonId, dataToken.Nickname, ws);
+        await gameService.JoinGame(gameId, dataToken.PersonId, dataToken.Nickname, ws);
         
         return Ok(new BaseResponse
         {
             Success = true,
             Message = "Заявка на вступление в игру оставлена! ожидайте"
         });
+    }
+
+    [Authorize]
+    [HttpGet("playing-field")]
+    public async Task<IActionResult> GetPlayingField(string gameId)
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+        
+        var board = gameService.GetBoard(gameId, dataToken.PersonId);
+        var boardStr = JsonConvert.SerializeObject(board);
+        
+        return Ok(boardStr);
+    }
+
+    [Authorize]
+    [HttpPost("approve-player")]
+    public async Task<IActionResult> ApprovePlayerTheGame(string gameId, string personId)
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+        
+        var res = await gameService.ApprovePersonTheGame(gameId, personId, dataToken.PersonId);
+        return Ok(res);
+    }
+    
+    [Authorize]
+    [HttpPost("reject-player")]
+    public async Task<IActionResult> RejectPlayerTheGame(string gameId, string personId)
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+        
+        var res = await gameService.RejectPersonTheGame(gameId, personId, dataToken.PersonId);
+        return Ok(res);
     }
 }

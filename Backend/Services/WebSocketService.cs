@@ -15,10 +15,8 @@ public class WebSocketService
         _logger = logger;
     }
 
-    public async Task HandleConnectionAsync(HttpContext context, string personId)
+    public async Task HandleConnectionAsync(WebSocket webSocket, string personId)
     {
-        using WebSocket webSocket = await context.WebSockets.AcceptWebSocketAsync();
-        
         _players.TryAdd(personId, webSocket);
         _logger.LogInformation($"Игрок {personId} подключен.");
 

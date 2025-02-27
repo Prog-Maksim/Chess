@@ -1,11 +1,14 @@
-﻿using Amazon.S3.Model;
-using Backend.Enums;
+﻿using Backend.Enums;
+using Backend.Game.Shapes;
+using Backend.Models.Response;
+using Backend.Services;
 
 namespace Backend.Game;
 
 public abstract class BaseChessGame
 {
     public string GameId { get; set; } = Guid.NewGuid().ToString();
+    public string GameName { get; set; }
     public int BoardSize { get; set; }
     public ChessPiece?[,] Board { get; set; }
     public List<ChessPlayer> Players { get; set; } = new();
@@ -13,16 +16,10 @@ public abstract class BaseChessGame
     public GameState State { get; set; } = GameState.WaitingForPlayers;
     public string OwnerId { get; set; }
     public bool IsGamePrivate { get; set; } = false;
-    
-    
-    protected int _currentPlayerIndex = 0; 
-    
-
+    public int CurrentPlayerIndex = 0; 
     private Timer? _gameTimer;
-    public int GameDurationSeconds { get; private set; } = 0;
+    public TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
     
-    // События
-    public event Action<string, ChessPlayer>? OnPlayerRequestJoin; // событие присоединения игроков
 
     /// <summary>
     /// Инициализация игры
@@ -47,18 +44,23 @@ public abstract class BaseChessGame
         IsGamePrivate = isGamePrivate;
     }
 
+    
     /// <summary>
     /// Метод добавления игроков
     /// </summary>
     /// <param name="player">Обьект игрока</param>
     /// <returns></returns>
-    protected virtual bool AddPlayer(ChessPlayer player)
+    protected virtual async Task<bool> AddPlayer(ChessPlayer player)
     {
         if (Players.Count < RequiredPlayers())
         {
             Players.Add(player);
             player.OnTimeUpdate += HandlePlayerTimeUpdate;
-            InitializePlayerPieces(player);
+            await InitializePlayerPieces(player);
+            
+            if (Players.Count == RequiredPlayers())
+                await StartGame();
+            
             return true;
         }
         return false;
@@ -68,23 +70,25 @@ public abstract class BaseChessGame
     /// Метод вызывается каждую секунду для каждого игрока активного хода 
     /// </summary>
     /// <param name="player"></param>
-    protected abstract void HandlePlayerTimeUpdate(ChessPlayer player);
+    protected abstract Task HandlePlayerTimeUpdate(ChessPlayer player);
     
     /// <summary>
     /// Метод оставления заявки на вступления в игру
     /// </summary>
     /// <param name="player"></param>
-    public virtual void RequestJoin(ChessPlayer player)
+    public virtual async Task RequestJoin(ChessPlayer player)
     {
         if (player.Id == OwnerId || !IsGamePrivate)
         {
             player.Approve();
-            AddPlayer(player);
+            await AddPlayer(player);
             return;
         }
         
+        var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
+        await SendWebSocketMessage.SendMessageJoinTheGame(player, owner);
+        
         WaitingPlayers.Add(player);
-        OnPlayerRequestJoin?.Invoke(OwnerId, player); // Уведомляем владельца
     }
     
     // TODO: оповестить игрока о том что ему разрешили вступить в игру
@@ -94,15 +98,21 @@ public abstract class BaseChessGame
     /// <param name="ownerId"></param>
     /// <param name="playerId"></param>
     /// <returns></returns>
-    public virtual bool ApprovePlayer(string ownerId, string playerId)
+    public virtual async Task<bool> ApprovePlayer(string ownerId, string playerId)
     {
-        if (ownerId != OwnerId) return false; // Только владелец может одобрять
+        if (ownerId != OwnerId) 
+            return false;
         var player = WaitingPlayers.Find(p => p.Id == playerId);
-        if (player == null) return false;
+        if (player == null) 
+            return false;
+        
+        await SendWebSocketMessage.SendMessageResultJoinTheGame(player, true);
+        await SendWebSocketMessage.SendMessageAddNewPlayer(Players, player);
 
         player.Approve();
-        AddPlayer(player);
+        _ = Task.Run(() => AddPlayer(player));
         WaitingPlayers.Remove(player);
+        
         return true;
     }
     
@@ -113,7 +123,7 @@ public abstract class BaseChessGame
     /// <param name="ownerId">ID владельца игры</param>
     /// <param name="playerId">ID игрока, который должен быть удален</param>
     /// <returns></returns>
-    public virtual bool RejectPlayer(string ownerId, string playerId)
+    public virtual async Task<bool> RejectPlayer(string ownerId, string playerId)
     {
         if (ownerId != OwnerId) return false; // Только владелец может отклонить игроков
         var player = WaitingPlayers.Find(p => p.Id == playerId);
@@ -121,30 +131,63 @@ public abstract class BaseChessGame
 
         // Удаляем игрока из списка ожидания
         WaitingPlayers.Remove(player);
+        
+        var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
+        await SendWebSocketMessage.SendMessageResultJoinTheGame(player, false);
+        
         return true;
     }
 
     /// <summary>
-    /// Начало игры
+    /// Запуск игры и обратного отсчета
     /// </summary>
-    public void StartGame()
+    public async Task StartGame()
     {
-        if (Players.Count == RequiredPlayers())
+        State = GameState.Countdown;
+
+        for (int i = 5; i > 0; i--)
         {
-            State = GameState.InProgress;
-            InitializeBoard();
-            StartTimer(); // Запускаем таймер
-            
-            // Указываем что данный игрок начинает игру
-            // Players[_currentPlayerIndex].StartTurn();
+            await SendWebSocketMessage.SendMessageReverseTimer(Players, i);
+            await Task.Delay(1000);
         }
+            
+        State = GameState.InProgress;
+        StartTimer();
+            
+        Players[CurrentPlayerIndex].StartTurn();
     }
 
+    
     /// <summary>
     /// Метод для инициализации фишек у игрока, а также их расставление
     /// </summary>
-    /// <param name="player"></param>
-    protected abstract void InitializePlayerPieces(ChessPlayer player);
+    /// <param name="player">Игрок</param>
+    protected abstract Task InitializePlayerPieces(ChessPlayer player);
+    
+    /// <summary>
+    /// Добавление фигуры на карту
+    /// </summary>
+    /// <param name="piece"></param>
+    /// <param name="col"></param>
+    /// <param name="row"></param>
+    public virtual void AddPieceToBoard(ChessPiece piece, int col, int row)
+    {
+        Board[col, row] = piece;
+    }
+
+    /// <summary>
+    /// Обновление позиции фигуры на карте
+    /// </summary>
+    /// <param name="piece"></param>
+    /// <param name="oldCol"></param>
+    /// <param name="oldRow"></param>
+    /// <param name="newCol"></param>
+    /// <param name="newRow"></param>
+    public virtual void UpdatePieceToBoard(ChessPiece piece, int oldCol, int oldRow, int newCol, int newRow)
+    {
+        Board[newCol, newRow] = piece;
+        Board[oldCol, oldRow] = null;
+    }
     
     /// <summary>
     /// Максимально кол-во игроков
@@ -153,27 +196,22 @@ public abstract class BaseChessGame
     protected abstract int RequiredPlayers();
     
     /// <summary>
-    /// Метод инициализации игрового поля
-    /// </summary>
-    protected abstract void InitializeBoard();
-    
-    /// <summary>
     /// Счетчик отчета время игры
     /// </summary>
     private void StartTimer()
     {
-        _gameTimer = new Timer(UpdateGameTime, null, 1000, 1000);
+        _gameTimer = new Timer(_ => Task.Run(UpdateGameTime), null, 1000, 1000);
     }
     
     /// <summary>
-    /// Время обновления времени игры
+    /// Метод обновления времени игры
     /// </summary>
-    /// <param name="state"></param>
-    private void UpdateGameTime(object? state)
+    private async Task UpdateGameTime()
     {
         if (State == GameState.InProgress)
         {
-            GameDurationSeconds++;
+            GameDurationSeconds += TimeSpan.FromSeconds(1);
+            await SendWebSocketMessage.SendMessageTimerGame(Players, GameDurationSeconds);
 
             // Если время игры превышено, завершаем
             if (GameDurationSeconds >= MaxGameTimeInSeconds())
@@ -182,6 +220,40 @@ public abstract class BaseChessGame
                 StopTimer();
             }
         }
+    }
+
+    /// <summary>
+    /// Рассылает сообщения пользователям при обновлении игрового поля
+    /// </summary>
+    protected virtual async Task SendMessageUpdateBoard()
+    {
+        GameBoard?[,] gameBoards = new GameBoard?[Board.GetLength(0), Board.GetLength(1)];
+
+        for (int i = 0; i < Board.GetLength(0); i++)
+        {
+            for (int j = 0; j < Board.GetLength(1); j++)
+            {
+                if (Board[i, j] == null)
+                    gameBoards[i, j] = null;
+                else
+                {
+                    var dataChessPiece = Board[i, j];
+                    var color = Players.Find(p => p.Id == dataChessPiece.OwnerId).Color;
+                    
+                    GameBoard gameBoard = new GameBoard
+                    {
+                        Color = color,
+                        Type = dataChessPiece.Type,
+                        PieceId = dataChessPiece.ChessPieceId,
+                        PersonId = dataChessPiece.OwnerId
+                    };
+
+                    gameBoards[i, j] = gameBoard;
+                }
+            }
+        }
+        
+        await SendWebSocketMessage.SendMessageUpdateBoard(Players, gameBoards);
     }
     
     /// <summary>
@@ -197,5 +269,13 @@ public abstract class BaseChessGame
     /// Максимальное время длительности игры
     /// </summary>
     /// <returns></returns>
-    protected virtual int MaxGameTimeInSeconds() => 3600;
+    protected virtual TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(1);
+
+    ~BaseChessGame()
+    {
+        StopTimer();
+
+        foreach (var player in Players)
+            player.OnTimeUpdate -= HandlePlayerTimeUpdate;
+    }
 }

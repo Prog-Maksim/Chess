@@ -1,11 +1,16 @@
 ﻿using System.Net.WebSockets;
+using Backend.Game.Shapes;
 
 namespace Backend.Game;
 
+/// <summary>
+/// Игрок
+/// </summary>
 public class ChessPlayer
 {
     public string Id { get; } 
     public string Name { get; }
+    public string? Color { get; set; }
     public bool IsApproved { get; private set; } = false; // Ждет подтверждения
     public List<ChessPiece> Pieces { get; } = new(); // Список фигур игрока
     
@@ -17,7 +22,7 @@ public class ChessPlayer
     private DateTime? _turnStartTime;
     
     // Событие, которое вызывается, когда время обновляется
-    public event Action<ChessPlayer>? OnTimeUpdate;
+    public event Func<ChessPlayer, Task>? OnTimeUpdate;
     
     public ChessPlayer(string id, string name)
     {
@@ -46,7 +51,7 @@ public class ChessPlayer
     public void StartTurn()
     {
         _turnStartTime = DateTime.UtcNow;
-        _turnTimer = new Timer(UpdateTime, null, 1000, 1000);
+        _turnTimer = new Timer(_ => Task.Run(UpdateTime), null, 1000, 1000);
     }
 
     /// <summary>
@@ -56,14 +61,12 @@ public class ChessPlayer
     {
         if (_turnStartTime.HasValue)
         {
-            RemainingTime -= DateTime.UtcNow - _turnStartTime.Value;
-            _turnStartTime = null;
             _turnTimer?.Dispose();
             _turnTimer = null;
         }
     }
     
-    private void UpdateTime(object? state)
+    private async Task UpdateTime()
     {
         if (RemainingTime <= TimeSpan.Zero)
         {
@@ -76,7 +79,7 @@ public class ChessPlayer
             RemainingTime -= TimeSpan.FromSeconds(1);
         }
 
-        OnTimeUpdate?.Invoke(this); // Вызываем событие для главного класса
+        await OnTimeUpdate?.Invoke(this); // Вызываем событие для главного класса
     }
 
     /// <summary>
