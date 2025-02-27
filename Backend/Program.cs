@@ -24,9 +24,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Регистрация Сервисов
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddSingleton<GameService>();
 
 // Регистрация репозиториев
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+
+builder.Services.AddSingleton<WebSocketService>();
 
 // Логгирование
 builder.Services.AddLogging(config =>
@@ -72,7 +75,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJw
         ValidIssuer = AuthOptions.Issuer,
         ValidateAudience = true,
         ValidAudience = AuthOptions.Audience,
-        ValidateLifetime = true,
+        ValidateLifetime = false,
         IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
         ValidateIssuerSigningKey = true
     };
@@ -164,6 +167,8 @@ app.UseCors(policyBuilder => policyBuilder
 );
 
 app.UseForwardedHeaders();
+
+app.UseWebSockets();
 
 app.UseHttpsRedirection();
 

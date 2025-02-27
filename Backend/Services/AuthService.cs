@@ -35,7 +35,7 @@ public class AuthService
         await _userRepository.AddUserAsync(person);
         await _userRepository.SaveChangesAsync();
 
-        var accessToken = JwtService.GenerateJwtToken(person.PersonId);
+        var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
 
         return new Token { Success = true, Message = "Вы успешно создали аккаунт!", AccessToken = accessToken };
     }
@@ -49,7 +49,7 @@ public class AuthService
         if (_passwordHasher.VerifyHashedPassword(person, person.Password, user.Password) != PasswordVerificationResult.Success)
             return new BaseResponse { Message = "Логин или пароль не верен!", Error = "Forbidden", StatusCode = 403 };
 
-        var accessToken = JwtService.GenerateJwtToken(person.PersonId);
+        var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
         
         return  new Token { Success = true, Message = "Вы успешно авторизовались!", AccessToken = accessToken };
     }
