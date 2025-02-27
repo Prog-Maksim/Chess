@@ -1,9 +1,8 @@
-appsettings.json
-.idea
-bin
-*/obj
-obj
-Logs
-.env
 **/bin
 **/obj
+appsettings.json
+/.idea
+Logs
+/.vs
+**/.env
+Backend/obj/*
