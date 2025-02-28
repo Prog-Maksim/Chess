@@ -1,0 +1,55 @@
+﻿<UserControl x:Class="Frontend.Controls.PlayerTimeMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Frontend.Controls"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             mc:Ignorable="d"
+             d:DesignWidth="300">
+    <Border
+        Margin="10 10 10 0"
+        CornerRadius="10"
+        Background="#E0E0E0"
+        Height="35">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+                <ColumnDefinition Width="Auto"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock
+                Grid.Column="0"
+                Text="Бобик999"
+                Margin="10 0 0 0"
+                VerticalAlignment="Center"
+                FontFamily="Montserrat"
+                FontWeight="SemiBold"
+                Foreground="Black"
+                FontSize="15">
+            </TextBlock>
+            
+            <TextBlock
+                Grid.Column="1"
+                Text="25:00"
+                Margin="10 0 0 0"
+                VerticalAlignment="Center"
+                FontFamily="Montserrat"
+                FontWeight="SemiBold"
+                Foreground="Black"
+                FontSize="15">
+            </TextBlock>
+            
+            <iconPacks:PackIconMaterialDesign 
+                Grid.Column="2"
+                Height="18"
+                Width="18"
+                Foreground="Black"
+                Kind="AccessTimeRound"
+                VerticalAlignment="Center"
+                Margin="10 0">
+            </iconPacks:PackIconMaterialDesign>
+        </Grid>
+    </Border>
+</UserControl>

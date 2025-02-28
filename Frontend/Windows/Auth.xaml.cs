@@ -13,14 +13,24 @@ namespace Frontend.Windows;
 public partial class Auth : Page
 {
     private string state = "registration";
+    private MainWindow.OpenMainWindowDelegate? func;
 
-    private TextBox? Nickname;
-    private TextBox Email;
-    private PasswordBox Password;
+    private TextBox _nickname;
+    private TextBox _email;
+    private PasswordBox _password;
     
     public Auth()
     {
         InitializeComponent();
+
+        _nickname = NicknameTextBox;
+        _email = EmailTextBox;
+        _password = PasswordTextBox;
+    }
+
+    public Auth(MainWindow.OpenMainWindowDelegate  func): this()
+    {
+        this.func = func;
     }
 
     private void UIElement_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -35,17 +45,17 @@ public partial class Auth : Page
             
             TextBoxList.Children.Clear();
             
-            Email = new TextBox();
-            Email.Tag = "Почта";
-            Email.Style = FindResource("TextBoxStyle") as Style;
+            _email = new TextBox();
+            _email.Tag = "Почта";
+            _email.Style = FindResource("TextBoxStyle") as Style;
             
-            Password = new PasswordBox();
-            Password.Tag = "Пароль";
-            Password.Margin = new Thickness(0, 0, 0, 10);
-            Password.Style = FindResource("PasswordBoxStyle") as Style;
+            _password = new PasswordBox();
+            _password.Tag = "Пароль";
+            _password.Margin = new Thickness(0, 0, 0, 10);
+            _password.Style = FindResource("PasswordBoxStyle") as Style;
             
-            TextBoxList.Children.Add(Email);
-            TextBoxList.Children.Add(Password);
+            TextBoxList.Children.Add(_email);
+            TextBoxList.Children.Add(_password);
         }
         else
         {
@@ -57,31 +67,31 @@ public partial class Auth : Page
             
             TextBoxList.Children.Clear();
             
-            Nickname = new TextBox();
-            Nickname.Tag = "Никнейм";
-            Nickname.Style = FindResource("TextBoxStyle") as Style;
+            _nickname = new TextBox();
+            _nickname.Tag = "Никнейм";
+            _nickname.Style = FindResource("TextBoxStyle") as Style;
             
-            Email = new TextBox();
-            Email.Tag = "Почта";
-            Email.Style = FindResource("TextBoxStyle") as Style;
+            _email = new TextBox();
+            _email.Tag = "Почта";
+            _email.Style = FindResource("TextBoxStyle") as Style;
             
-            Password = new PasswordBox();
-            Password.Tag = "Пароль";
-            Password.Margin = new Thickness(0, 0, 0, 10);
-            Password.Style = FindResource("PasswordBoxStyle") as Style;
+            _password = new PasswordBox();
+            _password.Tag = "Пароль";
+            _password.Margin = new Thickness(0, 0, 0, 10);
+            _password.Style = FindResource("PasswordBoxStyle") as Style;
             
-            TextBoxList.Children.Add(Nickname);
-            TextBoxList.Children.Add(Email);
-            TextBoxList.Children.Add(Password);
+            TextBoxList.Children.Add(_nickname);
+            TextBoxList.Children.Add(_email);
+            TextBoxList.Children.Add(_password);
         }
     }
 
     private void AuthButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (state == "registration")
-            _ = Registration(Nickname.Text, Email.Text, Password.Password);
+            _ = Registration(_nickname.Text, _email.Text, _password.Password);
         else
-            _ = Authorization(Email.Text, Password.Password);
+            _ = Authorization(_email.Text, _password.Password);
     }
 
     private async Task Registration(string nickname, string email, string password)
@@ -106,6 +116,9 @@ public partial class Auth : Page
                 if (!token.success)
                     ErrorTextBlock.Text = token.message;
                 SaveRepository.SaveToken(token.accessToken);
+                
+                if (func != null)
+                    func();
             }
             else
                 ErrorTextBlock.Text = responseContent;
@@ -138,6 +151,9 @@ public partial class Auth : Page
                 if (!token.success)
                     ErrorTextBlock.Text = token.message;
                 SaveRepository.SaveToken(token.accessToken);
+                
+                if (func != null)
+                    func();
             }
             else
                 ErrorTextBlock.Text = responseContent;

@@ -60,29 +60,32 @@
             
             <TextBlock
                 x:Name="ErrorTextBlock"
-                Text="тут произошла ошибка!"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Top"
                 Margin="0 0 0 15"
                 Foreground="Red"
-                Visibility="Hidden"
                 FontFamily="Montserrat"
                 FontSize="20"
+                TextWrapping="Wrap"
+                MaxWidth="500"
                 FontWeight="SemiBold">
             </TextBlock>
         
             <StackPanel x:Name="TextBoxList">
                 <TextBox
+                    x:Name="NicknameTextBox"
                     Style="{StaticResource TextBoxStyle}"
                     Tag="Никнейм">
                 </TextBox>
                 
                 <TextBox
+                    x:Name="EmailTextBox"
                     Style="{StaticResource TextBoxStyle}"
                     Tag="Почта">
                 </TextBox>
                 
                 <PasswordBox
+                    x:Name="PasswordTextBox"
                     Style="{StaticResource PasswordBoxStyle}"
                     Margin="0 0 0 15"
                     Tag="Пароль">

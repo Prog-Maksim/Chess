@@ -1,0 +1,36 @@
+﻿<Page x:Class="Frontend.Windows.MainMenu"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:Frontend.Windows"
+      mc:Ignorable="d"
+      Title="MainMenu" d:DesignHeight="700" d:DesignWidth="1300">
+    <Grid>
+        <StackPanel 
+            Orientation="Horizontal"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center">
+            
+            <Button
+                x:Name="CreateGame"
+                Width="200"
+                Height="30"
+                Content="Создать игру"
+                Background="#7074D5"
+                Foreground="White"
+                Click="CreateGame_OnClick"
+                Margin="0 0 10 0">
+            </Button>
+            
+            <Button
+                Width="200"
+                Height="30"
+                Background="#7074D5"
+                Foreground="White"
+                Content="Присоединиться">
+            </Button>
+            
+        </StackPanel>
+    </Grid>
+</Page>
