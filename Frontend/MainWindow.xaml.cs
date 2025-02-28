@@ -8,7 +8,9 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Frontend.Scrypt;
 using Frontend.Windows;
+using Frontend.Windows.Game;
 
 namespace Frontend;
 
@@ -17,10 +19,38 @@ namespace Frontend;
 /// </summary>
 public partial class MainWindow : Window
 {
+    public delegate void OpenMainWindowDelegate();
+    
     public MainWindow()
     {
         InitializeComponent();
+        
+        CheckAuth();
+    }
 
-        MainFrame.Content = new Auth();
+    private void CheckAuth()
+    {
+        if (!SaveRepository.CheckToken())
+        {
+            OpenMainWindowDelegate func = OpenMainWindow;
+            MainFrame.Content = new Auth(func);
+        }
+        else
+        {
+            string token = SaveRepository.ReadToken();
+            WebSocketService webSocketService = WebSocketService.Instance;
+            _ = webSocketService.ConnectAsync(token);
+            
+            MainFrame.Content = new MainMenu(webSocketService);
+        }
+    }
+
+    private void OpenMainWindow()
+    {
+        string token = SaveRepository.ReadToken();
+        WebSocketService webSocketService = WebSocketService.Instance;
+        _ = webSocketService.ConnectAsync(token);
+            
+        MainFrame.Content = new MainMenu(webSocketService);
     }
 }

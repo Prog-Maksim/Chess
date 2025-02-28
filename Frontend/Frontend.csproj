@@ -14,4 +14,8 @@
       <Resource Include="Image\image 1.png" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="MahApps.Metro.IconPacks" Version="5.1.0" />
+    </ItemGroup>
+
 </Project>
