@@ -1,5 +1,5 @@
 ﻿using System.Windows;
-using Frontend.Scrypt;
+using Frontend.Script;
 using Frontend.Windows;
 using Frontend.Windows.Game;
 

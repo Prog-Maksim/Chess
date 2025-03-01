@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Frontend.Controls;
 using Frontend.Models.WebSockerMessage;
-using Frontend.Scrypt;
+using Frontend.Script;
 
 namespace Frontend.Windows.Game;
 

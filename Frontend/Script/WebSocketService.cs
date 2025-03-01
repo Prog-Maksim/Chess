@@ -4,7 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using Frontend.Models.WebSockerMessage;
 
-namespace Frontend.Scrypt;
+namespace Frontend.Script;
 
 public class WebSocketService
 {

@@ -5,7 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Frontend.Models;
 using Frontend.Models.WebSockerMessage;
-using Frontend.Scrypt;
+using Frontend.Script;
 
 namespace Frontend.Windows;
 

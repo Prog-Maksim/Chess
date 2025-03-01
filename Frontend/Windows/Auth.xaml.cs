@@ -6,7 +6,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Frontend.Models;
-using Frontend.Scrypt;
+using Frontend.Script;
 
 namespace Frontend.Windows;
 

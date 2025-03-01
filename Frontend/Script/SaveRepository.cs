@@ -1,6 +1,6 @@
 ﻿using System.IO;
 
-namespace Frontend.Scrypt;
+namespace Frontend.Script;
 
 public class SaveRepository
 {
