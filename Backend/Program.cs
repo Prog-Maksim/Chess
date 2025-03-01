@@ -30,6 +30,7 @@ builder.Services.AddSingleton<GameService>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddSingleton<WebSocketService>();
+builder.Services.AddSingleton<SendWebSocketMessage>();
 
 // Логгирование
 builder.Services.AddLogging(config =>

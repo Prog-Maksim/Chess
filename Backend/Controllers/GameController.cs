@@ -20,16 +20,14 @@ public class GameController(WebSocketService webSocketService, GameService gameS
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
-
-        logger.LogInformation($"Подключение к webSocket");
+        
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
             using WebSocket ws = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            logger.LogInformation("Получение ws");
-        
+
+            gameService.UpdateWsToPerson(dataToken.PersonId, ws);
             await webSocketService.HandleConnectionAsync(ws, dataToken.PersonId);
-            logger.LogInformation("Игрок добавлен в список");
-            
+
             return Ok("Connected!");
         }
         return BadRequest();
