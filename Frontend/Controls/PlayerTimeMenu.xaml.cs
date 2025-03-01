@@ -8,4 +8,15 @@ public partial class PlayerTimeMenu : UserControl
     {
         InitializeComponent();
     }
+
+    public PlayerTimeMenu(string nickname, TimeSpan ts): this()
+    {
+        NameTextBox.Text = nickname;
+        TimeTextBox.Text = $"{ts.Minutes}:{ts.Seconds}";
+    }
+
+    public void UpdateTime(TimeSpan ts)
+    {
+        TimeTextBox.Text = $"{ts.Minutes}:{ts.Seconds}";
+    }
 }

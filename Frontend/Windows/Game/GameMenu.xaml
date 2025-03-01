@@ -79,6 +79,7 @@
         
         <!-- Боковое меню (левое) -->
         <StackPanel
+            x:Name="StackPanelPlayer"
             Grid.Row="1"
             Grid.Column="0"
             Margin="0 30">
@@ -122,9 +123,6 @@
                     </DataGrid>
                 </StackPanel>
             </Border>
-            
-            <frame:PlayerTimeMenu/>
-            <frame:PlayerTimeMenu/>
             
         </StackPanel>
         

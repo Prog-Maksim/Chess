@@ -11,13 +11,16 @@ namespace Frontend.Windows;
 
 public partial class MainMenu : Page
 {
+    private MainWindow mainWindow;
+    
     public MainMenu()
     {
         InitializeComponent();
     }
     
-    public MainMenu(WebSocketService webSocket): this()
+    public MainMenu(WebSocketService webSocket, MainWindow mainWindow): this()
     {
+        this.mainWindow = mainWindow;
         webSocket.OnResultJoinTheGame += StartGame;
     }
 
@@ -49,6 +52,10 @@ public partial class MainMenu : Page
             _ = SendRequestInGame(data.gameId);
             _gameId = data.gameId;
         }
+        else
+        {
+            MessageBox.Show("Не удалось создать игру!");
+        }
         
         CreateGame.Content = "Создать игру";
         CreateGame.IsEnabled = true;
@@ -69,16 +76,19 @@ public partial class MainMenu : Page
         if (response.IsSuccessStatusCode)
         {
             string responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Ответ от сервера: {responseBody}");
+            Console.WriteLine($"Result to server: {responseBody}");
         }
     }
 
     // Разрешили войти в игру
     private void StartGame(object? sender, ResultJoinTheGame result)
     {
+        Console.WriteLine("Успешно!");
+        
         if (_gameId != null)
         {
-            MessageBox.Show("Вам разрешили войти в игру");
+            Console.WriteLine($"GameId: {_gameId}");
+            mainWindow.OpenGameWindow(_gameId);
             // TODO: Открытие меню игры
         }
     }
