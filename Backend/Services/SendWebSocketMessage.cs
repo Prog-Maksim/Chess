@@ -7,14 +7,21 @@ using Newtonsoft.Json;
 
 namespace Backend.Services;
 
-public static class SendWebSocketMessage
+public class SendWebSocketMessage
 {
+    private readonly WebSocketService _webSocketService;
+
+    public SendWebSocketMessage(WebSocketService webSocketService)
+    {
+        _webSocketService = webSocketService;
+    }
+    
     /// <summary>
     /// Заявка на вступление в игру (отправляется создателю)
     /// </summary>
     /// <param name="player"></param>
     /// <param name="owner"></param>
-    public static async Task SendMessageJoinTheGame(ChessPlayer player, ChessPlayer owner)
+    public async Task SendMessageJoinTheGame(ChessPlayer player, ChessPlayer owner)
     {
         JoinTheGame joinTheGame = new JoinTheGame
         {
@@ -29,7 +36,7 @@ public static class SendWebSocketMessage
         var message = JsonConvert.SerializeObject(joinTheGame);
         var buffer = Encoding.UTF8.GetBytes(message);
 
-        if (owner.Client != null && owner.Client.State == WebSocketState.Open)
+        if (owner.Client != null && _webSocketService.GetWebSocket(owner.Id).State == WebSocketState.Open)
         {
             await owner.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                 CancellationToken.None);
@@ -43,7 +50,7 @@ public static class SendWebSocketMessage
     /// </summary>
     /// <param name="player"></param>
     /// <param name="success"></param>
-    public static async Task SendMessageResultJoinTheGame(ChessPlayer player, bool success)
+    public async Task SendMessageResultJoinTheGame(ChessPlayer player, bool success)
     {
         ResultJoinTheGame joinTheGame = new ResultJoinTheGame
         {
@@ -57,13 +64,15 @@ public static class SendWebSocketMessage
         var message = JsonConvert.SerializeObject(joinTheGame);
         var buffer = Encoding.UTF8.GetBytes(message);
 
-        if (player.Client != null && player.Client.State == WebSocketState.Open)
+        if (_webSocketService.GetWebSocket(player.Id).State != WebSocketState.Open)
+            Console.WriteLine("Невозможно отправить сообщение пользователю 1");
+        else if (player.Client == null)
+            Console.WriteLine("Невозможно отправить сообщение пользователю 2");
+        else
         {
             await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                 CancellationToken.None);
         }
-        else
-            Console.WriteLine("Невозможно отправить сообщение пользователю");
     }
 
     /// <summary>
@@ -71,7 +80,7 @@ public static class SendWebSocketMessage
     /// </summary>
     /// <param name="players"></param>
     /// <param name="time"></param>
-    public static async Task SendMessageReverseTimer(List<ChessPlayer> players, int time)
+    public async Task SendMessageReverseTimer(List<ChessPlayer> players, int time)
     {
         ReverseTimer reverseTimer = new ReverseTimer
         {
@@ -87,7 +96,7 @@ public static class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && player.Client.State == WebSocketState.Open)
+            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
                 await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
@@ -102,7 +111,7 @@ public static class SendWebSocketMessage
     /// </summary>
     /// <param name="players"></param>
     /// <param name="time"></param>
-    public static async Task SendMessageTimerGame(List<ChessPlayer> players, TimeSpan time)
+    public async Task SendMessageTimerGame(List<ChessPlayer> players, TimeSpan time)
     {
         DurationGame reverseTimer = new DurationGame
         {
@@ -118,7 +127,7 @@ public static class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && player.Client.State == WebSocketState.Open)
+            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
                 await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
@@ -133,7 +142,7 @@ public static class SendWebSocketMessage
     /// </summary>
     /// <param name="players"></param>
     /// <param name="time"></param>
-    public static async Task SendMessageTimerPersonTheGame(List<ChessPlayer> players, ChessPlayer currentPlayer,
+    public async Task SendMessageTimerPersonTheGame(List<ChessPlayer> players, ChessPlayer currentPlayer,
         TimeSpan time)
     {
         RemainingTimePerson reverseTimer = new RemainingTimePerson
@@ -151,7 +160,7 @@ public static class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && player.Client.State == WebSocketState.Open)
+            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
                 await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
@@ -166,7 +175,7 @@ public static class SendWebSocketMessage
     /// </summary>
     /// <param name="players"></param>
     /// <param name="targetPlayer"></param>
-    public static async Task SendMessageAddNewPlayer(List<ChessPlayer> players, ChessPlayer targetPlayer)
+    public async Task SendMessageAddNewPlayer(List<ChessPlayer> players, ChessPlayer targetPlayer)
     {
         AddPerson addPerson = new AddPerson
         {
@@ -186,7 +195,7 @@ public static class SendWebSocketMessage
             if (player.Id == targetPlayer.Id)
                 continue;
             
-            if (player.Client != null && player.Client.State == WebSocketState.Open)
+            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
                 await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
@@ -200,7 +209,7 @@ public static class SendWebSocketMessage
     /// Сообщения об обновлении поля
     /// </summary>
     /// <param name="players"></param>
-    public static async Task SendMessageUpdateBoard(List<ChessPlayer> players, GameBoard?[,]? board)
+    public async Task SendMessageUpdateBoard(List<ChessPlayer> players, GameBoard?[,]? board)
     {
         UpdateBoard updateBoard = new UpdateBoard
         {
@@ -216,7 +225,7 @@ public static class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && player.Client.State == WebSocketState.Open)
+            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
                 await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);

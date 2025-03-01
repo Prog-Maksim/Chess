@@ -38,6 +38,7 @@ public class ChessPlayer
     public void AddWebSocket(WebSocket client)
     {
         Client = client;
+        Console.WriteLine("Обновление WS");
     }
     
     /// <summary>

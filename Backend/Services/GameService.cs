@@ -11,10 +11,27 @@ public class GameService
     /// Список всех активных игр
     /// </summary>
     private List<BaseChessGame> GetAllGames { get; set; }
+    private SendWebSocketMessage _sendWebSocketMessage;
     
-    public GameService()
+    public GameService(SendWebSocketMessage sendWebSocketMessage)
     {
         GetAllGames = new List<BaseChessGame>();
+        _sendWebSocketMessage = sendWebSocketMessage;
+    }
+
+    public void UpdateWsToPerson(string personId, WebSocket socket)
+    {
+        foreach (var game in GetAllGames)
+        {
+            var person = game.Players.FirstOrDefault(p => p.Id == personId);
+
+            if (person != null)
+            {
+                Console.WriteLine("Обновление WebSocket");
+                person.AddWebSocket(socket);
+                break;
+            }
+        }
     }
 
     /// <summary>
@@ -25,7 +42,7 @@ public class GameService
     /// <returns>Идентификатор игры</returns>
     public string CreateGame2Players(string personId, string name)
     {
-        ChessGame2Players chessGame2Players = new ChessGame2Players(personId);
+        ChessGame2Players chessGame2Players = new ChessGame2Players(personId, _sendWebSocketMessage);
         GetAllGames.Add(chessGame2Players);
 
         return chessGame2Players.GameId;

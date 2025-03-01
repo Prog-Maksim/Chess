@@ -6,18 +6,18 @@ namespace Backend.Services;
 
 public class WebSocketService
 {
-    private readonly ConcurrentDictionary<string, WebSocket> _players;
+    private readonly Dictionary<string, WebSocket> _players;
     private readonly ILogger<WebSocketService> _logger;
 
     public WebSocketService(ILogger<WebSocketService> logger)
     {
-        _players = new ConcurrentDictionary<string, WebSocket>();
+        _players = new Dictionary<string, WebSocket>();
         _logger = logger;
     }
 
     public async Task HandleConnectionAsync(WebSocket webSocket, string personId)
     {
-        _players.TryAdd(personId, webSocket);
+        _players[personId] = webSocket;
         _logger.LogInformation($"Игрок {personId} подключен.");
 
         // TODO: Реализовать оповещение друзьям что игрок в сети
@@ -40,6 +40,7 @@ public class WebSocketService
                 _logger.LogInformation($"Получено сообщение от игрока {playerId}: {message}");
             }
         }
+        await RemovePlayerAsync(playerId);
     }
     
     // Метод для удаления игрока
@@ -48,15 +49,8 @@ public class WebSocketService
         // TODO: Реализовать оповещение игрокам если пользователь отключился во время игры
         // TODO: Реализовать оповещение друзьям что игрок не в сети
         
-        if (_players.TryRemove(playerId, out var webSocket))
-        {
-            await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Connection closed", CancellationToken.None);
-            _logger.LogInformation($"Игрок {playerId} удалён.");
-        }
-        else
-        {
-            _logger.LogWarning($"Игрок с ID {playerId} не найден.");
-        }
+        _players.Remove(playerId);
+        _logger.LogInformation($"Игрок {playerId} удалён.");
     }
 
     // Возвращает подключение игрока по его Id
