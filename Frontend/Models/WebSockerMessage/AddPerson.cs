@@ -2,6 +2,6 @@
 
 public class AddPerson: BaseWebSocketMessage
 {
-    public required string personId { get; set; }
-    public required string nickname { get; set; }
+    public required string PersonId { get; set; }
+    public required string Nickname { get; set; }
 }

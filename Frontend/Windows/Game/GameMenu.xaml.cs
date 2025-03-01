@@ -1,6 +1,7 @@
 ﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
+using Frontend.Controls;
 using Frontend.Models.WebSockerMessage;
 using Frontend.Scrypt;
 
@@ -8,15 +9,42 @@ namespace Frontend.Windows.Game;
 
 public partial class GameMenu : Page
 {
+    private string _gameId;
+    private Dictionary<string, PlayerTimeMenu> _players;
+    
     public GameMenu()
     {
         InitializeComponent();
         GenerateChessBoard();
     }
     
-    public GameMenu(WebSocketService webSocket): this()
+    public GameMenu(string gameId, WebSocketService webSocket): this()
     {
+        gameId = gameId;
+        _players = new Dictionary<string, PlayerTimeMenu>();
+        
         webSocket.OnDurationGame += UpdateGameTime;
+        webSocket.OnAddPerson += WebSocketOnOnAddPerson; 
+        webSocket.OnRemainingTimePerson += WebSocketOnOnRemainingTimePerson;
+    }
+
+    private void WebSocketOnOnRemainingTimePerson(object? sender, RemainingTimePerson e)
+    {
+        if (_players.ContainsKey(e.PersonId))
+            _players[e.PersonId].UpdateTime(e.Time);
+        else
+        {
+            PlayerTimeMenu playerTimeMenu = new PlayerTimeMenu(e.PersonId, new TimeSpan(hours: 0, minutes: 25, seconds: 0));
+            _players[e.PersonId] = playerTimeMenu;
+            StackPanelPlayer.Children.Add(playerTimeMenu);
+        }
+    }
+
+    private void WebSocketOnOnAddPerson(object? sender, AddPerson e)
+    {
+        PlayerTimeMenu playerTimeMenu = new PlayerTimeMenu(e.Nickname, new TimeSpan(hours: 0, minutes: 25, seconds: 0));
+        _players[e.PersonId] = playerTimeMenu;
+        StackPanelPlayer.Children.Add(playerTimeMenu);
     }
 
     private void GenerateChessBoard()
@@ -59,7 +87,7 @@ public partial class GameMenu : Page
         if (row == 7 && col == 7)
             return new CornerRadius(0, 0, radius, 0);
     
-        return new CornerRadius(0); // Для остальных клеток без закругления
+        return new CornerRadius(0);
     }
 
     private void UpdateGameTime(object? o, DurationGame game)
