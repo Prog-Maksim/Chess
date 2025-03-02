@@ -4,7 +4,6 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -26,7 +25,7 @@ public partial class GameMenu : Page
         GenerateChessBoard();
     }
     
-    public GameMenu(string gameId, WebSocketService webSocket): this()
+    public GameMenu(string gameId, WebSocketService webSocket, bool create = false): this()
     {
         _gameId = gameId;
         _players = new Dictionary<string, PlayerTimeMenu>();
@@ -35,12 +34,31 @@ public partial class GameMenu : Page
         webSocket.OnAddPerson += WebSocketOnAddPerson; 
         webSocket.OnRemainingTimePerson += WebSocketOnRemainingTimePerson;
         webSocket.OnUpdateBoard += WebSocketOnUpdateBoard;
+        webSocket.OnReverseTimer += WebSocketOnReverseTimer;
         
         _ = GetGameData(gameId);
+
+        if (create)
+        {
+            GameTime.Text = "Ожидание";
+            GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+            GameIdControl control = new GameIdControl(gameId);
+            StackPanelPlayer.Children.Insert(0, control);
+        }
+    }
+
+    private void WebSocketOnReverseTimer(object? sender, ReverseTimer e)
+    {
+        ReverseTime.Visibility = Visibility.Visible;
+        ReverTimeText.Text = e.Time.ToString();
+        
+        if (e.Time == 0)
+            ReverseTime.Visibility = Visibility.Hidden;
     }
 
     public async Task GetGameData(string gameId)
     {
+        Console.WriteLine(gameId);
         string url = Url.BaseUrl + "Game/playing-field?gameId=" + gameId;
         
         using (HttpClient client = new HttpClient())
@@ -54,7 +72,6 @@ public partial class GameMenu : Page
                 response.EnsureSuccessStatusCode();
 
                 string responseContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine(responseContent);
                 var gameData = JsonSerializer.Deserialize<GameData>(responseContent);
 
                 AddPersons(gameData.Players);
@@ -106,7 +123,7 @@ public partial class GameMenu : Page
 
                 image.MouseLeftButtonDown += (sender, args) =>
                 {
-                    MessageBox.Show("Нажатие левой кнопки мыши!");
+                    Console.WriteLine($"Обьект: {piece.Type}");
                 };
                 
                 Grid.SetRow(image, i);
@@ -195,6 +212,9 @@ public partial class GameMenu : Page
 
     private void UpdateGameTime(object? o, DurationGame game)
     {
+        if (GameTime.Foreground != Brushes.Black)
+            GameTime.Foreground = Brushes.Black;
+        
         GameTime.Text = game.Time.ToString();
     }
 }

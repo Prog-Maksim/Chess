@@ -40,9 +40,10 @@ public class GameService
     /// <param name="personId">Идентификатор игрока</param>
     /// <param name="name">Никнейм пользователя</param>
     /// <returns>Идентификатор игры</returns>
-    public string CreateGame2Players(string personId, string name)
+    public string CreateGame2Players(string personId, string name, WebSocket client)
     {
-        ChessGame2Players chessGame2Players = new ChessGame2Players(personId, _sendWebSocketMessage);
+        ChessPlayer player = new ChessPlayer(personId, name, client);
+        ChessGame2Players chessGame2Players = new ChessGame2Players(player, _sendWebSocketMessage);
         GetAllGames.Add(chessGame2Players);
 
         return chessGame2Players.GameId;

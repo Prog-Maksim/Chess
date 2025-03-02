@@ -45,8 +45,8 @@ public partial class MainWindow : Window
         MainFrame.Content = new MainMenu(webSocketService, this);
     }
 
-    public void OpenGameWindow(string gameId)
+    public void OpenGameWindow(string gameId, bool create = false)
     {
-        MainFrame.Content = new GameMenu(gameId, WebSocketService.Instance);
+        MainFrame.Content = new GameMenu(gameId, WebSocketService.Instance, create);
     }
 }
