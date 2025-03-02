@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using Frontend.Models.Request;
 using Frontend.Models.WebSockerMessage;
 
 namespace Frontend.Script;
@@ -9,7 +10,7 @@ namespace Frontend.Script;
 public class WebSocketService
 {
     private static WebSocketService _instance;
-    private static readonly object _lock = new object();
+    private static readonly object _lock = new ();
     private static ClientWebSocket? client;
 
     private WebSocketService()
@@ -60,6 +61,17 @@ public class WebSocketService
             Console.WriteLine("Close connect...");
         }
     }
+
+    public async Task SendMessage(MovePiece movePiece)
+    {
+        var message = JsonSerializer.Serialize(movePiece);
+        var buffer = Encoding.UTF8.GetBytes(message);
+        
+        if (client != null)
+            await client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, 
+                CancellationToken.None);
+    }
+    
     private async Task ReceiveMessages(ClientWebSocket client)
     {
         var buffer = new byte[8192];

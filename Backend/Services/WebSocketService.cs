@@ -1,6 +1,8 @@
 ﻿using System.Collections.Concurrent;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
+using Backend.Models.Request;
 
 namespace Backend.Services;
 
@@ -8,11 +10,13 @@ public class WebSocketService
 {
     private readonly Dictionary<string, WebSocket> _players;
     private readonly ILogger<WebSocketService> _logger;
+    private readonly Lazy<GameService> _gameService;
 
-    public WebSocketService(ILogger<WebSocketService> logger)
+    public WebSocketService(ILogger<WebSocketService> logger, Lazy<GameService> gameService)
     {
         _players = new Dictionary<string, WebSocket>();
         _logger = logger;
+        _gameService = gameService;
     }
 
     public async Task HandleConnectionAsync(WebSocket webSocket, string personId)
@@ -38,9 +42,21 @@ public class WebSocketService
             {
                 string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
                 _logger.LogInformation($"Получено сообщение от игрока {playerId}: {message}");
+                await ParseMessage(message);
             }
         }
         await RemovePlayerAsync(playerId);
+    }
+
+    public async Task ParseMessage(string message)
+    {
+        if (message.Contains("MovePiece"))
+        {
+            var result = JsonSerializer.Deserialize<MovePiece>(message);
+            var dataToken = JwtService.GetJwtTokenData(result.token);
+            
+            await _gameService.Value.Moving(result.gameId, dataToken.PersonId, result.FromRow, result.FromCol, result.ToRow, result.ToCol);
+        }
     }
     
     // Метод для удаления игрока
