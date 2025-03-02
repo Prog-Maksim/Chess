@@ -221,6 +221,7 @@ public class SendWebSocketMessage
         };
         
         var message = JsonConvert.SerializeObject(updateBoard);
+        Console.WriteLine(message);
         var buffer = Encoding.UTF8.GetBytes(message);
 
         foreach (var player in players)

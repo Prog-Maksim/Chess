@@ -21,7 +21,7 @@ public class GameData
     /// <summary>
     /// Игровое поле
     /// </summary>
-    public GameBoard?[,]? Board { get; set; }
+    public List<List<GameBoard?>> Board { get; set; }
     /// <summary>
     /// Список игроков
     /// </summary>

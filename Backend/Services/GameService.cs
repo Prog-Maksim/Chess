@@ -104,14 +104,19 @@ public class GameService
             data.Players.Add(gamePlayerData);
         }
 
-        GameBoard?[,] gameBoards = new GameBoard?[game.Board.GetLength(0), game.Board.GetLength(1)];
+        List<List<GameBoard?>> gameBoards = new();
 
         for (int i = 0; i < game.Board.GetLength(0); i++)
         {
+            if (gameBoards.Count <= i)
+                gameBoards.Add(new List<GameBoard?>());
+            
             for (int j = 0; j < game.Board.GetLength(1); j++)
             {
                 if (game.Board[i, j] == null)
-                    gameBoards[i, j] = null;
+                {
+                    gameBoards[i].Add(null);
+                }
                 else
                 {
                     var dataChessPiece = game.Board[i, j];
@@ -125,7 +130,7 @@ public class GameService
                         PersonId = dataChessPiece.OwnerId
                     };
 
-                    gameBoards[i, j] = gameBoard;
+                    gameBoards[i].Add(gameBoard);
                 }
             }
         }
