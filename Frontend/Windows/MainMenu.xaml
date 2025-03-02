@@ -15,7 +15,8 @@
             <Button
                 x:Name="CreateGame"
                 Width="200"
-                Height="30"
+                Height="35"
+                Style="{StaticResource ClickButtonStyle}"
                 Content="Создать игру"
                 Background="#7074D5"
                 Foreground="White"
@@ -24,10 +25,13 @@
             </Button>
             
             <Button
+                x:Name="JoinTheGame"
                 Width="200"
-                Height="30"
+                Height="35"
+                Style="{StaticResource ClickButtonStyle}"
                 Background="#7074D5"
                 Foreground="White"
+                Click="JoinTheGame_OnClick"
                 Content="Присоединиться">
             </Button>
             
