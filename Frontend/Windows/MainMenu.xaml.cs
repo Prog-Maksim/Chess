@@ -49,8 +49,8 @@ public partial class MainMenu : Page
             string responseBody = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<CreateGame>(responseBody);
 
-            _ = SendRequestInGame(data.gameId);
-            _gameId = data.gameId;
+            Console.WriteLine($"GameId: {data.gameId}");
+            mainWindow.OpenGameWindow(data.gameId, true);
         }
         else
         {
