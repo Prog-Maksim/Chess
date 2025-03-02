@@ -104,7 +104,6 @@ public abstract class BaseChessGame
         WaitingPlayers.Add(player);
     }
     
-    // TODO: оповестить игрока о том что ему разрешили вступить в игру
     /// <summary>
     /// Метод разрешаюший пользователю вступить в игру
     /// </summary>
@@ -129,7 +128,6 @@ public abstract class BaseChessGame
         return true;
     }
     
-    // TODO: оповестить игрока о том что ему запретили в игре
     /// <summary>
     /// Метод запрещающий пользователю вступить в игру
     /// </summary>
@@ -167,6 +165,16 @@ public abstract class BaseChessGame
         State = GameState.InProgress;
         StartTimer();
             
+        Players[CurrentPlayerIndex].StartTurn();
+    }
+
+    public void NextTurn()
+    {
+        Players[CurrentPlayerIndex].EndTurn();
+        
+        if (CurrentPlayerIndex + 1 < Players.Count) CurrentPlayerIndex++;
+        else CurrentPlayerIndex = 0;
+        
         Players[CurrentPlayerIndex].StartTurn();
     }
 
