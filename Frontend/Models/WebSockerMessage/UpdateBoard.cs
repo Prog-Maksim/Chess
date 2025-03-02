@@ -2,5 +2,5 @@
 
 public class UpdateBoard: BaseWebSocketMessage
 {
-    public GameBoard?[,]? Board { get; set; }
+    public required List<List<GameBoard>> Board { get; set; }
 }

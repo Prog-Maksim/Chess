@@ -1,7 +1,7 @@
-﻿using System.Net.WebSockets;
+﻿using System.IO;
+using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
-using System.Windows;
 using Frontend.Models.WebSockerMessage;
 
 namespace Frontend.Script;
@@ -62,21 +62,29 @@ public class WebSocketService
     }
     private async Task ReceiveMessages(ClientWebSocket client)
     {
-        var buffer = new byte[1024];
+        var buffer = new byte[8192];
+        using var ms = new MemoryStream();
 
         while (client.State == WebSocketState.Open)
         {
-            var result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
-
-            if (result.MessageType == WebSocketMessageType.Close)
+            ms.SetLength(0);
+            WebSocketReceiveResult result;
+            do
             {
-                await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Сервер закрыл соединение", CancellationToken.None);
-                Console.WriteLine("1: Сервер закрыл соединение.");
-                break;
-            }
+                result = await client.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
+    
+                if (result.MessageType == WebSocketMessageType.Close)
+                {
+                    await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Сервер закрыл соединение", CancellationToken.None);
+                    Console.WriteLine("Сервер закрыл соединение.");
+                    return;
+                }
 
-            string message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            Console.WriteLine($"Sever: {message}");
+                ms.Write(buffer, 0, result.Count);
+
+            } while (!result.EndOfMessage);
+        
+            string message = Encoding.UTF8.GetString(ms.ToArray());
             ParseMessages(message);
         }
     }
@@ -109,7 +117,6 @@ public class WebSocketService
     /// Событие обновление игрового поля
     /// </summary>
     public event EventHandler<UpdateBoard>? OnUpdateBoard;
-    
 
     private void ParseMessages(string message)
     {
@@ -157,10 +164,10 @@ public class WebSocketService
         }
         else if (message.Contains("UpdateBoard"))
         {
-            // var result = JsonSerializer.Deserialize<UpdateBoard>(message);
-            //
-            // if (result != null)
-            //     OnUpdateBoard?.Invoke(this, result);
+            var result = JsonSerializer.Deserialize<UpdateBoard>(message);
+            
+            if (result != null)
+                OnUpdateBoard?.Invoke(this, result);
         }
     }
 }

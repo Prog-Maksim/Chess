@@ -79,8 +79,14 @@ public class GameController(WebSocketService webSocketService, GameService gameS
         
         var board = gameService.GetBoard(gameId, dataToken.PersonId);
         var boardStr = JsonConvert.SerializeObject(board);
-        
-        return Ok(boardStr);
+        Console.WriteLine(boardStr);
+
+        return new ContentResult
+        {
+            Content = boardStr,
+            ContentType = "application/json",
+            StatusCode = 200
+        };
     }
 
     [Authorize]

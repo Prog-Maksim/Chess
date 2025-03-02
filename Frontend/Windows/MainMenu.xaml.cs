@@ -71,25 +71,16 @@ public partial class MainMenu : Page
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
         
         var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await client.PostAsync(url, content);
-        
-        if (response.IsSuccessStatusCode)
-        {
-            string responseBody = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Result to server: {responseBody}");
-        }
+        await client.PostAsync(url, content);
     }
 
     // Разрешили войти в игру
     private void StartGame(object? sender, ResultJoinTheGame result)
     {
-        Console.WriteLine("Успешно!");
-        
         if (_gameId != null)
         {
             Console.WriteLine($"GameId: {_gameId}");
             mainWindow.OpenGameWindow(_gameId);
-            // TODO: Открытие меню игры
         }
     }
 }

@@ -24,7 +24,7 @@ public class ChessGame2Players: BaseChessGame
     {
         if (Players.Count == 1)
         {
-            player.Color = "#FFFFFF";
+            player.Color = "#eeeeee";
             
             King king = new King(player.Id);
             AddPieceToBoard(king, 7, 3);
