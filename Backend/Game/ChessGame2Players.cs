@@ -5,11 +5,11 @@ namespace Backend.Game;
 
 public class ChessGame2Players: BaseChessGame
 {
-    public ChessGame2Players(string ownerId, SendWebSocketMessage socketMessage) : base(8, ownerId, socketMessage)
+    public ChessGame2Players(ChessPlayer player, SendWebSocketMessage socketMessage) : base(8, player, socketMessage)
     {
         GameName = "Игра 2x2"; 
     }
-    public ChessGame2Players(string ownerId, bool isGamePrivate, SendWebSocketMessage socketMessage) : base(8, ownerId, isGamePrivate, socketMessage) { }
+    public ChessGame2Players(ChessPlayer player, bool isGamePrivate, SendWebSocketMessage socketMessage) : base(8, player, isGamePrivate, socketMessage) { }
 
     protected override int RequiredPlayers() => 2;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(3);
