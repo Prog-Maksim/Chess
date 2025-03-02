@@ -7,7 +7,7 @@
       xmlns:frame="clr-namespace:Frontend.Controls"
       mc:Ignorable="d"
       Title="GameMenu" d:DesignHeight="700" d:DesignWidth="1300">
-    <Grid ShowGridLines="True">
+    <Grid ShowGridLines="False">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="270"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
@@ -19,6 +19,24 @@
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         
+        <TextBlock
+            x:Name="ReverseTime"
+            Grid.RowSpan="3"
+            Grid.ColumnSpan="3"
+            Panel.ZIndex="1"
+            VerticalAlignment="Center"
+            HorizontalAlignment="Center"
+            FontFamily="Montserrat"
+            FontSize="30"
+            FontWeight="Bold"
+            TextAlignment="Center"
+            Visibility="Hidden">
+            <Run Text="До начала игры осталось:"/>
+            <LineBreak></LineBreak>
+            <LineBreak></LineBreak>
+            <Run x:Name="ReverTimeText" FontSize="50" Text="5"></Run>
+        </TextBlock>
+        
         <!-- Верхнее меню -->
         <Border
             Grid.Row="0"
@@ -28,7 +46,7 @@
             Height="40"
             Margin="120 0"
             VerticalAlignment="Bottom">
-            <Grid ShowGridLines="True">
+            <Grid ShowGridLines="False">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                     <ColumnDefinition></ColumnDefinition>
