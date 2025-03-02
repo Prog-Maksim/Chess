@@ -10,11 +10,16 @@ public static class Rasterization
     
     public static void SvgToPng(string pathToImage, string color)
     {
-        if (!Directory.Exists("Temporary"))
-            Directory.CreateDirectory("Temporary");
-
+        if (!Directory.Exists($"Image/Temporary/{color}"))
+            Directory.CreateDirectory($"Image/Temporary/{color}");
+        
         string name = pathToImage;
-        name = name.Split('/').Last().Replace(".svg", "");
+        name = name.Split('\\').Last().Replace(".svg", "");
+        
+        string pathToSave = $"Image/Temporary/{color}/{name}.png";
+        
+        if (File.Exists(pathToSave))
+            return;
 
         string svgImage = File.ReadAllText(pathToImage);
         svgImage = svgImage.Replace(basicColor, color);
@@ -22,7 +27,13 @@ public static class Rasterization
         byte[] bytes = Encoding.ASCII.GetBytes(svgImage);
         
         var magickReadSettings = new MagickReadSettings { Format = MagickFormat.Svg };
+        
         using var image = new MagickImage(bytes, magickReadSettings) { Format = MagickFormat.Png };
-        image.Write($"Image/Temporary/{name}.png");
+        
+        image.Alpha(AlphaOption.Set);
+        image.Transparent(new MagickColor("#FFFFFF"));
+        image.Format = MagickFormat.Png32;
+        
+        image.Write(pathToSave);
     }
 }

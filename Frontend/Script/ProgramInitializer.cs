@@ -1,4 +1,6 @@
 ﻿using System.IO;
+using System.Net.Http;
+using Frontend.Enums;
 
 namespace Frontend.Script;
 
@@ -14,5 +16,60 @@ public class ProgramInitializer
         
         if (!Directory.Exists("Image/Static"))
             Directory.CreateDirectory("Image/Static");
+
+        _ = InstallBaseImage();
+    }
+
+    private const string BaseUrl = Url.BaseUrl + "Image/get-image?type=";
+    private const string SaveDirectory = "Image/Static/Piece/Base";
+
+    private static async Task InstallBaseImage()
+    {
+        if (!Directory.Exists(SaveDirectory))
+            Directory.CreateDirectory(SaveDirectory);
+        
+        using (HttpClient client = new HttpClient())
+        {
+            foreach (PieceType type in Enum.GetValues(typeof(PieceType)))
+            {
+                string url = BaseUrl + type;
+                string savePath = Path.Combine(SaveDirectory, $"{type}.svg");
+                
+                if (File.Exists(savePath))
+                    continue;
+
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+
+                    await using FileStream fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    await response.Content.CopyToAsync(fileStream);
+
+                    Console.WriteLine($"Файл сохранён: {savePath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка при скачивании {type}: {ex.Message}");
+                }
+            }
+        }
+        
+        PieceConversion();
+    }
+
+    private static void PieceConversion()
+    {
+        string[] colors = { "#000000", "#eeeeee", "#7074D5", "#DD4CEE" };
+        
+        foreach (PieceType type in Enum.GetValues(typeof(PieceType)))
+        {
+            string savePath = Path.Combine(SaveDirectory, $"{type}.svg");
+            
+            foreach (var color in colors)
+            {
+                Rasterization.SvgToPng(savePath, color);
+            }
+        }
     }
 }

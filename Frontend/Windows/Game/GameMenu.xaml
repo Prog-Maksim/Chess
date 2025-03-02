@@ -56,7 +56,7 @@
                     Foreground="Black"
                     FontFamily="Montserrat"
                     FontSize="17"
-                    Text="10:05">
+                    Text="00:00">
                 </TextBlock>
                 
                 <Border
