@@ -27,11 +27,14 @@ public abstract class BaseChessGame
     /// </summary>
     /// <param name="boardSize">Размер поля</param>
     /// <param name="ownerId">Главный пользователь</param>
-    protected BaseChessGame(int boardSize, string ownerId, SendWebSocketMessage webSocketMessage)
+    protected BaseChessGame(int boardSize, ChessPlayer player, SendWebSocketMessage webSocketMessage)
     {
         BoardSize = boardSize;
         Board = new ChessPiece?[boardSize, boardSize];
-        OwnerId = ownerId;
+        OwnerId = player.Id;
+        
+        player.Approve();
+        _ = AddPlayer(player);
         
         _webSocketMessage = webSocketMessage;
     }
@@ -42,7 +45,7 @@ public abstract class BaseChessGame
     /// <param name="boardSize">Размер поля</param>
     /// <param name="ownerId">Главный пользователь</param>
     /// <param name="isGamePrivate">Приватная ли игра</param>
-    protected BaseChessGame(int boardSize, string ownerId, bool isGamePrivate, SendWebSocketMessage socketMessage): this(boardSize, ownerId, socketMessage)
+    protected BaseChessGame(int boardSize, ChessPlayer player, bool isGamePrivate, SendWebSocketMessage socketMessage): this(boardSize, player, socketMessage)
     {
         IsGamePrivate = isGamePrivate;
     }
@@ -62,7 +65,7 @@ public abstract class BaseChessGame
             await InitializePlayerPieces(player);
             
             if (Players.Count == RequiredPlayers())
-                await StartGame();
+                new Thread(async () => await StartGame()).Start();
             
             return true;
         }
@@ -85,8 +88,7 @@ public abstract class BaseChessGame
         {
             player.Approve();
             await AddPlayer(player);
-            
-            Console.WriteLine("Выдано разрешение игроку войти в игру");
+
             await _webSocketMessage.SendMessageResultJoinTheGame(player, true);
             await _webSocketMessage.SendMessageAddNewPlayer(Players, player);
             
@@ -153,7 +155,7 @@ public abstract class BaseChessGame
     {
         State = GameState.Countdown;
 
-        for (int i = 5; i > 0; i--)
+        for (int i = 5; i >= 0; i--)
         {
             await _webSocketMessage.SendMessageReverseTimer(Players, i);
             await Task.Delay(1000);
