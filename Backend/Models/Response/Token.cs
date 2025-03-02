@@ -8,4 +8,9 @@ public class Token: BaseResponse
     /// Access токен для доступа к сайту
     /// </summary>
     public required string AccessToken { get; set; }
+    
+    /// <summary>
+    /// Идентификатор пользователя
+    /// </summary>
+    public required string PersonId { get; set; }
 }

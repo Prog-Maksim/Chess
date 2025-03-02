@@ -37,7 +37,7 @@ public class AuthService
 
         var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
 
-        return new Token { Success = true, Message = "Вы успешно создали аккаунт!", AccessToken = accessToken };
+        return new Token { Success = true, Message = "Вы успешно создали аккаунт!", AccessToken = accessToken, PersonId = person.PersonId };
     }
 
     public async Task<BaseResponse> LoginUserAsync(AuthUser user)
@@ -51,6 +51,6 @@ public class AuthService
 
         var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
         
-        return  new Token { Success = true, Message = "Вы успешно авторизовались!", AccessToken = accessToken };
+        return  new Token { Success = true, Message = "Вы успешно авторизовались!", AccessToken = accessToken, PersonId = person.PersonId };
     }
 }

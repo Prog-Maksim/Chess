@@ -129,7 +129,11 @@ public class ChessGame2Players: BaseChessGame
         if (piece.Type == PieceType.Pawn)
         {
             bool result = await ValidateMovePawn(piece, person.Color, oldRow, oldCol, newRow, newCol);
-            if (result) piece.IsFirstMove = false;
+            if (result)
+            {
+                piece.IsFirstMove = false;
+                NextTurn();
+            }
             return result;
         }
 

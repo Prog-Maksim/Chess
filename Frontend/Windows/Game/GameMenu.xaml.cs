@@ -19,10 +19,11 @@ namespace Frontend.Windows.Game;
 public partial class GameMenu : Page
 {
     private bool _gameState;
-    private bool _playerTurn = true;
+    private bool _playerTurn;
     
     private string _gameId;
     private Dictionary<string, PlayerTimeMenu> _players;
+    private string _playerIdTern;
     
     public GameMenu()
     {
@@ -31,6 +32,7 @@ public partial class GameMenu : Page
     }
 
     private readonly WebSocketService _webSocketService;
+    private GameIdControl? _gameIdControl;
     
     public GameMenu(string gameId, WebSocketService webSocket, bool create = false): this()
     {
@@ -51,8 +53,10 @@ public partial class GameMenu : Page
         {
             GameTime.Text = "Ожидание";
             GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
-            GameIdControl control = new GameIdControl(gameId);
-            StackPanelPlayer.Children.Insert(0, control);
+            _gameIdControl = new GameIdControl(gameId);
+            StackPanelPlayer.Children.Insert(0, _gameIdControl);
+            _playerTurn = true;
+            _playerIdTern = SaveRepository.ReadId();
         }
     }
 
@@ -65,6 +69,8 @@ public partial class GameMenu : Page
         {
             ReverseTime.Visibility = Visibility.Hidden;
             _gameState = true;
+            
+            if (_gameIdControl != null) StackPanelPlayer.Children.Remove(_gameIdControl);
         }
     }
 
@@ -85,6 +91,8 @@ public partial class GameMenu : Page
 
                 string responseContent = await response.Content.ReadAsStringAsync();
                 var gameData = JsonSerializer.Deserialize<GameData>(responseContent);
+
+                _playerIdTern = gameData.CurrentPlayer;
 
                 AddPersons(gameData.Players);
                 UpdateBoard(gameData.Board);
@@ -209,14 +217,24 @@ public partial class GameMenu : Page
 
     private void WebSocketOnRemainingTimePerson(object? sender, RemainingTimePerson e)
     {
-        if (_players.ContainsKey(e.PersonId))
-            _players[e.PersonId].UpdateTime(e.Time);
-        else
+        if (!_players.ContainsKey(e.PersonId))
+            return;
+
+        if (_playerIdTern != e.PersonId)
         {
-            PlayerTimeMenu playerTimeMenu = new PlayerTimeMenu(e.PersonId, new TimeSpan(hours: 0, minutes: 25, seconds: 0));
-            _players[e.PersonId] = playerTimeMenu;
-            StackPanelPlayer.Children.Add(playerTimeMenu);
+            _players[_playerIdTern].EndTern();
+            _playerIdTern = e.PersonId;
         }
+        
+        _players[_playerIdTern].UpdateTime(e.Time);
+
+        if (_playerIdTern == SaveRepository.ReadId())
+        {
+            _players[_playerIdTern].IsTern(true);
+            _playerTurn = true;
+        }
+        else
+            _players[_playerIdTern].IsTern();
     }
 
     private void WebSocketOnAddPerson(object? sender, AddPerson e)
@@ -295,6 +313,8 @@ public partial class GameMenu : Page
 
     private void UpdateGameTime(object? o, DurationGame game)
     {
+        _gameState = true;
+        
         if (GameTime.Foreground != Brushes.Black)
             GameTime.Foreground = Brushes.Black;
         
