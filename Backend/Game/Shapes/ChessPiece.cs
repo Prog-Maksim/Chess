@@ -8,6 +8,7 @@ namespace Backend.Game.Shapes;
 public abstract class ChessPiece
 {
     public string ChessPieceId { get; set; } = Guid.NewGuid().ToString();
+    public bool IsFirstMove { get; set; } = true;
     public PieceType Type { get; }
     public string OwnerId { get; set; }
     

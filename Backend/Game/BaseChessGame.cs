@@ -7,7 +7,7 @@ namespace Backend.Game;
 
 public abstract class BaseChessGame
 {
-    public string GameId { get; set; } = Guid.NewGuid().ToString();
+    public string GameId { get; set; }
     public string GameName { get; set; }
     public int BoardSize { get; set; }
     public ChessPiece?[,] Board { get; set; }
@@ -20,15 +20,18 @@ public abstract class BaseChessGame
     private Timer? _gameTimer;
     public TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
     
-    protected readonly SendWebSocketMessage _webSocketMessage;
+    protected readonly Lazy<SendWebSocketMessage> _webSocketMessage;
     
     /// <summary>
     /// Инициализация игры
     /// </summary>
     /// <param name="boardSize">Размер поля</param>
     /// <param name="ownerId">Главный пользователь</param>
-    protected BaseChessGame(int boardSize, ChessPlayer player, SendWebSocketMessage webSocketMessage)
+    protected BaseChessGame(int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage)
     {
+        Random rnd = new();
+        GameId = $"{rnd.Next(9999)}-{rnd.Next(9999)}-{rnd.Next(9999)}";
+        
         BoardSize = boardSize;
         Board = new ChessPiece?[boardSize, boardSize];
         OwnerId = player.Id;
@@ -45,7 +48,7 @@ public abstract class BaseChessGame
     /// <param name="boardSize">Размер поля</param>
     /// <param name="ownerId">Главный пользователь</param>
     /// <param name="isGamePrivate">Приватная ли игра</param>
-    protected BaseChessGame(int boardSize, ChessPlayer player, bool isGamePrivate, SendWebSocketMessage socketMessage): this(boardSize, player, socketMessage)
+    protected BaseChessGame(int boardSize, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage): this(boardSize, player, socketMessage)
     {
         IsGamePrivate = isGamePrivate;
     }
@@ -89,14 +92,14 @@ public abstract class BaseChessGame
             player.Approve();
             await AddPlayer(player);
 
-            await _webSocketMessage.SendMessageResultJoinTheGame(player, true);
-            await _webSocketMessage.SendMessageAddNewPlayer(Players, player);
+            await _webSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
+            await _webSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
             
             return;
         }
         
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
-        await _webSocketMessage.SendMessageJoinTheGame(player, owner);
+        await _webSocketMessage.Value.SendMessageJoinTheGame(player, owner);
         
         WaitingPlayers.Add(player);
     }
@@ -116,8 +119,8 @@ public abstract class BaseChessGame
         if (player == null) 
             return false;
         
-        await _webSocketMessage.SendMessageResultJoinTheGame(player, true);
-        await _webSocketMessage.SendMessageAddNewPlayer(Players, player);
+        await _webSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
+        await _webSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
 
         player.Approve();
         _ = Task.Run(() => AddPlayer(player));
@@ -143,7 +146,7 @@ public abstract class BaseChessGame
         WaitingPlayers.Remove(player);
         
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
-        await _webSocketMessage.SendMessageResultJoinTheGame(player, false);
+        await _webSocketMessage.Value.SendMessageResultJoinTheGame(player, false);
         
         return true;
     }
@@ -157,7 +160,7 @@ public abstract class BaseChessGame
 
         for (int i = 5; i >= 0; i--)
         {
-            await _webSocketMessage.SendMessageReverseTimer(Players, i);
+            await _webSocketMessage.Value.SendMessageReverseTimer(Players, i);
             await Task.Delay(1000);
         }
             
@@ -221,7 +224,7 @@ public abstract class BaseChessGame
         if (State == GameState.InProgress)
         {
             GameDurationSeconds += TimeSpan.FromSeconds(1);
-            await _webSocketMessage.SendMessageTimerGame(Players, GameDurationSeconds);
+            await _webSocketMessage.Value.SendMessageTimerGame(Players, GameDurationSeconds);
 
             // Если время игры превышено, завершаем
             if (GameDurationSeconds >= MaxGameTimeInSeconds())
@@ -263,7 +266,7 @@ public abstract class BaseChessGame
             }
         }
         
-        await _webSocketMessage.SendMessageUpdateBoard(Players, gameBoards);
+        await _webSocketMessage.Value.SendMessageUpdateBoard(Players, gameBoards);
     }
     
     /// <summary>
@@ -280,6 +283,8 @@ public abstract class BaseChessGame
     /// </summary>
     /// <returns></returns>
     protected virtual TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(1);
+    
+    public abstract Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol);
 
     ~BaseChessGame()
     {

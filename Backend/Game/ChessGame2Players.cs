@@ -1,15 +1,17 @@
-﻿using Backend.Game.Shapes;
+﻿using Backend.Enums;
+using Backend.Game.Shapes;
+using Backend.Models.Response;
 using Backend.Services;
 
 namespace Backend.Game;
 
 public class ChessGame2Players: BaseChessGame
 {
-    public ChessGame2Players(ChessPlayer player, SendWebSocketMessage socketMessage) : base(8, player, socketMessage)
+    public ChessGame2Players(ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage) : base(8, player, socketMessage)
     {
         GameName = "Игра 2x2"; 
     }
-    public ChessGame2Players(ChessPlayer player, bool isGamePrivate, SendWebSocketMessage socketMessage) : base(8, player, isGamePrivate, socketMessage) { }
+    public ChessGame2Players(ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage) : base(8, player, isGamePrivate, socketMessage) { }
 
     protected override int RequiredPlayers() => 2;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(3);
@@ -17,7 +19,7 @@ public class ChessGame2Players: BaseChessGame
     
     protected override async Task HandlePlayerTimeUpdate(ChessPlayer player)
     {
-        await _webSocketMessage.SendMessageTimerPersonTheGame(Players, player, player.RemainingTime);
+        await _webSocketMessage.Value.SendMessageTimerPersonTheGame(Players, player, player.RemainingTime);
     }
     
     protected override async Task InitializePlayerPieces(ChessPlayer player)
@@ -112,21 +114,80 @@ public class ChessGame2Players: BaseChessGame
     
     // Действия
 
-    public async Task Motion(string pieceId, int newCol, int newRow)
+    public override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)
     {
-        if (newRow > 7 || newCol > 7)
+        if (newRow > 7 || newCol > 7 || newRow < 0 || newCol < 0)
             throw new ArgumentOutOfRangeException("Значение newCol или newRow должно быть в диапазоне от 0 до 7");
         
-        for (int i = 0; i < Board.GetLength(0); i++)
+        var piece = Board[oldRow, oldCol];
+
+        if (piece.OwnerId != personId)
+            return false;
+
+        var person = Players.FirstOrDefault(p => p.Id == personId);
+
+        if (piece.Type == PieceType.Pawn)
         {
-            for (int j = 0; j < Board.GetLength(1); j++)
-            {
-                if (Board[i, j] != null && Board[i, j].OwnerId == pieceId)
-                {
-                    Board[newCol, newCol] = Board[i, j];
-                    Board[i, j] = null;
-                }
-            }
+            bool result = await ValidateMovePawn(piece, person.Color, oldRow, oldCol, newRow, newCol);
+            if (result) piece.IsFirstMove = false;
+            return result;
         }
+
+        return true;
+    }
+
+    private async Task<bool> ValidateMovePawn(ChessPiece piece, string color, int oldRow, int oldCol, int newRow, int newCol)
+    {
+        if (oldRow == 1)
+        {
+            if (color == "#000000" && piece.IsFirstMove && oldCol == newCol && newRow > oldRow && (newRow - oldRow) <= 2)
+            {
+                Board[newRow, newCol] = piece;
+                Board[oldRow, oldCol] = null;
+
+                await SendMessageUpdateBoard();
+                return true;
+            }
+
+            return false;
+        }
+
+        if (oldRow == 6)
+        {
+            if (color == "#eeeeee" && piece.IsFirstMove && oldCol == newCol && newRow < oldRow && (oldRow - newRow) <= 2)
+            {
+                Board[newRow, newCol] = piece;
+                Board[oldRow, oldCol] = null;
+
+                await SendMessageUpdateBoard();
+                return true;
+            }
+
+            return false;
+        }
+    
+        if (oldCol == newCol)
+        {
+            if (color == "#000000" && newRow > oldRow && (newRow - oldRow) <= 1)
+            {
+                Board[newRow, newCol] = piece;
+                Board[oldRow, oldCol] = null;
+                
+                await SendMessageUpdateBoard();
+                return true;
+            }
+            if (color == "#eeeeee" && newRow < oldRow && (oldRow - newRow) <= 1)
+            {
+                Board[newRow, newCol] = piece;
+                Board[oldRow, oldCol] = null;
+                
+                await SendMessageUpdateBoard();
+                return true;
+            }
+
+            return false;
+        }
+
+        return false;
     }
 }

@@ -8,7 +8,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Frontend.Controls;
+using Frontend.Enums;
 using Frontend.Models;
+using Frontend.Models.Request;
 using Frontend.Models.WebSockerMessage;
 using Frontend.Script;
 
@@ -16,6 +18,9 @@ namespace Frontend.Windows.Game;
 
 public partial class GameMenu : Page
 {
+    private bool GameState = true;
+    private bool PlayerTurn = true;
+    
     private string _gameId;
     private Dictionary<string, PlayerTimeMenu> _players;
     
@@ -24,11 +29,15 @@ public partial class GameMenu : Page
         InitializeComponent();
         GenerateChessBoard();
     }
+
+    private readonly WebSocketService _webSocketService;
     
     public GameMenu(string gameId, WebSocketService webSocket, bool create = false): this()
     {
         _gameId = gameId;
         _players = new Dictionary<string, PlayerTimeMenu>();
+        
+        _webSocketService = webSocket;
         
         webSocket.OnDurationGame += UpdateGameTime;
         webSocket.OnAddPerson += WebSocketOnAddPerson; 
@@ -51,9 +60,12 @@ public partial class GameMenu : Page
     {
         ReverseTime.Visibility = Visibility.Visible;
         ReverTimeText.Text = e.Time.ToString();
-        
+
         if (e.Time == 0)
+        {
             ReverseTime.Visibility = Visibility.Hidden;
+            GameState = true;
+        }
     }
 
     public async Task GetGameData(string gameId)
@@ -96,14 +108,24 @@ public partial class GameMenu : Page
     {
         UpdateBoard(e.Board);
     }
+    
 
     private void UpdateBoard(List<List<GameBoard>> board)
     {
+        ChessBoardGrid.Children
+            .OfType<Image>()
+            .ToList()
+            .ForEach(img => ChessBoardGrid.Children.Remove(img));
+
+        
         for (int i = 0; i < board.Count; i++)
         {
             for (int j = 0; j < board[i].Count; j++)
             {
                 var piece = board[i][j];
+                
+                int rowCopy = i;
+                int colCopy = j;
 
                 if (piece == null)
                     continue;
@@ -118,12 +140,12 @@ public partial class GameMenu : Page
                 {
                     Source = new BitmapImage(new Uri(fullPath, UriKind.Absolute)),
                     Margin = new Thickness(7),
-                    Cursor = Cursors.Hand,
+                    Cursor = Cursors.Hand
                 };
 
                 image.MouseLeftButtonDown += (sender, args) =>
                 {
-                    Console.WriteLine($"Обьект: {piece.Type}");
+                    if (GameState && PlayerTurn) ClickTheGameBoard(piece.Type, rowCopy, colCopy);
                 };
                 
                 Grid.SetRow(image, i);
@@ -131,6 +153,58 @@ public partial class GameMenu : Page
                 ChessBoardGrid.Children.Add(image);
             }
         }
+    }
+
+    private bool isSelect = false;
+    private AddressTheBoard? StartPoint;
+    private void ClickTheGameBoard(PieceType? type, int row, int col)
+    {
+        if (isSelect && StartPoint.Row == row && StartPoint.Col == col)
+        {
+            StartPoint = null;
+            isSelect = false;
+        }
+        
+        if (!isSelect)
+        {
+            if (type != null)
+            {
+                StartPoint = new AddressTheBoard
+                {
+                    Row = row,
+                    Col = col,
+                };
+                isSelect = true;
+            }
+            else
+            {
+                MessageBox.Show("Здесь нет фигуры");
+            }
+        }
+        else
+        {
+            if (StartPoint != null)
+                _ = SendMoveRequestAsync(StartPoint.Row, StartPoint.Col, row, col);
+        }
+    }
+
+    private async Task SendMoveRequestAsync(int fromRow, int fromCol, int toRow, int toCol)
+    {
+        MovePiece movePiece = new MovePiece
+        {
+            Type = "MovePiece",
+            gameId = _gameId,
+            token = SaveRepository.ReadToken(),
+            FromRow = fromRow,
+            FromCol = fromCol,
+            ToRow = toRow,
+            ToCol = toCol,
+        };
+
+        await _webSocketService.SendMessage(movePiece);
+        
+        isSelect = false;
+        StartPoint = null;
     }
 
     private void WebSocketOnRemainingTimePerson(object? sender, RemainingTimePerson e)
@@ -181,10 +255,19 @@ public partial class GameMenu : Page
         {
             for (int col = 0; col < size; col++)
             {
+                int rowCopy = row;
+                int colCopy = col;
+                
                 Border cell = new Border
                 {
                     Background = (row + col) % 2 == 0 ? lightColor : darkColor,
-                    CornerRadius = GetCornerRadius(row, col)
+                    CornerRadius = GetCornerRadius(row, col),
+                    Cursor = Cursors.Hand
+                };
+
+                cell.MouseLeftButtonDown += (sender, args) =>
+                {
+                    if (GameState && PlayerTurn) ClickTheGameBoard(null, rowCopy, colCopy);
                 };
                 
                 Grid.SetRow(cell, row);
@@ -217,4 +300,10 @@ public partial class GameMenu : Page
         
         GameTime.Text = game.Time.ToString();
     }
+}
+
+public class AddressTheBoard
+{
+    public int Row { get; set; }
+    public int Col { get; set; }
 }

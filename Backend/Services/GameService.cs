@@ -11,9 +11,9 @@ public class GameService
     /// Список всех активных игр
     /// </summary>
     private List<BaseChessGame> GetAllGames { get; set; }
-    private SendWebSocketMessage _sendWebSocketMessage;
+    private Lazy<SendWebSocketMessage> _sendWebSocketMessage;
     
-    public GameService(SendWebSocketMessage sendWebSocketMessage)
+    public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage)
     {
         GetAllGames = new List<BaseChessGame>();
         _sendWebSocketMessage = sendWebSocketMessage;
@@ -158,5 +158,15 @@ public class GameService
             throw new KeyNotFoundException("Данная игра не найдена");
         
         return await game.RejectPlayer(sendPersonId, playerId);
+    }
+
+    public async Task<bool> Moving(string gameId, string personId, int oldRow, int oldCol, int newRow, int newCol)
+    {
+        var game = GetAllGames.Find(x => x.GameId == gameId);
+
+        if (game == null)
+            throw new KeyNotFoundException("Данная игра не найдена");
+
+        return await game.Moving(personId, oldRow, oldCol, newRow, newCol);
     }
 }

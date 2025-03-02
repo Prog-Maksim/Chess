@@ -24,14 +24,17 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // Регистрация Сервисов
-builder.Services.AddScoped<AuthService>();
 builder.Services.AddSingleton<GameService>();
+builder.Services.AddScoped<AuthService>();
 
 // Регистрация репозиториев
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 
 builder.Services.AddSingleton<WebSocketService>();
 builder.Services.AddSingleton<SendWebSocketMessage>();
+
+builder.Services.AddSingleton(provider => new Lazy<GameService>(() => provider.GetRequiredService<GameService>()));
+builder.Services.AddSingleton(provider => new Lazy<SendWebSocketMessage>(() => provider.GetRequiredService<SendWebSocketMessage>()));
 
 // Логгирование
 builder.Services.AddLogging(config =>
