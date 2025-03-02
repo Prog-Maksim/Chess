@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="Styles/ButtonStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Styles/ClickButtonStyle.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Styles/TextBoxStyle.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Styles/PasswordBoxStyle.xaml"></ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>

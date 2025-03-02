@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using Frontend.Controls;
 using Frontend.Models;
 using Frontend.Models.WebSockerMessage;
 using Frontend.Script;
@@ -11,6 +12,8 @@ namespace Frontend.Windows;
 
 public partial class MainMenu : Page
 {
+    public delegate void GetGameId(string gameId);
+    
     private MainWindow mainWindow;
     
     public MainMenu()
@@ -73,8 +76,7 @@ public partial class MainMenu : Page
         var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
         await client.PostAsync(url, content);
     }
-
-    // Разрешили войти в игру
+    
     private void StartGame(object? sender, ResultJoinTheGame result)
     {
         if (_gameId != null)
@@ -83,4 +85,18 @@ public partial class MainMenu : Page
             mainWindow.OpenGameWindow(_gameId);
         }
     }
+
+    private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
+    {
+        GetGameId getGameId = GameId;
+        SetGameIdControl setGameIdControl = new SetGameIdControl(getGameId);
+        Content = setGameIdControl;
+    }
+
+    private void GameId(string gameId)
+    {
+        _gameId = gameId;
+        _ = SendRequestInGame(gameId);
+    }
+    
 }

@@ -18,8 +18,8 @@ namespace Frontend.Windows.Game;
 
 public partial class GameMenu : Page
 {
-    private bool GameState = true;
-    private bool PlayerTurn = true;
+    private bool _gameState;
+    private bool _playerTurn = true;
     
     private string _gameId;
     private Dictionary<string, PlayerTimeMenu> _players;
@@ -64,7 +64,7 @@ public partial class GameMenu : Page
         if (e.Time == 0)
         {
             ReverseTime.Visibility = Visibility.Hidden;
-            GameState = true;
+            _gameState = true;
         }
     }
 
@@ -145,7 +145,7 @@ public partial class GameMenu : Page
 
                 image.MouseLeftButtonDown += (sender, args) =>
                 {
-                    if (GameState && PlayerTurn) ClickTheGameBoard(piece.Type, rowCopy, colCopy);
+                    if (_gameState && _playerTurn) ClickTheGameBoard(piece.Type, rowCopy, colCopy);
                 };
                 
                 Grid.SetRow(image, i);
@@ -155,7 +155,7 @@ public partial class GameMenu : Page
         }
     }
 
-    private bool isSelect = false;
+    private bool isSelect;
     private AddressTheBoard? StartPoint;
     private void ClickTheGameBoard(PieceType? type, int row, int col)
     {
@@ -267,7 +267,7 @@ public partial class GameMenu : Page
 
                 cell.MouseLeftButtonDown += (sender, args) =>
                 {
-                    if (GameState && PlayerTurn) ClickTheGameBoard(null, rowCopy, colCopy);
+                    if (_gameState && _playerTurn) ClickTheGameBoard(null, rowCopy, colCopy);
                 };
                 
                 Grid.SetRow(cell, row);
