@@ -18,14 +18,18 @@ namespace Frontend.Windows.Game;
 
 public partial class GameMenu : Page
 {
+    // состояние игры
     private bool _gameState;
+    // состояние игрока, может ли он походить
     private bool _playerTurn;
-    
+    // идентификатор карты
     private string _gameId;
+    // меню игроков
     private Dictionary<string, PlayerTimeMenu> _players;
+    // идентификатор игрока чей щяс ход
     private string _playerIdTern;
-
-    private int _gameSize = 16;
+    // размер поля
+    private int _gameSize;
     
     public GameMenu()
     {
@@ -34,11 +38,17 @@ public partial class GameMenu : Page
 
     private readonly WebSocketService _webSocketService;
     private GameIdControl? _gameIdControl;
+
+    public delegate void ExitGame();
+    public delegate void ContinueGame();
+
+    private readonly MainMenu _mainMenu;
     
-    public GameMenu(string gameId, WebSocketService webSocket, bool create = false): this()
+    public GameMenu(string gameId, WebSocketService webSocket, MainMenu mainMenu, bool create = false): this()
     {
         _gameId = gameId;
         _players = new Dictionary<string, PlayerTimeMenu>();
+        _mainMenu = mainMenu;
         
         _webSocketService = webSocket;
         
@@ -47,6 +57,7 @@ public partial class GameMenu : Page
         webSocket.OnRemainingTimePerson += WebSocketOnRemainingTimePerson;
         webSocket.OnUpdateBoard += WebSocketOnUpdateBoard;
         webSocket.OnReverseTimer += WebSocketOnReverseTimer;
+        webSocket.OnGameOverPlayer += WebSocketOnGameOverPlayer;
         
         _ = GetGameData(gameId);
 
@@ -58,6 +69,27 @@ public partial class GameMenu : Page
             StackPanelPlayer.Children.Insert(0, _gameIdControl);
             _playerTurn = true;
             _playerIdTern = SaveRepository.ReadId();
+        }
+    }
+
+    private GameOverMessage GameOver;
+    private void WebSocketOnGameOverPlayer(object? sender, GameOverPlayer e)
+    {
+        if (_players.ContainsKey(e.PersonId))
+            _players[e.PersonId].IsGameOver();
+
+        if (e.PersonId == SaveRepository.ReadId())
+        {
+            ContinueGame continueGame = () => { MainGrid.Children.Remove(GameOver); };
+            ExitGame exitGame = () => { _mainMenu.OpenMainMenu(); };
+            
+            GameOver = new GameOverMessage(exitGame, continueGame);
+
+            Grid.SetRowSpan(GameOver, 3);
+            Grid.SetColumnSpan(GameOver, 3);
+            
+            MainGrid.Children.Add(GameOver);
+            Panel.SetZIndex(GameOver, 2);
         }
     }
 
@@ -238,7 +270,10 @@ public partial class GameMenu : Page
             _playerTurn = true;
         }
         else
+        {
             _players[_playerIdTern].IsTern();
+            _playerTurn = false;
+        }
     }
 
     private void WebSocketOnAddPerson(object? sender, AddPerson e)
@@ -327,6 +362,30 @@ public partial class GameMenu : Page
             GameTime.Foreground = Brushes.Black;
         
         GameTime.Text = game.Time.ToString();
+    }
+
+    private void LeaveGame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        var result = MessageBox.Show("Вы уверены что хотите выйти из игры! \nЕсли вы продолжите, то покинете игру и сможете вернуться только в качестве зрителя, так как будете дисквалифицированы. \n\nПосле завершения игры возможна потеря очков.", "Предупреждение", MessageBoxButton.YesNo, MessageBoxImage.Information);
+        
+        if (result == MessageBoxResult.Yes)
+        {
+            _ = SendRequestExitGame();
+            _mainMenu.OpenMainMenu();
+        }
+    }
+
+    private async Task SendRequestExitGame()
+    {
+        HttpClient httpClient = new HttpClient();
+        
+        var requestUri = Url.BaseUrl + $"Game/leave-game?gameId={_gameId}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
+        
+        request.Content = new StringContent(string.Empty);
+        await httpClient.SendAsync(request);
     }
 }
 

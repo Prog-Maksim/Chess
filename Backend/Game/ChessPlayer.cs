@@ -1,4 +1,4 @@
-﻿using System.Net.WebSockets;
+﻿using Backend.Enums;
 using Backend.Game.Shapes;
 
 namespace Backend.Game;
@@ -11,13 +11,11 @@ public class ChessPlayer
     public string Id { get; } 
     public string Name { get; }
     public string? Color { get; set; }
-    public bool IsApproved { get; private set; } = false; // Ждет подтверждения
+    
+    public bool IsApproved { get; private set; } // Ждет подтверждения
     public List<ChessPiece> Pieces { get; } = new(); // Список фигур игрока
-    
-    public WebSocket? Client {get; private set;}
-    
+    public PlayerState State { get; set; } = PlayerState.Active; // Статус игрока
     public TimeSpan RemainingTime { get; private set; } = TimeSpan.FromMinutes(25); // Время на ход
-
     private Timer? _turnTimer;
     private DateTime? _turnStartTime;
     
@@ -28,17 +26,6 @@ public class ChessPlayer
     {
         Id = id;
         Name = name;
-    }
-    
-    public ChessPlayer(string id, string name, WebSocket client): this(id, name)
-    {
-        Client = client;
-    }
-
-    public void AddWebSocket(WebSocket client)
-    {
-        Client = client;
-        Console.WriteLine("Обновление WS");
     }
     
     /// <summary>
@@ -74,6 +61,7 @@ public class ChessPlayer
             RemainingTime = TimeSpan.Zero;
             _turnTimer?.Dispose();
             _turnTimer = null;
+            State = PlayerState.OutOfTime;
         }
         else
         {

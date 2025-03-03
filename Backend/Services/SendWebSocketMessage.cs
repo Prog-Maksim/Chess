@@ -35,10 +35,10 @@ public class SendWebSocketMessage
 
         var message = JsonConvert.SerializeObject(joinTheGame);
         var buffer = Encoding.UTF8.GetBytes(message);
-
-        if (owner.Client != null && _webSocketService.GetWebSocket(owner.Id).State == WebSocketState.Open)
+        
+        if (_webSocketService.GetWebSocket(owner.Id).State == WebSocketState.Open)
         {
-            await owner.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+            await _webSocketService.GetWebSocket(owner.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                 CancellationToken.None);
         }
         else
@@ -66,11 +66,9 @@ public class SendWebSocketMessage
 
         if (_webSocketService.GetWebSocket(player.Id).State != WebSocketState.Open)
             Console.WriteLine("Невозможно отправить сообщение пользователю 1");
-        else if (player.Client == null)
-            Console.WriteLine("Невозможно отправить сообщение пользователю 2");
         else
         {
-            await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+            await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                 CancellationToken.None);
         }
     }
@@ -96,9 +94,9 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
-                await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -127,9 +125,9 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
-                await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -160,9 +158,9 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
-                await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -195,9 +193,9 @@ public class SendWebSocketMessage
             if (player.Id == targetPlayer.Id)
                 continue;
             
-            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
-                await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -225,9 +223,60 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (player.Client != null && _webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
             {
-                await player.Client.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                    CancellationToken.None);
+            }
+            else
+                Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        }
+    }
+    
+    /// <summary>
+    /// Сообщения о завершении игры
+    /// </summary>
+    /// <param name="players"></param>
+    public async Task SendMessageFinishGame(List<ChessPlayer> players, FinishGame finish)
+    {
+        var message = JsonConvert.SerializeObject(finish);
+        var buffer = Encoding.UTF8.GetBytes(message);
+
+        foreach (var player in players)
+        {
+            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            {
+                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                    CancellationToken.None);
+            }
+            else
+                Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        }
+    }
+    
+    /// <summary>
+    /// Сообщения о прогирыше игрока
+    /// </summary>
+    /// <param name="players"></param>
+    public async Task SendMessagePlayerGameOver(List<ChessPlayer> players, string playerId)
+    {
+        GameOverPlayer gameOverPlayer = new GameOverPlayer
+        {
+            MessageType = "GameOver",
+            Message = "Игрок проиграл",
+            StatusCode = 200,
+            Success = true,
+            PersonId = playerId
+        };
+        
+        var message = JsonConvert.SerializeObject(gameOverPlayer);
+        var buffer = Encoding.UTF8.GetBytes(message);
+
+        foreach (var player in players)
+        {
+            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            {
+                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else

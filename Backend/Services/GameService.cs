@@ -12,26 +12,13 @@ public class GameService
     /// </summary>
     private List<BaseChessGame> GetAllGames { get; set; }
     private Lazy<SendWebSocketMessage> _sendWebSocketMessage;
+
+    public delegate void DeleteGame(string gameId);
     
     public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage)
     {
         GetAllGames = new List<BaseChessGame>();
         _sendWebSocketMessage = sendWebSocketMessage;
-    }
-
-    public void UpdateWsToPerson(string personId, WebSocket socket)
-    {
-        foreach (var game in GetAllGames)
-        {
-            var person = game.Players.FirstOrDefault(p => p.Id == personId);
-
-            if (person != null)
-            {
-                Console.WriteLine("Обновление WebSocket");
-                person.AddWebSocket(socket);
-                break;
-            }
-        }
     }
 
     /// <summary>
@@ -42,11 +29,21 @@ public class GameService
     /// <returns>Идентификатор игры</returns>
     public string CreateGame2Players(string personId, string name, WebSocket client)
     {
-        ChessPlayer player = new ChessPlayer(personId, name, client);
-        ChessGame2Players chessGame2Players = new ChessGame2Players(player, _sendWebSocketMessage);
+        DeleteGame deleteGame = DeleteGameHandler;
+        
+        ChessPlayer player = new ChessPlayer(personId, name);
+        ChessGame2Players chessGame2Players = new ChessGame2Players(player, _sendWebSocketMessage, deleteGame);
         GetAllGames.Add(chessGame2Players);
 
         return chessGame2Players.GameId;
+    }
+
+    private void DeleteGameHandler(string gameId)
+    {
+        var game = GetAllGames.FirstOrDefault(g => g.GameId == gameId);
+        
+        if (game != null)
+            GetAllGames.Remove(game);
     }
 
     /// <summary>
@@ -64,7 +61,7 @@ public class GameService
         if (game == null)
             throw new KeyNotFoundException("Данная игра не найдена");
         
-        ChessPlayer player = new ChessPlayer(playerId, nickname, client);
+        ChessPlayer player = new ChessPlayer(playerId, nickname);
         await game.RequestJoin(player);
     }
 
@@ -168,5 +165,15 @@ public class GameService
             throw new KeyNotFoundException("Данная игра не найдена");
 
         return await game.Moving(personId, oldRow, oldCol, newRow, newCol);
+    }
+
+    public async Task LeaveTheGame(string gameId, string personId)
+    {
+        var game = GetAllGames.Find(x => x.GameId == gameId);
+
+        if (game == null)
+            throw new KeyNotFoundException("Данная игра не найдена");
+
+        game.ExitTheGame(personId);
     }
 }

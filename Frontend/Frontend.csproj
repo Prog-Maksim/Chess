@@ -13,6 +13,10 @@
       <None Remove="Image\image 1.png" />
       <Resource Include="Image\image 1.png" />
       <None Remove="Image\Static\pawn.svg" />
+      <None Remove="Image\Arrow\Left.png" />
+      <Resource Include="Image\Arrow\Left.png" />
+      <None Remove="Image\Arrow\Right.png" />
+      <Resource Include="Image\Arrow\Right.png" />
     </ItemGroup>
 
     <ItemGroup>
