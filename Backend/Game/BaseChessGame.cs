@@ -174,6 +174,9 @@ public abstract class BaseChessGame
 
     protected void NextTurn()
     {
+        if (State != GameState.InProgress)
+            return;
+        
         Players[CurrentPlayerIndex].EndTurn();
         
         if (CurrentPlayerIndex + 1 < Players.Count) CurrentPlayerIndex++;
@@ -300,7 +303,15 @@ public abstract class BaseChessGame
     /// <returns></returns>
     protected virtual TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(1);
     
-    public abstract Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol);
+    protected abstract Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol);
+
+    public async Task<bool> MakeAMove(string personId, int oldRow, int oldCol, int newRow, int newCol)
+    {
+        if (State == GameState.InProgress)
+            return await Moving(personId, oldRow, oldCol, newRow, newCol);
+
+        return false;
+    }
 
     /// <summary>
     /// Объявление победы
@@ -335,10 +346,125 @@ public abstract class BaseChessGame
         if (players.Count == 1)
             DeclarationVictory(players.First());
     }
+    
+    private readonly Dictionary<string, CancellationTokenSource> _playerTimers = new();
 
-    public virtual bool ExitTheGame(string personId)
+    /// <summary>
+    /// Отмечаем пользователя как неактивный
+    /// </summary>
+    /// <param name="playerId"></param>
+    public void InActivePlayer(string playerId)
     {
-        var player = Players.FirstOrDefault(p => p.Id == personId);
+        if (_playerTimers.ContainsKey(playerId))
+            return;
+        
+        var player = Players.FirstOrDefault(p => p.Id == playerId);
+        player.State = PlayerState.InActive;
+        State = GameState.Stopped;
+        
+        var cts = new CancellationTokenSource();
+        _playerTimers[playerId] = cts;
+
+        PlayerIsActive playerIsActive = new PlayerIsActive
+        {
+            MessageType = "PlayerIsActive",
+            Message = "Игрок отключился",
+            StatusCode = 200,
+            Success = true,
+            PlayerId = playerId,
+            State = false,
+            Time = TimeSpan.FromMinutes(1)
+        };
+        _ = WebSocketMessage.Value.SendMessageStateActivePlayer(Players, playerIsActive);
+        
+
+        Task.Run(async () => PlayerReverseTimerAcync(playerId, cts), cts.Token);
+    }
+
+    private async Task PlayerReverseTimerAcync(string playerId, CancellationTokenSource cts)
+    {
+        const int timeoutSeconds = 60;
+            int remainingTime = timeoutSeconds;
+            
+            try
+            {
+                while (remainingTime > 0)
+                {
+                    await Task.Delay(1000, cts.Token);
+
+                    remainingTime--;
+
+                    var player = Players.FirstOrDefault(p => p.Id == playerId);
+                    if (player == null || player.State != PlayerState.InActive)
+                    {
+                        PlayerIsActive playerIsActive = new PlayerIsActive
+                        {
+                            MessageType = "PlayerIsActive",
+                            Message = "Игрок подключился",
+                            StatusCode = 200,
+                            Success = true,
+                            PlayerId = playerId,
+                            State = true,
+                            Time = TimeSpan.FromSeconds(remainingTime)
+                        };
+                        await WebSocketMessage.Value.SendMessageStateActivePlayer(Players, playerIsActive);
+                        return;
+                    }
+                    
+                    Console.WriteLine($"Игрок {playerId} отключится через {remainingTime} сек.");
+                    ReversTimeAnActivePlayer reversTime = new ReversTimeAnActivePlayer()
+                    {
+                        MessageType = "InActiveTime",
+                        Message = $"У игрока осталось времени: {TimeSpan.FromSeconds(remainingTime)}",
+                        StatusCode = 200,
+                        Success = true,
+                        PlayerId = playerId,
+                        Time = TimeSpan.FromSeconds(remainingTime)
+                    };
+                    await WebSocketMessage.Value.SendMessageStateReverseTimeInActivePlayer(Players, reversTime);
+                    Console.WriteLine("Сообщение отправлено");
+                }
+                
+                var disconnectedPlayer = Players.FirstOrDefault(p => p.Id == playerId);
+                if (disconnectedPlayer != null && disconnectedPlayer.State == PlayerState.InActive)
+                {
+                    disconnectedPlayer.State = PlayerState.Disconnected;
+                    State = GameState.InProgress;
+                    Console.WriteLine($"Игрок {playerId} отключен из-за не активности.");
+                }
+            }
+            catch (TaskCanceledException) { }
+            finally
+            {
+                _playerTimers.Remove(playerId);
+            }
+    }
+
+    /// <summary>
+    /// Помечаем пользователя снова активным
+    /// </summary>
+    /// <param name="playerId"></param>
+    public void SetPlayerActive(string playerId)
+    {
+        var player = Players.FirstOrDefault(p => p.Id == playerId);
+
+        if (player != null && player.State == PlayerState.InActive)
+        {
+            player.State = PlayerState.Active;
+            State = GameState.InProgress;
+            if (_playerTimers.TryGetValue(playerId, out var cts))
+            {
+                cts.Cancel();
+                _playerTimers.Remove(playerId);
+            }
+
+            Console.WriteLine($"Игрок {playerId} снова активен.");
+        }
+    }
+
+    public virtual bool ExitTheGame(string playerId)
+    {
+        var player = Players.FirstOrDefault(p => p.Id == playerId);
 
         if (player == null)
             return false;

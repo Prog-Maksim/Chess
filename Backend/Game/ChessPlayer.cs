@@ -56,6 +56,9 @@ public class ChessPlayer
     
     private async Task UpdateTime()
     {
+        if (State != PlayerState.Active)
+            return;
+            
         if (RemainingTime <= TimeSpan.Zero)
         {
             RemainingTime = TimeSpan.Zero;

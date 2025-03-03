@@ -113,7 +113,7 @@ public class ChessGame2Players: BaseChessGame
     }
     
     // Действия
-    public override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)
+    protected override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)
     {
         if (newRow > 7 || newCol > 7 || newRow < 0 || newCol < 0)
             throw new ArgumentOutOfRangeException("Значение newCol или newRow должно быть в диапазоне от 0 до 7");
