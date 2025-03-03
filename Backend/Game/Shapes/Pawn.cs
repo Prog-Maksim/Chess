@@ -6,6 +6,8 @@ public class Pawn: ChessPiece
 {
     public Pawn(string ownerId) : base(PieceType.Pawn, ownerId) { }
     
+    public bool IsSecondMove { get; set; } = false;
+    
     public override bool IsValidMove(int newRow, int newCol)
     {
         return true;
