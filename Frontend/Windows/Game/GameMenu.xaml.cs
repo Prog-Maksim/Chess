@@ -24,11 +24,12 @@ public partial class GameMenu : Page
     private string _gameId;
     private Dictionary<string, PlayerTimeMenu> _players;
     private string _playerIdTern;
+
+    private int _gameSize = 16;
     
     public GameMenu()
     {
         InitializeComponent();
-        GenerateChessBoard();
     }
 
     private readonly WebSocketService _webSocketService;
@@ -93,9 +94,13 @@ public partial class GameMenu : Page
                 var gameData = JsonSerializer.Deserialize<GameData>(responseContent);
 
                 _playerIdTern = gameData.CurrentPlayer;
+                _gameSize = gameData.Board.Count;
+                GenerateChessBoard(_gameSize);
 
                 AddPersons(gameData.Players);
                 UpdateBoard(gameData.Board);
+                
+                MainGrid.Children.Remove(ProcessingGame);
             }
             catch (HttpRequestException e)
             {
@@ -117,7 +122,6 @@ public partial class GameMenu : Page
         UpdateBoard(e.Board);
     }
     
-
     private void UpdateBoard(List<List<GameBoard>> board)
     {
         ChessBoardGrid.Children
@@ -147,7 +151,7 @@ public partial class GameMenu : Page
                 Image image = new Image
                 {
                     Source = new BitmapImage(new Uri(fullPath, UriKind.Absolute)),
-                    Margin = new Thickness(7),
+                    Margin = new Thickness(_gameSize == 8? 7: 3),
                     Cursor = Cursors.Hand
                 };
 
@@ -260,18 +264,22 @@ public partial class GameMenu : Page
         }
     }
 
-    private void GenerateChessBoard()
+    private void GenerateChessBoard(int sizeBoard)
     {
-        int size = 8;
-        
         ChessBoardGrid.Children.Clear();
+        
+        for (int i = 0; i < sizeBoard; i++)
+        {
+            ChessBoardGrid.RowDefinitions.Add(new RowDefinition());
+            ChessBoardGrid.ColumnDefinitions.Add(new ColumnDefinition());
+        }
         
         Brush lightColor = (Brush)new BrushConverter().ConvertFrom("#E0E0E0");
         Brush darkColor = (Brush)new BrushConverter().ConvertFrom("#BEBEBE");
         
-        for (int row = 0; row < size; row++)
+        for (int row = 0; row < sizeBoard; row++)
         {
-            for (int col = 0; col < size; col++)
+            for (int col = 0; col < sizeBoard; col++)
             {
                 int rowCopy = row;
                 int colCopy = col;
@@ -279,7 +287,7 @@ public partial class GameMenu : Page
                 Border cell = new Border
                 {
                     Background = (row + col) % 2 == 0 ? lightColor : darkColor,
-                    CornerRadius = GetCornerRadius(row, col),
+                    CornerRadius = GetCornerRadius(row, col, sizeBoard),
                     Cursor = Cursors.Hand
                 };
 
@@ -295,17 +303,17 @@ public partial class GameMenu : Page
         }
     }
     
-    private CornerRadius GetCornerRadius(int row, int col)
+    private CornerRadius GetCornerRadius(int row, int col, int sizeBoard)
     {
         int radius = 5;
         
         if (row == 0 && col == 0)
             return new CornerRadius(radius, 0, 0, 0);
-        if (row == 7 && col == 0)
+        if (row == sizeBoard - 1 && col == 0)
             return new CornerRadius(0, 0, 0, radius);
-        if (row == 0 && col == 7)
+        if (row == 0 && col == sizeBoard - 1)
             return new CornerRadius(0, radius, 0, 0);
-        if (row == 7 && col == 7)
+        if (row == sizeBoard - 1 && col == sizeBoard - 1)
             return new CornerRadius(0, 0, radius, 0);
     
         return new CornerRadius(0);
