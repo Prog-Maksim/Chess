@@ -162,9 +162,13 @@ public class ChessGame2Players: BaseChessGame
 
     private async Task<bool> ValidateMovePawn(ChessPiece piece, string color, int oldRow, int oldCol, int newRow, int newCol)
     {
+        // Античит. Проверка, существует ли квадрат на доске
+        if (newCol < 0 || newRow < 0 || newCol > 7 || newRow > 7)
+            return false;
+        
         // Убийство вражеской фигуры
         if ((newCol == oldCol + 1 || newCol == oldCol - 1)
-            && oldRow == newRow + (color == "#000000" ? 1 : -1)
+            && newRow == oldRow + (color == "#000000" ? 1 : -1)
             && Board[newRow, newCol] != null
             && Board[newRow, newCol].OwnerId != piece.OwnerId)
         {
