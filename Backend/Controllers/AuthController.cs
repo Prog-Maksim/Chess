@@ -8,7 +8,7 @@ namespace Backend.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Produces("application/json")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api-chess/v{version:apiVersion}/[controller]")]
 public class AuthController(AuthService authService): ControllerBase
 {
     [AllowAnonymous]

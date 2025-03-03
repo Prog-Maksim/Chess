@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:local="clr-namespace:Frontend.Controls"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              mc:Ignorable="d"
              Background="Transparent"
              Height="250" Width="300">
@@ -22,14 +23,27 @@
                <RowDefinition></RowDefinition>
            </Grid.RowDefinitions>
            
+           <iconPacks:PackIconEvaIcons 
+               Grid.Row="0"
+               Kind="Close"
+               VerticalAlignment="Center"
+               HorizontalAlignment="Right"
+               Margin="20 0"
+               Width="20"
+               Height="20"
+               Cursor="Hand"
+               Foreground="Red"
+               MouseLeftButtonDown="UIElement_OnMouseLeftButtonDown">
+           </iconPacks:PackIconEvaIcons>
+           
            <TextBlock
                Grid.Row="0"
                VerticalAlignment="Center"
                HorizontalAlignment="Center"
                FontFamily="Montserrat"
-               FontSize="20"
+               FontSize="18"
                FontWeight="Bold"
-               Margin="0 20"
+               Margin="0 20 20 20"
                Text="Присоединение к игре">
            </TextBlock>
            
@@ -46,6 +60,7 @@
                x:Name="Click"
                Grid.Row="2"
                Height="50"
+               Background="#7074D5"
                Margin="10 0"
                Click="Click_OnClick"
                Style="{StaticResource ClickButtonStyle}"

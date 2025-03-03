@@ -1,6 +1,7 @@
 ﻿using Backend.Enums;
 using Backend.Game.Shapes;
 using Backend.Models.Response;
+using Backend.Models.Response.WebSockerMessage;
 using Backend.Services;
 
 namespace Backend.Game;
@@ -20,14 +21,16 @@ public abstract class BaseChessGame
     private Timer? _gameTimer;
     public TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
     
-    protected readonly Lazy<SendWebSocketMessage> _webSocketMessage;
-    
+    protected readonly Lazy<SendWebSocketMessage> WebSocketMessage;
+    private GameService.DeleteGame _deleteGame;
+
     /// <summary>
     /// Инициализация игры
     /// </summary>
     /// <param name="boardSize">Размер поля</param>
-    /// <param name="ownerId">Главный пользователь</param>
-    protected BaseChessGame(int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage)
+    /// <param name="player"></param>
+    /// <param name="webSocketMessage"></param>
+    protected BaseChessGame(int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, GameService.DeleteGame deleteGame)
     {
         Random rnd = new();
         GameId = $"{rnd.Next(9999)}-{rnd.Next(9999)}-{rnd.Next(9999)}";
@@ -39,27 +42,28 @@ public abstract class BaseChessGame
         player.Approve();
         _ = AddPlayer(player);
         
-        _webSocketMessage = webSocketMessage;
+        WebSocketMessage = webSocketMessage;
+        _deleteGame = deleteGame;
     }
-    
+
     /// <summary>
     /// Инициализация игры
     /// </summary>
     /// <param name="boardSize">Размер поля</param>
-    /// <param name="ownerId">Главный пользователь</param>
+    /// <param name="player"></param>
     /// <param name="isGamePrivate">Приватная ли игра</param>
-    protected BaseChessGame(int boardSize, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage): this(boardSize, player, socketMessage)
+    /// <param name="socketMessage"></param>
+    protected BaseChessGame(int boardSize, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame): this(boardSize, player, socketMessage, deleteGame)
     {
         IsGamePrivate = isGamePrivate;
     }
-
     
     /// <summary>
     /// Метод добавления игроков
     /// </summary>
     /// <param name="player">Обьект игрока</param>
     /// <returns></returns>
-    protected virtual async Task<bool> AddPlayer(ChessPlayer player)
+    protected async Task<bool> AddPlayer(ChessPlayer player)
     {
         if (Players.Count < RequiredPlayers())
         {
@@ -85,21 +89,21 @@ public abstract class BaseChessGame
     /// Метод оставления заявки на вступления в игру
     /// </summary>
     /// <param name="player"></param>
-    public virtual async Task RequestJoin(ChessPlayer player)
+    public async Task RequestJoin(ChessPlayer player)
     {
         if (player.Id == OwnerId || !IsGamePrivate)
         {
             player.Approve();
             await AddPlayer(player);
 
-            await _webSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
-            await _webSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
+            await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
+            await WebSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
             
             return;
         }
         
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
-        await _webSocketMessage.Value.SendMessageJoinTheGame(player, owner);
+        await WebSocketMessage.Value.SendMessageJoinTheGame(player, owner);
         
         WaitingPlayers.Add(player);
     }
@@ -110,7 +114,7 @@ public abstract class BaseChessGame
     /// <param name="ownerId"></param>
     /// <param name="playerId"></param>
     /// <returns></returns>
-    public virtual async Task<bool> ApprovePlayer(string ownerId, string playerId)
+    public async Task<bool> ApprovePlayer(string ownerId, string playerId)
     {
         if (ownerId != OwnerId) 
             return false;
@@ -118,8 +122,8 @@ public abstract class BaseChessGame
         if (player == null) 
             return false;
         
-        await _webSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
-        await _webSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
+        await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
+        await WebSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
 
         player.Approve();
         _ = Task.Run(() => AddPlayer(player));
@@ -134,7 +138,7 @@ public abstract class BaseChessGame
     /// <param name="ownerId">ID владельца игры</param>
     /// <param name="playerId">ID игрока, который должен быть удален</param>
     /// <returns></returns>
-    public virtual async Task<bool> RejectPlayer(string ownerId, string playerId)
+    public async Task<bool> RejectPlayer(string ownerId, string playerId)
     {
         if (ownerId != OwnerId) return false; // Только владелец может отклонить игроков
         var player = WaitingPlayers.Find(p => p.Id == playerId);
@@ -144,7 +148,7 @@ public abstract class BaseChessGame
         WaitingPlayers.Remove(player);
         
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
-        await _webSocketMessage.Value.SendMessageResultJoinTheGame(player, false);
+        await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, false);
         
         return true;
     }
@@ -152,13 +156,13 @@ public abstract class BaseChessGame
     /// <summary>
     /// Запуск игры и обратного отсчета
     /// </summary>
-    public async Task StartGame()
+    private async Task StartGame()
     {
         State = GameState.Countdown;
 
-        for (int i = 5; i >= 0; i--)
+        for (int i = 5; i > 0; i--)
         {
-            await _webSocketMessage.Value.SendMessageReverseTimer(Players, i);
+            await WebSocketMessage.Value.SendMessageReverseTimer(Players, i);
             await Task.Delay(1000);
         }
             
@@ -168,16 +172,18 @@ public abstract class BaseChessGame
         Players[CurrentPlayerIndex].StartTurn();
     }
 
-    public void NextTurn()
+    protected void NextTurn()
     {
         Players[CurrentPlayerIndex].EndTurn();
         
         if (CurrentPlayerIndex + 1 < Players.Count) CurrentPlayerIndex++;
         else CurrentPlayerIndex = 0;
         
-        Players[CurrentPlayerIndex].StartTurn();
+        if (Players[CurrentPlayerIndex].State == PlayerState.Active)
+            Players[CurrentPlayerIndex].StartTurn();
+        else
+            NextTurn();
     }
-
     
     /// <summary>
     /// Метод для инициализации фишек у игрока, а также их расставление
@@ -191,7 +197,7 @@ public abstract class BaseChessGame
     /// <param name="piece"></param>
     /// <param name="col"></param>
     /// <param name="row"></param>
-    public virtual void AddPieceToBoard(ChessPiece piece, int col, int row)
+    protected void AddPieceToBoard(ChessPiece piece, int col, int row)
     {
         Board[col, row] = piece;
     }
@@ -232,7 +238,9 @@ public abstract class BaseChessGame
         if (State == GameState.InProgress)
         {
             GameDurationSeconds += TimeSpan.FromSeconds(1);
-            await _webSocketMessage.Value.SendMessageTimerGame(Players, GameDurationSeconds);
+            await WebSocketMessage.Value.SendMessageTimerGame(Players, GameDurationSeconds);
+
+            CheckThePlayers();
 
             // Если время игры превышено, завершаем
             if (GameDurationSeconds >= MaxGameTimeInSeconds())
@@ -274,13 +282,13 @@ public abstract class BaseChessGame
             }
         }
         
-        await _webSocketMessage.Value.SendMessageUpdateBoard(Players, gameBoards);
+        await WebSocketMessage.Value.SendMessageUpdateBoard(Players, gameBoards);
     }
     
     /// <summary>
     /// Остановка таймера
     /// </summary>
-    public void StopTimer()
+    private void StopTimer()
     {
         _gameTimer?.Dispose();
         _gameTimer = null;
@@ -294,11 +302,62 @@ public abstract class BaseChessGame
     
     public abstract Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol);
 
+    /// <summary>
+    /// Объявление победы
+    /// </summary>
+    protected virtual void DeclarationVictory(ChessPlayer player)
+    {
+        FinishGame finish = new FinishGame
+        {
+            MessageType = "Finished",
+            Message = "Игра завершена",
+            StatusCode = 200,
+            Success = true,
+            Winner = player.Id
+        };
+
+        _ = WebSocketMessage.Value.SendMessageFinishGame(Players, finish);
+
+        foreach (var pl in Players)
+            pl.EndTurn();
+        
+        State = GameState.Finished;
+        _deleteGame(GameId);
+    }
+
+    /// <summary>
+    /// Проверка активных игроков
+    /// </summary>
+    private void CheckThePlayers()
+    {
+        var players = Players.Where(p => p.State == PlayerState.Active).ToList();
+
+        if (players.Count == 1)
+            DeclarationVictory(players.First());
+    }
+
+    public virtual bool ExitTheGame(string personId)
+    {
+        var player = Players.FirstOrDefault(p => p.Id == personId);
+
+        if (player == null)
+            return false;
+
+        if (player.State != PlayerState.Active)
+            return true;
+
+        player.State = PlayerState.Disconnected;
+        return true;
+    }
+
     ~BaseChessGame()
     {
         StopTimer();
 
         foreach (var player in Players)
             player.OnTimeUpdate -= HandlePlayerTimeUpdate;
+        
+        Players.Clear();
+        WaitingPlayers.Clear();
     }
 }

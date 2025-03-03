@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.ComponentModel;
+using System.Windows;
 using Frontend.Script;
 using Frontend.Windows;
 using Frontend.Windows.Game;
@@ -36,7 +37,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OpenMainWindow()
+    public void OpenMainWindow()
     {
         string token = SaveRepository.ReadToken();
         WebSocketService webSocketService = WebSocketService.Instance;
@@ -45,8 +46,14 @@ public partial class MainWindow : Window
         MainFrame.Content = new MainMenu(webSocketService, this);
     }
 
-    public void OpenGameWindow(string gameId, bool create = false)
+    public void OpenGameWindow(string gameId, MainMenu mainMenu, bool create = false)
     {
-        MainFrame.Content = new GameMenu(gameId, WebSocketService.Instance, create);
+        MainFrame.Content = new GameMenu(gameId, WebSocketService.Instance, mainMenu, create);
+    }
+
+    private void MainWindow_OnClosing(object? sender, CancelEventArgs e)
+    {
+        WebSocketService webSocketService = WebSocketService.Instance;
+        _ = webSocketService.DisconnectAsync();
     }
 }

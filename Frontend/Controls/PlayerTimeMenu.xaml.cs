@@ -33,4 +33,9 @@ public partial class PlayerTimeMenu : UserControl
     {
         MainBorder.Background = (Brush)new BrushConverter().ConvertFrom("#E0E0E0");
     }
+
+    public void IsGameOver()
+    {
+        MainBorder.Background = Brushes.Red;
+    }
 }

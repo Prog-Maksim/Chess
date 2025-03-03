@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media;
 using Frontend.Controls;
 using Frontend.Models;
 using Frontend.Models.WebSockerMessage;
@@ -19,8 +20,18 @@ public partial class MainMenu : Page
     public MainMenu()
     {
         InitializeComponent();
+        
+        var client = WebSocketService.Instance;
+        client.OnIsConnected += ClientOnIsConnected;
     }
-    
+
+    private void ClientOnIsConnected(object? sender, bool e)
+    {
+        CoopButton.IsEnabled = e;
+        CreateGame.IsEnabled = e;
+        JoinTheGame.IsEnabled = e;
+    }
+
     public MainMenu(WebSocketService webSocket, MainWindow mainWindow): this()
     {
         this.mainWindow = mainWindow;
@@ -53,7 +64,7 @@ public partial class MainMenu : Page
             var data = JsonSerializer.Deserialize<CreateGame>(responseBody);
 
             Console.WriteLine($"GameId: {data.gameId}");
-            mainWindow.OpenGameWindow(data.gameId, true);
+            mainWindow.OpenGameWindow(data.gameId, this, true);
         }
         else
         {
@@ -82,15 +93,31 @@ public partial class MainMenu : Page
         if (_gameId != null)
         {
             Console.WriteLine($"GameId: {_gameId}");
-            mainWindow.OpenGameWindow(_gameId);
+            mainWindow.OpenGameWindow(_gameId, this);
         }
     }
 
+    private SetGameIdControl? SetGameIdControl;
+
+    public delegate void CloseMenu();
     private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
     {
+        if (SetGameIdControl != null)
+            return;
+        
         GetGameId getGameId = GameId;
-        SetGameIdControl setGameIdControl = new SetGameIdControl(getGameId);
-        Content = setGameIdControl;
+        CloseMenu closeMenu = () =>
+        {
+            MainGrid.Children.Remove(SetGameIdControl);
+            SetGameIdControl = null;
+            CoopButton_OnClick(sender, e);
+        };
+        SetGameIdControl = new SetGameIdControl(getGameId, closeMenu);
+        
+        Grid.SetRowSpan(SetGameIdControl, 4);
+        Grid.SetColumnSpan(SetGameIdControl, 4);
+        Panel.SetZIndex(SetGameIdControl, 2);
+        MainGrid.Children.Add(SetGameIdControl);
     }
 
     private void GameId(string gameId)
@@ -98,5 +125,21 @@ public partial class MainMenu : Page
         _gameId = gameId;
         _ = SendRequestInGame(gameId);
     }
-    
+
+    public void OpenMainMenu()
+    {
+        mainWindow.OpenMainWindow();
+    }
+
+    private bool _buttonIsOpen;
+    private void CoopButton_OnClick(object sender, RoutedEventArgs e)
+    {
+        CoopPopup.IsOpen = !_buttonIsOpen;
+        _buttonIsOpen = !_buttonIsOpen;
+        
+        if (_buttonIsOpen)
+            CoopButton.Background = (Brush)new BrushConverter().ConvertFrom("#5053A7");
+        else
+            CoopButton.Background = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+    }
 }

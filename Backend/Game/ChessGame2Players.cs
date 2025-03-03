@@ -7,11 +7,11 @@ namespace Backend.Game;
 
 public class ChessGame2Players: BaseChessGame
 {
-    public ChessGame2Players(ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage) : base(8, player, socketMessage)
+    public ChessGame2Players(ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(8, player, socketMessage, deleteGame)
     {
         GameName = "Игра 2x2"; 
     }
-    public ChessGame2Players(ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage) : base(8, player, isGamePrivate, socketMessage) { }
+    public ChessGame2Players(ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(8, player, isGamePrivate, socketMessage, deleteGame) { }
 
     protected override int RequiredPlayers() => 2;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(3);
@@ -19,7 +19,7 @@ public class ChessGame2Players: BaseChessGame
     
     protected override async Task HandlePlayerTimeUpdate(ChessPlayer player)
     {
-        await _webSocketMessage.Value.SendMessageTimerPersonTheGame(Players, player, player.RemainingTime);
+        await WebSocketMessage.Value.SendMessageTimerPersonTheGame(Players, player, player.RemainingTime);
     }
     
     protected override async Task InitializePlayerPieces(ChessPlayer player)
@@ -113,7 +113,6 @@ public class ChessGame2Players: BaseChessGame
     }
     
     // Действия
-
     public override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)
     {
         if (newRow > 7 || newCol > 7 || newRow < 0 || newCol < 0)
@@ -137,7 +136,24 @@ public class ChessGame2Players: BaseChessGame
             return result;
         }
 
+        await ValideKillPLayer(newRow, newCol);
+
+        Board[newRow, newCol] = piece;
+        Board[oldRow, oldCol] = null;
+
+        await SendMessageUpdateBoard();
+        
         return true;
+    }
+
+    private async Task ValideKillPLayer(int newRow, int newCol)
+    {
+        if (Board[newRow, newCol] != null && Board[newRow, newCol].Type == PieceType.King)
+        {
+            var player = Players.FirstOrDefault(p => p.Id == Board[newRow, newCol].OwnerId);
+            player.State = PlayerState.Lost;
+            await WebSocketMessage.Value.SendMessagePlayerGameOver(Players, player.Id);
+        }
     }
 
     private async Task<bool> ValidateMovePawn(ChessPiece piece, string color, int oldRow, int oldCol, int newRow, int newCol)
@@ -146,6 +162,7 @@ public class ChessGame2Players: BaseChessGame
         {
             if (color == "#000000" && piece.IsFirstMove && oldCol == newCol && newRow > oldRow && (newRow - oldRow) <= 2)
             {
+                await ValideKillPLayer(newRow, newCol);
                 Board[newRow, newCol] = piece;
                 Board[oldRow, oldCol] = null;
 
@@ -160,6 +177,7 @@ public class ChessGame2Players: BaseChessGame
         {
             if (color == "#eeeeee" && piece.IsFirstMove && oldCol == newCol && newRow < oldRow && (oldRow - newRow) <= 2)
             {
+                await ValideKillPLayer(newRow, newCol);
                 Board[newRow, newCol] = piece;
                 Board[oldRow, oldCol] = null;
 
@@ -174,6 +192,7 @@ public class ChessGame2Players: BaseChessGame
         {
             if (color == "#000000" && newRow > oldRow && (newRow - oldRow) <= 1)
             {
+                ValideKillPLayer(newRow, newCol);
                 Board[newRow, newCol] = piece;
                 Board[oldRow, oldCol] = null;
                 
@@ -182,6 +201,7 @@ public class ChessGame2Players: BaseChessGame
             }
             if (color == "#eeeeee" && newRow < oldRow && (oldRow - newRow) <= 1)
             {
+                ValideKillPLayer(newRow, newCol);
                 Board[newRow, newCol] = piece;
                 Board[oldRow, oldCol] = null;
                 

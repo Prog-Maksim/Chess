@@ -10,7 +10,7 @@ namespace Backend.Controllers;
 [ApiController]
 [ApiVersion("1.0")]
 [Produces("application/json")]
-[Route("api/v{version:apiVersion}/[controller]")]
+[Route("api-chess/v{version:apiVersion}/[controller]")]
 public class GameController(WebSocketService webSocketService, GameService gameService, ILogger<GameController> logger): ControllerBase
 {
     [Authorize]
@@ -24,8 +24,6 @@ public class GameController(WebSocketService webSocketService, GameService gameS
         if (HttpContext.WebSockets.IsWebSocketRequest)
         {
             using WebSocket ws = await HttpContext.WebSockets.AcceptWebSocketAsync();
-
-            gameService.UpdateWsToPerson(dataToken.PersonId, ws);
             await webSocketService.HandleConnectionAsync(ws, dataToken.PersonId);
 
             return Ok("Connected!");
@@ -111,5 +109,17 @@ public class GameController(WebSocketService webSocketService, GameService gameS
         
         var res = await gameService.RejectPersonTheGame(gameId, personId, dataToken.PersonId);
         return Ok(res);
+    }
+    
+    [Authorize]
+    [HttpPost("leave-game")]
+    public async Task<IActionResult> ExitTheGame(string gameId)
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+        
+        await gameService.LeaveTheGame(gameId, dataToken.PersonId);
+        return Ok();
     }
 }

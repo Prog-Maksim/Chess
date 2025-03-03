@@ -6,35 +6,233 @@
       xmlns:local="clr-namespace:Frontend.Windows"
       mc:Ignorable="d"
       Title="MainMenu" d:DesignHeight="700" d:DesignWidth="1300">
-    <Grid>
-        <StackPanel 
-            Orientation="Horizontal"
-            VerticalAlignment="Center"
-            HorizontalAlignment="Center">
+    <Grid x:Name="MainGrid" ShowGridLines="False">
+
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.15*"></RowDefinition>
+            <RowDefinition></RowDefinition>
+        </Grid.RowDefinitions>
+        
+       <Viewbox Grid.Row="0" Stretch="Uniform" HorizontalAlignment="Left">
+           <TextBlock
+               FontFamily="Montserrat"
+               FontSize="25"
+               FontWeight="Bold"
+               Margin="30 20 0 40">
+               <Run>Очков: </Run>
+               <Run>680</Run>
+           </TextBlock>
+       </Viewbox>
+
+        <Viewbox Grid.Row="0" Stretch="Uniform">
+            <Grid>
+                <Button
+                    x:Name="CoopButton"
+                    Width="300"
+                    Height="45"
+                    Click="CoopButton_OnClick"
+                    Style="{StaticResource ClickButtonStyle}"
+                    Content="Кооператив"
+                    Background="#7074D5"
+                    Foreground="White"
+                    VerticalAlignment="Top"
+                    Margin="0 10 0 30">
+                </Button>
             
-            <Button
-                x:Name="CreateGame"
-                Width="200"
-                Height="35"
-                Style="{StaticResource ClickButtonStyle}"
-                Content="Создать игру"
-                Background="#7074D5"
-                Foreground="White"
-                Click="CreateGame_OnClick"
-                Margin="0 0 10 0">
-            </Button>
-            
-            <Button
-                x:Name="JoinTheGame"
-                Width="200"
-                Height="35"
-                Style="{StaticResource ClickButtonStyle}"
-                Background="#7074D5"
-                Foreground="White"
-                Click="JoinTheGame_OnClick"
-                Content="Присоединиться">
-            </Button>
-            
-        </StackPanel>
+                <Popup
+                    x:Name="CoopPopup"
+                    PlacementTarget="{Binding ElementName=CoopButton}"
+                    Placement="Bottom"
+                    HorizontalOffset="-60"
+                    VerticalOffset="10"
+                    StaysOpen="False"
+                    Margin="0 0 0 25"
+                    AllowsTransparency="True">
+
+                    <StackPanel
+                        Orientation="Horizontal"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+
+                        <Button
+                            x:Name="CreateGame"
+                            Width="200"
+                            Height="35"
+                            Style="{StaticResource ClickButtonStyle}"
+                            Content="Создать игру"
+                            Background="#7074D5"
+                            Foreground="White"
+                            Click="CreateGame_OnClick"
+                            Margin="0 0 10 0">
+                        </Button>
+
+                        <Button
+                            x:Name="JoinTheGame"
+                            Width="200"
+                            Height="35"
+                            Style="{StaticResource ClickButtonStyle}"
+                            Background="#7074D5"
+                            Foreground="White"
+                            Click="JoinTheGame_OnClick"
+                            Content="Присоединиться">
+
+                        </Button>
+                    </StackPanel>
+                </Popup>
+            </Grid>
+        </Viewbox>
+
+        <Grid Grid.Row="1" ShowGridLines="False">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.4*"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="0.4*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+
+            <Grid Grid.Column="0" ShowGridLines="False">
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition Height="0.30*"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Border
+                    Grid.Row="0"
+                    Background="#E0E0E0"
+                    Margin="20 20 20 0"
+                    CornerRadius="15">
+                </Border>
+
+                <Border
+                    Grid.Row="1"
+                    Background="#FFEA94"
+                    Margin="20"
+                    CornerRadius="15">
+                    <Viewbox Stretch="Uniform">
+                        <TextBlock
+                            Margin="30"
+                            Text="Battle pass"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            FontFamily="Montserrat"
+                            Foreground="Black"
+                            FontWeight="Bold"
+                            FontSize="30">
+                        </TextBlock>
+                    </Viewbox>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Column="1" ShowGridLines="False">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="0.8*"></RowDefinition>
+                    <RowDefinition></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Border
+                    Grid.Row="0"
+                    Margin="20"
+                    CornerRadius="15"
+                    Background="#E0E0E0">
+                </Border>
+
+                <Grid Grid.Row="1" ShowGridLines="False">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                        <ColumnDefinition></ColumnDefinition>
+                        <ColumnDefinition Width="0.1*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+
+                    <Viewbox Grid.Column="0">
+                        <Image
+                            Cursor="Hand"
+                            Source="../Image/Arrow/Left.png"
+                            Margin="50 0">
+                        </Image>
+                    </Viewbox>
+                    
+                    <Viewbox Grid.Column="1">
+                        <TextBlock
+                            Text="Король"
+                            VerticalAlignment="Top"
+                            HorizontalAlignment="Center"
+                            FontFamily="Montserrat"
+                            FontSize="25"
+                            Margin="0 10 0 200"
+                            FontWeight="Bold">
+                        </TextBlock>
+                    </Viewbox>
+                    
+                    <StackPanel 
+                        Grid.Column="1"
+                        Orientation="Horizontal" 
+                        VerticalAlignment="Center" 
+                        HorizontalAlignment="Center">
+                        
+                        <Viewbox Stretch="Uniform">
+                            <Image
+                                Margin="0 270"
+                                Source="../Image/image 1.png">
+                            </Image>
+                        </Viewbox>
+                        
+                        <Viewbox Stretch="Uniform">
+                            <Image
+                                Margin="60 150"
+                                Source="../Image/image 1.png">
+                            </Image>
+                        </Viewbox>
+                        
+                        <Viewbox Stretch="Uniform">
+                            <Image
+                                Margin="0 270"
+                                Source="../Image/image 1.png">
+                            </Image>
+                        </Viewbox>
+                        
+                    </StackPanel>
+
+                    <Viewbox Grid.Column="2">
+                        <Image
+                            Cursor="Hand"
+                            Source="../Image/Arrow/Right.png"
+                            Margin="50 0">
+                        </Image>
+                    </Viewbox>
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Column="2" ShowGridLines="False">
+                <Grid.RowDefinitions>
+                    <RowDefinition></RowDefinition>
+                    <RowDefinition Height="0.30*"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <Border
+                    Grid.Row="0"
+                    Background="#E0E0E0"
+                    Margin="20 20 20 0"
+                    CornerRadius="15">
+                </Border>
+
+                <Border
+                    Grid.Row="1"
+                    Background="#7074D5"
+                    Margin="20"
+                    CornerRadius="15">
+                    <Viewbox Stretch="Uniform">
+                        <TextBlock
+                            Text="В БОЙ!"
+                            Margin="30"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Center"
+                            FontFamily="Montserrat"
+                            Foreground="White"
+                            FontWeight="Bold"
+                            FontSize="30">
+                        </TextBlock>
+                    </Viewbox>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </Page>

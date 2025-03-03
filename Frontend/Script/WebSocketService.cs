@@ -2,6 +2,7 @@
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
+using System.Windows;
 using Frontend.Models.Request;
 using Frontend.Models.WebSockerMessage;
 
@@ -12,8 +13,23 @@ public class WebSocketService
     private static WebSocketService _instance;
     private static readonly object _lock = new ();
     private static ClientWebSocket? client;
+    private readonly int _maxRetries = 3;
+    private int _retryCount;
+    private readonly TimeSpan _retryDelay = TimeSpan.FromSeconds(3);
+    private readonly CancellationTokenSource _cancellationTokenSource = new();
 
-    private int _retrive;
+    /// <summary>
+    /// Событие Активен ли WebSocket
+    /// </summary>
+    public event EventHandler<bool>? OnIsConnected; 
+    /// <summary>
+    /// Событие при не успешном подключении к WebWocket
+    /// </summary>
+    public event EventHandler? OnConnectRetry; 
+    /// <summary>
+    /// Не удалось подключиться к WebWocket
+    /// </summary>
+    public event EventHandler? OnFailedConnect; 
 
     private WebSocketService()
     {
@@ -37,42 +53,74 @@ public class WebSocketService
     
     public async Task ConnectAsync(string token)
     {
-        if (client != null)
+        if (client?.State == WebSocketState.Open || client?.State == WebSocketState.Connecting)
             return;
-        
+
         client = new ClientWebSocket();
         client.Options.SetRequestHeader("Authorization", $"Bearer {token}");
 
+        while (_retryCount < _maxRetries)
+        {
+            try
+            {
+                Console.WriteLine("Connecting to WebSocket...");
+                await client.ConnectAsync(new Uri(Url.BaseUrlWs), _cancellationTokenSource.Token);
+
+                Console.WriteLine("WebSocket connected!");
+                OnIsConnected?.Invoke(this, true);
+                _retryCount = 0;
+
+                await ReceiveMessages();
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"WebSocket connection error: {ex.Message}");
+                OnIsConnected?.Invoke(this, false);
+                _retryCount++;
+
+                if (_retryCount >= _maxRetries)
+                {
+                    Console.WriteLine("Max retry attempts reached. Connection failed.");
+                    break;
+                }
+                
+                OnConnectRetry?.Invoke(this, EventArgs.Empty);
+                Console.WriteLine($"Retrying connection in {_retryDelay.TotalSeconds} seconds...");
+                await Task.Delay(_retryDelay);
+            }
+        }
+
+        if (_retryCount >= _maxRetries)
+            OnFailedConnect?.Invoke(this, EventArgs.Empty);
+    }
+    
+    public async Task DisconnectAsync()
+    {
+        if (client == null || client.State == WebSocketState.Closed || client.State == WebSocketState.Aborted)
+            return;
+
         try
         {
-            Console.WriteLine("Connect to WebSocket...");
-            await client.ConnectAsync(new Uri(Url.BaseUrlWs), CancellationToken.None);
-            Console.WriteLine("WebSocket connected!");
-            
-            await ReceiveMessages(client);
-            _retrive = 0;
+            Console.WriteLine("Closing WebSocket connection...");
+            await client.CloseAsync(WebSocketCloseStatus.NormalClosure, "Closing", CancellationToken.None);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error: {ex.Message}");
-            Console.WriteLine(ex.StackTrace);
-
-            _retrive++;
-            
-            if (_retrive == 4)
-                return;
-
-            await ConnectAsync(token);
+            Console.WriteLine($"Error while closing WebSocket: {ex.Message}");
         }
         finally
         {
-            Console.WriteLine("Close connect...");
-            
-            _retrive++;
-            
-            if (_retrive < 4)
-                await ConnectAsync(token);
+            client.Dispose();
+            client = null;
         }
+        
+        OnIsConnected?.Invoke(this, false);
+    }
+    
+    public bool IsConnected()
+    {
+        return client != null && client.State == WebSocketState.Open;
     }
 
     public async Task SendMessage(MovePiece movePiece)
@@ -85,7 +133,7 @@ public class WebSocketService
                 CancellationToken.None);
     }
     
-    private async Task ReceiveMessages(ClientWebSocket client)
+    private async Task ReceiveMessages()
     {
         var buffer = new byte[8192];
         using var ms = new MemoryStream();
@@ -110,7 +158,7 @@ public class WebSocketService
             } while (!result.EndOfMessage);
         
             string message = Encoding.UTF8.GetString(ms.ToArray());
-            ParseMessages(message);
+            await ParseMessages(message);
         }
     }
     
@@ -142,8 +190,16 @@ public class WebSocketService
     /// Событие обновление игрового поля
     /// </summary>
     public event EventHandler<UpdateBoard>? OnUpdateBoard;
+    /// <summary>
+    /// Событие завершения игры
+    /// </summary>
+    public event EventHandler<FinishGame>? OnGameFinished;
+    /// <summary>
+    /// Событие прогирыша игрока
+    /// </summary>
+    public event EventHandler<GameOverPlayer>? OnGameOverPlayer;
 
-    private void ParseMessages(string message)
+    private async Task ParseMessages(string message)
     {
         if (message.Contains("Join"))
         {
@@ -164,7 +220,35 @@ public class WebSocketService
             var result = JsonSerializer.Deserialize<ReverseTimer>(message);
             
             if (result != null)
+            {
                 OnReverseTimer?.Invoke(this, result);
+
+                try
+                {
+                    if (result.Time == 1)
+                        await Task.Run(async () =>
+                        {
+                            await Task.Delay(1000);
+                            ReverseTimer timer = new ReverseTimer
+                            {
+                                Message = result.Message,
+                                MessageType = result.MessageType,
+                                StatusCode = result.StatusCode,
+                                Success = result.Success,
+                                Time = result.Time - 1
+                            };
+                            Application.Current.Dispatcher.Invoke(() =>
+                            {
+                                OnReverseTimer?.Invoke(this, timer);
+                            });
+                        });
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show(e.Message);
+                    Console.WriteLine(e.StackTrace);
+                }
+            }
         }
         else if (message.Contains("TimerGame"))
         {
@@ -193,6 +277,20 @@ public class WebSocketService
             
             if (result != null)
                 OnUpdateBoard?.Invoke(this, result);
+        }
+        else if (message.Contains("Finished"))
+        {
+            var result = JsonSerializer.Deserialize<FinishGame>(message);
+            
+            if (result != null)
+                OnGameFinished?.Invoke(this, result);
+        }
+        else if (message.Contains("GameOver"))
+        {
+            var result = JsonSerializer.Deserialize<GameOverPlayer>(message);
+            
+            if (result != null)
+                OnGameOverPlayer?.Invoke(this, result);
         }
     }
 }
