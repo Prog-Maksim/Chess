@@ -125,15 +125,18 @@ public class ChessGame2Players: BaseChessGame
 
         var person = Players.FirstOrDefault(p => p.Id == personId);
 
-        if (piece.Type == PieceType.Pawn)
+        switch (piece.Type)
         {
-            bool result = await ValidateMovePawn(piece, person.Color, oldRow, oldCol, newRow, newCol);
-            if (result)
+            case PieceType.Pawn:
             {
-                piece.IsFirstMove = false;
-                NextTurn();
+                bool result = await ValidateMovePawn(piece, person.Color, oldRow, oldCol, newRow, newCol);
+                if (result)
+                {
+                    piece.IsFirstMove = false;
+                    NextTurn();
+                }
+                return result;
             }
-            return result;
         }
 
         await ValideKillPLayer(newRow, newCol);
@@ -158,60 +161,43 @@ public class ChessGame2Players: BaseChessGame
 
     private async Task<bool> ValidateMovePawn(ChessPiece piece, string color, int oldRow, int oldCol, int newRow, int newCol)
     {
-        if (oldRow == 1)
+        // Убийство вражеской фигуры
+        if ((newCol == oldCol + 1 || newCol == oldCol - 1)
+            && oldRow == newRow + (color == "#000000" ? 1 : -1)
+            && Board[newRow, newCol] != null
+            && Board[newRow, newCol].OwnerId != piece.OwnerId)
         {
-            if (color == "#000000" && piece.IsFirstMove && oldCol == newCol && newRow > oldRow && (newRow - oldRow) <= 2)
-            {
-                await ValideKillPLayer(newRow, newCol);
-                Board[newRow, newCol] = piece;
-                Board[oldRow, oldCol] = null;
-
-                await SendMessageUpdateBoard();
-                return true;
-            }
-
-            return false;
+            await ValideKillPLayer(newRow, newCol);
+            Board[newRow, newCol] = piece;
+            Board[oldRow, oldCol] = null;
+            
+            await SendMessageUpdateBoard();
+            return true;
         }
-
-        if (oldRow == 6)
+        
+        // Ходить можно только когда спереди никого нет, и ходить можно только по вертикали
+        if (Board[oldRow + (color == "#000000" ? 1 : -1), oldCol] == null && oldCol == newCol)
         {
-            if (color == "#eeeeee" && piece.IsFirstMove && oldCol == newCol && newRow < oldRow && (oldRow - newRow) <= 2)
+            // Можно походить на 2 клетки, если там никого и это первый шаг
+            if (newRow == oldRow + (color == "#000000" ? 2 : -2)
+                && piece.IsFirstMove
+                && Board[oldRow + (color == "#000000" ? 2 : -2), oldCol] == null)
             {
-                await ValideKillPLayer(newRow, newCol);
                 Board[newRow, newCol] = piece;
                 Board[oldRow, oldCol] = null;
 
                 await SendMessageUpdateBoard();
                 return true;
             }
-
-            return false;
+            
+            // обычный ход
+            if (newRow == oldRow + (color == "#000000" ? 1 : -1))
+            {
+                await SendMessageUpdateBoard();
+                return true;
+            }
         }
-    
-        if (oldCol == newCol)
-        {
-            if (color == "#000000" && newRow > oldRow && (newRow - oldRow) <= 1)
-            {
-                ValideKillPLayer(newRow, newCol);
-                Board[newRow, newCol] = piece;
-                Board[oldRow, oldCol] = null;
-                
-                await SendMessageUpdateBoard();
-                return true;
-            }
-            if (color == "#eeeeee" && newRow < oldRow && (oldRow - newRow) <= 1)
-            {
-                ValideKillPLayer(newRow, newCol);
-                Board[newRow, newCol] = piece;
-                Board[oldRow, oldCol] = null;
-                
-                await SendMessageUpdateBoard();
-                return true;
-            }
-
-            return false;
-        }
-
+        
         return false;
     }
 }
