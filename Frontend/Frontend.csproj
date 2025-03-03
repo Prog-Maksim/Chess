@@ -21,6 +21,8 @@
       <None Remove="Enums\Notify\warning.png" />
       <Resource Include="Image\Notify\caution.png" />
       <Resource Include="Image\Notify\warning.png" />
+      <None Remove="Image\Notify\restart.png" />
+      <Resource Include="Image\Notify\restart.png" />
     </ItemGroup>
 
     <ItemGroup>
