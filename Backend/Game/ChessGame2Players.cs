@@ -246,11 +246,67 @@ public class ChessGame2Players: BaseChessGame
     
     private async Task<bool> ValidateMoveRook(ChessPiece piece, string color, int oldRow, int oldCol, int newRow, int newCol)
     {
-        // Сходу проверка, не ходит ли на свою же фигуру
+        int i;
+        
+        // Рокировка
+        if (piece.IsFirstMove 
+            && Board[newRow, newCol] != null 
+            && Board[newRow, newCol].Type != PieceType.King
+            && Board[newRow, newCol].IsFirstMove
+            && Board[newRow, newCol].OwnerId == piece.OwnerId)
+        {
+            for (i = oldCol + 1; i <= 7; ++i)
+            {
+                if (Board[oldRow, oldCol + i] != null 
+                    && (Board[oldRow, oldCol + i].Type != PieceType.King
+                    || Board[oldRow, oldCol + i].OwnerId != piece.OwnerId))
+                    break;
+
+                if (Board[oldRow, oldCol + i] != null
+                    && Board[oldRow, oldCol + i].Type == PieceType.King
+                    && Board[oldRow, oldCol + i].OwnerId == piece.OwnerId)
+                {
+                    Board[newRow, newCol].IsFirstMove = false;
+                    
+                    Board[newRow, newCol - 1] = piece;
+                    Board[oldRow, oldCol] = null;
+                    
+                    Board[newRow, newCol - 2] = Board[newRow, newCol];
+                    Board[newRow, newCol] = null;
+                        
+                    await SendMessageUpdateBoard();
+                    return true;
+                }
+            }
+            
+            for (i = oldCol - 1; i >= 0; --i)
+            {
+                if (Board[oldRow, oldCol + i] != null 
+                    && (Board[oldRow, oldCol + i].Type != PieceType.King
+                        || Board[oldRow, oldCol + i].OwnerId != piece.OwnerId))
+                    break;
+
+                if (Board[oldRow, oldCol + i] != null
+                    && Board[oldRow, oldCol + i].Type == PieceType.King
+                    && Board[oldRow, oldCol + i].OwnerId == piece.OwnerId)
+                {
+                    Board[newRow, newCol].IsFirstMove = false;
+                    
+                    Board[newRow, newCol + 1] = piece;
+                    Board[oldRow, oldCol] = null;
+                    
+                    Board[newRow, newCol + 2] = Board[newRow, newCol];
+                    Board[newRow, newCol] = null;
+                        
+                    await SendMessageUpdateBoard();
+                    return true;
+                }
+            }
+        }
+        
+        // Проверка, не ходит ли на свою же фигуру
         if (Board[newRow, newCol] != null && Board[newRow, newCol].OwnerId == piece.OwnerId)
             return false;
-        
-        int i;
         
         if (oldCol == newCol)
         {
