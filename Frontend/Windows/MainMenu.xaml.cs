@@ -5,6 +5,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Frontend.Controls;
+using Frontend.Controls.Message;
 using Frontend.Models;
 using Frontend.Models.WebSockerMessage;
 using Frontend.Script;
@@ -23,6 +24,25 @@ public partial class MainMenu : Page
         
         var client = WebSocketService.Instance;
         client.OnIsConnected += ClientOnIsConnected;
+        client.OnConnectRetry += ClientOnConnectRetry;
+    }
+    
+
+    private void ClientOnConnectRetry(object? sender, EventArgs e)
+    {
+        WarningRetryConnect warningRetryConnect = new WarningRetryConnect();
+        warningRetryConnect.Margin = new Thickness(0, 10, 0, 35);
+        Notify.Child = warningRetryConnect;
+        
+        RemoveWarningAfterDelay(warningRetryConnect);
+    }
+    
+    private async void RemoveWarningAfterDelay(INotify warningRetryConnect, int time = 1500)
+    {
+        await Task.Delay(time);
+        
+        if (Notify.Child == warningRetryConnect)
+            Notify.Child = null;
     }
 
     private void ClientOnIsConnected(object? sender, bool e)

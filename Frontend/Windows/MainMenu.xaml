@@ -4,8 +4,9 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:Frontend.Windows"
+      xmlns:notify="clr-namespace:Frontend.Controls.Message"
       mc:Ignorable="d"
-      Title="MainMenu" d:DesignHeight="700" d:DesignWidth="1300">
+      Title="MainMenu" d:DesignHeight="1080" d:DesignWidth="1920">
     <Grid x:Name="MainGrid" ShowGridLines="False">
 
         <Grid.RowDefinitions>
@@ -13,16 +14,19 @@
             <RowDefinition></RowDefinition>
         </Grid.RowDefinitions>
         
-       <Viewbox Grid.Row="0" Stretch="Uniform" HorizontalAlignment="Left">
+       <Viewbox Grid.Row="0" Stretch="Uniform" HorizontalAlignment="Right">
            <TextBlock
                FontFamily="Montserrat"
                FontSize="25"
                FontWeight="Bold"
-               Margin="30 20 0 40">
+               Margin="0 20 30 40">
                <Run>Очков: </Run>
                <Run>680</Run>
            </TextBlock>
        </Viewbox>
+        
+        <Viewbox x:Name="Notify" Grid.Row="0" HorizontalAlignment="Left">
+        </Viewbox>
 
         <Viewbox Grid.Row="0" Stretch="Uniform">
             <Grid>
