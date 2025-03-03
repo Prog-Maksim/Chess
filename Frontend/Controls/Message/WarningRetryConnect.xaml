@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="Frontend.Controls.Message.WarningRetryConnect"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             mc:Ignorable="d" Background="Transparent">
+    <Border
+        Height="35"
+        CornerRadius="0 10 10 0"
+        Background="#FFFB8D"
+        Padding="10 0">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition ></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock
+                Grid.Column="0"
+                VerticalAlignment="Center"
+                FontFamily="Montserrat"
+                FontWeight="Bold">
+                <Run>Не удается подключиться к серверу</Run>
+            </TextBlock>
+            
+            <TextBlock
+                Grid.Column="1"
+                VerticalAlignment="Center"
+                FontFamily="Montserrat"
+                FontWeight="Bold"
+                Foreground="Gray"
+                FontSize="11"
+                Margin="10 0">
+                <Run>Повтор через 3 сек</Run>
+            </TextBlock>
+            
+            <Image 
+                Grid.Column="2"
+                Source="../../Image/Notify/caution.png">
+            </Image>
+        </Grid>
+    </Border>
+</UserControl>

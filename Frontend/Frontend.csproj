@@ -17,6 +17,10 @@
       <Resource Include="Image\Arrow\Left.png" />
       <None Remove="Image\Arrow\Right.png" />
       <Resource Include="Image\Arrow\Right.png" />
+      <None Remove="Enums\Notify\caution.png" />
+      <None Remove="Enums\Notify\warning.png" />
+      <Resource Include="Image\Notify\caution.png" />
+      <Resource Include="Image\Notify\warning.png" />
     </ItemGroup>
 
     <ItemGroup>
