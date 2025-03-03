@@ -15,6 +15,8 @@ namespace Frontend.Windows;
 public partial class MainMenu : Page
 {
     public delegate void GetGameId(string gameId);
+
+    private readonly WebSocketService client;
     
     private MainWindow mainWindow;
     
@@ -22,27 +24,41 @@ public partial class MainMenu : Page
     {
         InitializeComponent();
         
-        var client = WebSocketService.Instance;
+        client = WebSocketService.Instance;
         client.OnIsConnected += ClientOnIsConnected;
         client.OnConnectRetry += ClientOnConnectRetry;
+        client.OnFailedConnect += ClientOnFailedConnect;
     }
+
+    public delegate void RetryConnect();
     
+    private void ClientOnFailedConnect(object? sender, EventArgs e)
+    {
+        RetryConnect deleteNotify = () =>
+        {
+            RemoveWarningAfterDelay(0);
+            _ = client.ConnectAsync(SaveRepository.ReadToken());
+        };
+        FailedMessageConnect warningRetryConnect = new FailedMessageConnect(deleteNotify);
+        warningRetryConnect.Margin = new Thickness(0, 10, 0, 35);
+        Notify.Child = warningRetryConnect;
+    }
 
     private void ClientOnConnectRetry(object? sender, EventArgs e)
     {
+        RemoveWarningAfterDelay(0);
+        
         WarningRetryConnect warningRetryConnect = new WarningRetryConnect();
         warningRetryConnect.Margin = new Thickness(0, 10, 0, 35);
         Notify.Child = warningRetryConnect;
         
-        RemoveWarningAfterDelay(warningRetryConnect);
+        RemoveWarningAfterDelay();
     }
     
-    private async void RemoveWarningAfterDelay(INotify warningRetryConnect, int time = 1500)
+    private async void RemoveWarningAfterDelay(int time = 1500)
     {
         await Task.Delay(time);
-        
-        if (Notify.Child == warningRetryConnect)
-            Notify.Child = null;
+        Notify.Child = null;
     }
 
     private void ClientOnIsConnected(object? sender, bool e)

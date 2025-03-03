@@ -92,7 +92,10 @@ public class WebSocketService
         }
 
         if (_retryCount >= _maxRetries)
+        {
+            _retryCount = 0;
             OnFailedConnect?.Invoke(this, EventArgs.Empty);
+        }
     }
     
     public async Task DisconnectAsync()

@@ -144,6 +144,7 @@ public class ChessGame2Players: BaseChessGame
         Board[newRow, newCol] = piece;
         Board[oldRow, oldCol] = null;
 
+        NextTurn();
         await SendMessageUpdateBoard();
         
         return true;
