@@ -129,7 +129,7 @@ public class ChessGame2Players: BaseChessGame
         {
             case PieceType.Pawn:
             {
-                bool result = await ValidateMovePawn(piece, person.Color, oldRow, oldCol, newRow, newCol);
+                bool result = await ValidateMovePawn((Pawn)piece, person.Color, oldRow, oldCol, newRow, newCol);
                 if (result)
                 {
                     piece.IsFirstMove = false;
@@ -160,7 +160,7 @@ public class ChessGame2Players: BaseChessGame
         }
     }
 
-    private async Task<bool> ValidateMovePawn(ChessPiece piece, string color, int oldRow, int oldCol, int newRow, int newCol)
+    private async Task<bool> ValidateMovePawn(Pawn piece, string color, int oldRow, int oldCol, int newRow, int newCol)
     {
         // Античит. Проверка, существует ли квадрат на доске
         if (newCol < 0 || newRow < 0 || newCol > 7 || newRow > 7)
@@ -198,6 +198,9 @@ public class ChessGame2Players: BaseChessGame
             // обычный ход
             if (newRow == oldRow + (color == "#000000" ? 1 : -1))
             {
+                Board[newRow, newCol] = piece;
+                Board[oldRow, oldCol] = null;
+                
                 await SendMessageUpdateBoard();
                 return true;
             }
