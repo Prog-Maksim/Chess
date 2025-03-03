@@ -3,14 +3,14 @@
     <Style x:Key="TextBoxStyle" TargetType="TextBox">
         <Setter Property="Margin" Value="0 0 0 35"/>
         <Setter Property="Height" Value="35"/>
-        <Setter Property="Width" Value="400"></Setter>
+        <Setter Property="Width" Value="400"/>
         <Setter Property="FontFamily" Value="Roboto"/>
         <Setter Property="Foreground" Value="{DynamicResource ForegroundTextColorTextBox}"/>
         <Setter Property="FontSize" Value="13"/>
-        <Setter Property="BorderThickness" Value="1"></Setter>
-        <Setter Property="BorderBrush" Value="#C9C9C9"></Setter>
-        <Setter Property="VerticalContentAlignment" Value="Center"></Setter>
-        <Setter Property="Padding" Value="0 1 1 1"></Setter>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="#C9C9C9"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Padding" Value="0 1 1 1"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>

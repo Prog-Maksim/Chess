@@ -4,6 +4,7 @@
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
       xmlns:local="clr-namespace:Frontend.Windows"
+      xmlns:frame="clr-namespace:Frontend.Controls"
       mc:Ignorable="d"
       Title="Auth" d:DesignHeight="700" d:DesignWidth="1300">
     <Grid>
@@ -72,24 +73,6 @@
             </TextBlock>
         
             <StackPanel x:Name="TextBoxList">
-                <TextBox
-                    x:Name="NicknameTextBox"
-                    Style="{StaticResource TextBoxStyle}"
-                    Tag="Никнейм">
-                </TextBox>
-                
-                <TextBox
-                    x:Name="EmailTextBox"
-                    Style="{StaticResource TextBoxStyle}"
-                    Tag="Почта">
-                </TextBox>
-                
-                <PasswordBox
-                    x:Name="PasswordTextBox"
-                    Style="{StaticResource PasswordBoxStyle}"
-                    Margin="0 0 0 15"
-                    Tag="Пароль">
-                </PasswordBox>
             </StackPanel>
             
             <TextBlock
