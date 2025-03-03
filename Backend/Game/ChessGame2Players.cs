@@ -147,6 +147,16 @@ public class ChessGame2Players: BaseChessGame
                 }
                 return result;
             }
+            case PieceType.Rook:
+            {
+                bool result = await ValidateMoveRook(piece, person.Color, oldRow, oldCol, newRow, newCol);
+                if (result)
+                {
+                    piece.IsFirstMove = false;
+                    NextTurn();
+                }
+                return result;
+            }
         }
 
         await ValideKillPLayer(newRow, newCol);
@@ -172,10 +182,6 @@ public class ChessGame2Players: BaseChessGame
 
     private async Task<bool> ValidateMovePawn(Pawn piece, string color, int oldRow, int oldCol, int newRow, int newCol)
     {
-        // Античит. Проверка, существует ли квадрат на доске
-        if (newCol < 0 || newRow < 0 || newCol > 7 || newRow > 7)
-            return false;
-
         sbyte colorShift = color == "#000000" ? (sbyte)1 : (sbyte)-1;
         
         // Взятие на проходе
@@ -232,6 +238,91 @@ public class ChessGame2Players: BaseChessGame
                 
                 await SendMessageUpdateBoard();
                 return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    private async Task<bool> ValidateMoveRook(ChessPiece piece, string color, int oldRow, int oldCol, int newRow, int newCol)
+    {
+        // Сходу проверка, не ходит ли на свою же фигуру
+        if (Board[newRow, newCol] != null && Board[newRow, newCol].OwnerId == piece.OwnerId)
+            return false;
+        
+        int i;
+        
+        if (oldCol == newCol)
+        {
+            // Ход вниз
+            for (i = oldRow + 1; i <= 7; ++i)
+            {
+                if (oldRow + i == newRow)
+                {
+                    await ValideKillPLayer(newRow, newCol);
+                    Board[newRow, newCol] = piece;
+                    Board[oldRow, oldCol] = null;
+                        
+                    await SendMessageUpdateBoard();
+                    return true;
+                }
+            
+                if (Board[oldRow + i, oldCol] != null)
+                    break;
+            }
+            
+            // Ход вверх
+            for (i = oldRow - 1; i >= 0; --i)
+            {
+                if (oldRow + i == newRow)
+                {
+                    await ValideKillPLayer(newRow, newCol);
+                    Board[newRow, newCol] = piece;
+                    Board[oldRow, oldCol] = null;
+                        
+                    await SendMessageUpdateBoard();
+                    return true;
+                }
+            
+                if (Board[oldRow + i, oldCol] != null)
+                    break;
+            }
+        }
+        
+        if (oldRow == newRow)
+        {
+            // Ход вправо
+            for (i = oldCol + 1; i <= 7; ++i)
+            {
+                if (oldCol + i == newCol)
+                {
+                    await ValideKillPLayer(newRow, newCol);
+                    Board[newRow, newCol] = piece;
+                    Board[oldRow, oldCol] = null;
+                        
+                    await SendMessageUpdateBoard();
+                    return true;
+                }
+            
+                if (Board[oldRow, oldCol + i] != null)
+                    break;
+            }
+            
+            // Ход влево
+            for (i = oldCol - 1; i >= 0; --i)
+            {
+                if (oldCol + i == newCol)
+                {
+                    await ValideKillPLayer(newRow, newCol);
+                    Board[newRow, newCol] = piece;
+                    Board[oldRow, oldCol] = null;
+                        
+                    await SendMessageUpdateBoard();
+                    return true;
+                }
+            
+                if (Board[oldRow, oldCol + i] != null)
+                    break;
             }
         }
         
