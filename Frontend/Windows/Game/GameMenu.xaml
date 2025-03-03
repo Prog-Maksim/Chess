@@ -7,7 +7,7 @@
       xmlns:frame="clr-namespace:Frontend.Controls"
       mc:Ignorable="d"
       Title="GameMenu" d:DesignHeight="700" d:DesignWidth="1300">
-    <Grid ShowGridLines="False">
+    <Grid x:Name="MainGrid">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="270"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
@@ -18,6 +18,25 @@
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
+        
+        <Border
+            x:Name="ProcessingGame"
+            Grid.RowSpan="2"
+            Grid.ColumnSpan="3"
+            Panel.ZIndex="1"
+            Background="White">
+            <TextBlock
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                TextAlignment="Center"
+                FontFamily="Montserrat"
+                FontSize="30"
+                FontWeight="Bold">
+                <Run>Идет загрузка карты</Run>
+                <LineBreak/>
+                <Run Foreground="Gray">Ожидайте...</Run>
+            </TextBlock>
+        </Border>
         
         <TextBlock
             x:Name="ReverseTime"
@@ -50,7 +69,7 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                     <ColumnDefinition></ColumnDefinition>
-                    <ColumnDefinition MaxWidth="180"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
                 
                 <TextBlock
@@ -81,6 +100,8 @@
                     Grid.Column="2"
                     Background="#BEBEBE"
                     Margin="5"
+                    Width="120"
+                    HorizontalAlignment="Right"
                     CornerRadius="10">
                     <TextBlock
                         VerticalAlignment="Center"
@@ -89,7 +110,7 @@
                         Foreground="Red"
                         FontFamily="Montserrat"
                         FontSize="15"
-                        Text="Закончить">
+                        Text="Выход">
                     </TextBlock>
                 </Border>
             </Grid>
@@ -147,52 +168,11 @@
         <!-- Шахматное поле -->
         <Viewbox  Grid.Row="1" Grid.Column="1">
             <Grid x:Name="ChessBoardGrid" ShowGridLines="False" Width="400" Height="400" Margin="20">
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                    <RowDefinition Height="*" />
-                </Grid.RowDefinitions>
-
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
                 
                 <ItemsControl>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
                             <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="*" />
-                                </Grid.RowDefinitions>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
                             </Grid>
                         </ItemsPanelTemplate>
                     </ItemsControl.ItemsPanel>

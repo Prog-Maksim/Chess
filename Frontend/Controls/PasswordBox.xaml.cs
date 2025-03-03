@@ -3,9 +3,9 @@ using Frontend.Interfaces;
 
 namespace Frontend.Controls;
 
-public partial class TextBox : UserControl, ITextBoxBase
+public partial class PasswordBox : UserControl, ITextBoxBase
 {
-    public TextBox()
+    public PasswordBox()
     {
         InitializeComponent();
         
@@ -13,9 +13,8 @@ public partial class TextBox : UserControl, ITextBoxBase
     }
     
     public string PreviewText {get; set;}
-
     public string GetText()
     {
-        return BaseTextBox.Text;
+        return PasswordBoxBase.Password;
     }
 }

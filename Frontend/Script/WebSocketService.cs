@@ -13,6 +13,8 @@ public class WebSocketService
     private static readonly object _lock = new ();
     private static ClientWebSocket? client;
 
+    private int _retrive;
+
     private WebSocketService()
     {
         
@@ -39,26 +41,37 @@ public class WebSocketService
             return;
         
         client = new ClientWebSocket();
-        var url = "wss://monitor-advanced-suddenly.ngrok-free.app/api/v1/Game/connect";
-        
         client.Options.SetRequestHeader("Authorization", $"Bearer {token}");
 
         try
         {
             Console.WriteLine("Connect to WebSocket...");
-            await client.ConnectAsync(new Uri(url), CancellationToken.None);
+            await client.ConnectAsync(new Uri(Url.BaseUrlWs), CancellationToken.None);
             Console.WriteLine("WebSocket connected!");
             
             await ReceiveMessages(client);
+            _retrive = 0;
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error: {ex.Message}");
             Console.WriteLine(ex.StackTrace);
+
+            _retrive++;
+            
+            if (_retrive == 4)
+                return;
+
+            await ConnectAsync(token);
         }
         finally
         {
             Console.WriteLine("Close connect...");
+            
+            _retrive++;
+            
+            if (_retrive < 4)
+                await ConnectAsync(token);
         }
     }
 

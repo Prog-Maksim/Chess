@@ -5,8 +5,11 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Frontend.Interfaces;
 using Frontend.Models;
 using Frontend.Script;
+using PasswordBox = Frontend.Controls.PasswordBox;
+using TextBox = Frontend.Controls.TextBox;
 
 namespace Frontend.Windows;
 
@@ -15,17 +18,14 @@ public partial class Auth : Page
     private string state = "registration";
     private MainWindow.OpenMainWindowDelegate? func;
 
-    private TextBox _nickname;
-    private TextBox _email;
-    private PasswordBox _password;
+    private Controls.TextBox _nickname;
+    private Controls.TextBox _email;
+    private Controls.PasswordBox _password;
     
     public Auth()
     {
         InitializeComponent();
-
-        _nickname = NicknameTextBox;
-        _email = EmailTextBox;
-        _password = PasswordTextBox;
+        AuthState();
     }
 
     public Auth(MainWindow.OpenMainWindowDelegate  func): this()
@@ -36,62 +36,66 @@ public partial class Auth : Page
     private void UIElement_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (state == "registration")
-        {
-            state = "authorization";
-            
-            MainTextBlock.Text = "Авторизация";
-            AuthButton.Content = "Авторизоваться";
-            ChoiseText.Text = "еще нет аккаунта?";
-            
-            TextBoxList.Children.Clear();
-            
-            _email = new TextBox();
-            _email.Tag = "Почта";
-            _email.Style = FindResource("TextBoxStyle") as Style;
-            
-            _password = new PasswordBox();
-            _password.Tag = "Пароль";
-            _password.Margin = new Thickness(0, 0, 0, 10);
-            _password.Style = FindResource("PasswordBoxStyle") as Style;
-            
-            TextBoxList.Children.Add(_email);
-            TextBoxList.Children.Add(_password);
-        }
+            AuthState();
         else
-        {
-            state = "registration";
+            RegState();
+    }
+
+    private void AuthState()
+    {
+        state = "authorization";
             
-            MainTextBlock.Text = "Регистрация";
-            AuthButton.Content = "Зарегистрироваться";
-            ChoiseText.Text = "уже есть аккаунт?";
+        MainTextBlock.Text = "Авторизация";
+        AuthButton.Content = "Авторизоваться";
+        ChoiseText.Text = "еще нет аккаунта?";
             
-            TextBoxList.Children.Clear();
+        TextBoxList.Children.Clear();
             
-            _nickname = new TextBox();
-            _nickname.Tag = "Никнейм";
-            _nickname.Style = FindResource("TextBoxStyle") as Style;
+        _email = new TextBox();
+        _email.PreviewText = "Почта";
+        _email.Margin = new Thickness(0, 0, 0, 30);
             
-            _email = new TextBox();
-            _email.Tag = "Почта";
-            _email.Style = FindResource("TextBoxStyle") as Style;
+        _password = new PasswordBox();
+        _password.PreviewText = "Пароль";
+        _password.Margin = new Thickness(0, 0, 0, 10);
             
-            _password = new PasswordBox();
-            _password.Tag = "Пароль";
-            _password.Margin = new Thickness(0, 0, 0, 10);
-            _password.Style = FindResource("PasswordBoxStyle") as Style;
+        TextBoxList.Children.Add(_email);
+        TextBoxList.Children.Add(_password);
+    }
+
+    private void RegState()
+    {
+        state = "registration";
             
-            TextBoxList.Children.Add(_nickname);
-            TextBoxList.Children.Add(_email);
-            TextBoxList.Children.Add(_password);
-        }
+        MainTextBlock.Text = "Регистрация";
+        AuthButton.Content = "Зарегистрироваться";
+        ChoiseText.Text = "уже есть аккаунт?";
+            
+        TextBoxList.Children.Clear();
+            
+        _nickname = new TextBox();
+        _nickname.PreviewText = "Никнейм";
+        _nickname.Margin = new Thickness(0, 0, 0, 30);
+            
+        _email = new TextBox();
+        _email.PreviewText = "Почта";
+        _email.Margin = new Thickness(0, 0, 0, 30);
+            
+        _password = new PasswordBox();
+        _password.PreviewText = "Пароль";
+        _password.Margin = new Thickness(0, 0, 0, 10);
+            
+        TextBoxList.Children.Add(_nickname);
+        TextBoxList.Children.Add(_email);
+        TextBoxList.Children.Add(_password);
     }
 
     private void AuthButton_OnClick(object sender, RoutedEventArgs e)
     {
         if (state == "registration")
-            _ = Registration(_nickname.Text, _email.Text, _password.Password);
+            _ = Registration(_nickname.GetText(), _email.GetText(), _password.GetText());
         else
-            _ = Authorization(_email.Text, _password.Password);
+            _ = Authorization(_email.GetText(), _password.GetText());
     }
 
     private async Task Registration(string nickname, string email, string password)
