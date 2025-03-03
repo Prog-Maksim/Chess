@@ -36,9 +36,10 @@ public class SendWebSocketMessage
         var message = JsonConvert.SerializeObject(joinTheGame);
         var buffer = Encoding.UTF8.GetBytes(message);
         
-        if (_webSocketService.GetWebSocket(owner.Id).State == WebSocketState.Open)
+        var ws = _webSocketService.GetWebSocket(player.Id);
+        if (ws != null && ws.State == WebSocketState.Open)
         {
-            await _webSocketService.GetWebSocket(owner.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+            await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                 CancellationToken.None);
         }
         else
@@ -64,13 +65,14 @@ public class SendWebSocketMessage
         var message = JsonConvert.SerializeObject(joinTheGame);
         var buffer = Encoding.UTF8.GetBytes(message);
 
-        if (_webSocketService.GetWebSocket(player.Id).State != WebSocketState.Open)
-            Console.WriteLine("Невозможно отправить сообщение пользователю 1");
-        else
+        var ws = _webSocketService.GetWebSocket(player.Id);
+        if (ws != null && ws.State == WebSocketState.Open)
         {
-            await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+            await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                 CancellationToken.None);
         }
+        else
+            Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
     }
 
     /// <summary>
@@ -94,9 +96,10 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
             {
-                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -125,9 +128,10 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
             {
-                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -158,9 +162,10 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
             {
-                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -193,9 +198,10 @@ public class SendWebSocketMessage
             if (player.Id == targetPlayer.Id)
                 continue;
             
-            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
             {
-                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -223,9 +229,10 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
             {
-                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -244,9 +251,10 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
             {
-                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
@@ -274,13 +282,71 @@ public class SendWebSocketMessage
 
         foreach (var player in players)
         {
-            if (_webSocketService.GetWebSocket(player.Id).State == WebSocketState.Open)
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
             {
-                await _webSocketService.GetWebSocket(player.Id).SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                     CancellationToken.None);
             }
             else
                 Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        }
+    }
+    
+    /// <summary>
+    /// Сообщения о статусе игрока (активен, не активен)
+    /// </summary>
+    /// <param name="players"></param>
+    public async Task SendMessageStateActivePlayer(List<ChessPlayer> players, PlayerIsActive playerIsActive)
+    {
+        var message = JsonConvert.SerializeObject(playerIsActive);
+        var buffer = Encoding.UTF8.GetBytes(message);
+
+        foreach (var player in players)
+        {
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
+            {
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                    CancellationToken.None);
+            }
+            else
+                Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        }
+    }
+    
+    /// <summary>
+    /// Сообщение, сколько осталось у игрока до исключения из игры
+    /// </summary>
+    /// <param name="players"></param>
+    public async Task SendMessageStateReverseTimeInActivePlayer(List<ChessPlayer> players, ReversTimeAnActivePlayer reversTimeAnActivePlayer)
+    {
+        Console.WriteLine("Попытка отправить сообщение");
+        var message = JsonConvert.SerializeObject(reversTimeAnActivePlayer);
+        var buffer = Encoding.UTF8.GetBytes(message);
+
+        Console.WriteLine("Проходимся по списку");
+        foreach (var player in players)
+        {
+            try
+            {
+                Console.WriteLine(player.Id);
+                var ws = _webSocketService.GetWebSocket(player.Id);
+                if (ws != null && ws.State == WebSocketState.Open)
+                {
+                    Console.WriteLine("Отправка сообщения...");
+                    await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                        CancellationToken.None);
+                    Console.WriteLine("Сообщение отправлено");
+                }
+                else
+                    Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error: " + e);
+                throw;
+            }
         }
     }
 }

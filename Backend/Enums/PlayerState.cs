@@ -3,7 +3,7 @@
 public enum PlayerState
 {
     /// <summary>
-    /// Игрок в игрк
+    /// Игрок активен
     /// </summary>
     Active,
     
@@ -16,6 +16,11 @@ public enum PlayerState
     /// У игрока закончилось время
     /// </summary>
     OutOfTime,
+    
+    /// <summary>
+    /// Игрок не активен
+    /// </summary>
+    InActive,
     
     /// <summary>
     /// Игрок вышел из игры или отключился

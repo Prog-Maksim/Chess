@@ -161,6 +161,7 @@ public class WebSocketService
             } while (!result.EndOfMessage);
         
             string message = Encoding.UTF8.GetString(ms.ToArray());
+            Console.WriteLine(message);
             await ParseMessages(message);
         }
     }

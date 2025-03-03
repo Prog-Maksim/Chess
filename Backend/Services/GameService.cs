@@ -164,7 +164,7 @@ public class GameService
         if (game == null)
             throw new KeyNotFoundException("Данная игра не найдена");
 
-        return await game.Moving(personId, oldRow, oldCol, newRow, newCol);
+        return await game.MakeAMove(personId, oldRow, oldCol, newRow, newCol);
     }
 
     public async Task LeaveTheGame(string gameId, string personId)
@@ -175,5 +175,27 @@ public class GameService
             throw new KeyNotFoundException("Данная игра не найдена");
 
         game.ExitTheGame(personId);
+    }
+
+    public void SetUserIsInActive(string playerId)
+    {
+        foreach (var game in GetAllGames)
+        {
+            var person = game.Players.FirstOrDefault(p => p.Id == playerId);
+            
+            if (person != null)
+                game.InActivePlayer(playerId);
+        }
+    }
+    
+    public void SetUserIsActive(string playerId)
+    {
+        foreach (var game in GetAllGames)
+        {
+            var person = game.Players.FirstOrDefault(p => p.Id == playerId);
+            
+            if (person != null)
+                game.SetPlayerActive(playerId);
+        }
     }
 }
