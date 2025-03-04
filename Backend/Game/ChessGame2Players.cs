@@ -257,14 +257,14 @@ public class ChessGame2Players: BaseChessGame
         {
             for (i = oldCol + 1; i <= 7; ++i)
             {
-                if (Board[oldRow, oldCol + i] != null 
-                    && (Board[oldRow, oldCol + i].Type != PieceType.King
-                    || Board[oldRow, oldCol + i].OwnerId != piece.OwnerId))
+                if (Board[oldRow, i] != null 
+                    && (Board[oldRow, i].Type != PieceType.King
+                    || Board[oldRow, i].OwnerId != piece.OwnerId))
                     break;
 
                 if (Board[oldRow, oldCol + i] != null
-                    && Board[oldRow, oldCol + i].Type == PieceType.King
-                    && Board[oldRow, oldCol + i].OwnerId == piece.OwnerId)
+                    && Board[oldRow, i].Type == PieceType.King
+                    && Board[oldRow, i].OwnerId == piece.OwnerId)
                 {
                     Board[newRow, newCol].IsFirstMove = false;
                     
@@ -281,14 +281,14 @@ public class ChessGame2Players: BaseChessGame
             
             for (i = oldCol - 1; i >= 0; --i)
             {
-                if (Board[oldRow, oldCol + i] != null 
-                    && (Board[oldRow, oldCol + i].Type != PieceType.King
-                        || Board[oldRow, oldCol + i].OwnerId != piece.OwnerId))
+                if (Board[oldRow, i] != null 
+                    && (Board[oldRow, i].Type != PieceType.King
+                        || Board[oldRow, i].OwnerId != piece.OwnerId))
                     break;
 
-                if (Board[oldRow, oldCol + i] != null
-                    && Board[oldRow, oldCol + i].Type == PieceType.King
-                    && Board[oldRow, oldCol + i].OwnerId == piece.OwnerId)
+                if (Board[oldRow, i] != null
+                    && Board[oldRow, i].Type == PieceType.King
+                    && Board[oldRow, i].OwnerId == piece.OwnerId)
                 {
                     Board[newRow, newCol].IsFirstMove = false;
                     
@@ -313,7 +313,7 @@ public class ChessGame2Players: BaseChessGame
             // Ход вниз
             for (i = oldRow + 1; i <= 7; ++i)
             {
-                if (oldRow + i == newRow)
+                if (i == newRow)
                 {
                     await ValideKillPLayer(newRow, newCol);
                     Board[newRow, newCol] = piece;
@@ -323,14 +323,14 @@ public class ChessGame2Players: BaseChessGame
                     return true;
                 }
             
-                if (Board[oldRow + i, oldCol] != null)
+                if (Board[i, oldCol] != null)
                     break;
             }
             
             // Ход вверх
             for (i = oldRow - 1; i >= 0; --i)
             {
-                if (oldRow + i == newRow)
+                if (i == newRow)
                 {
                     await ValideKillPLayer(newRow, newCol);
                     Board[newRow, newCol] = piece;
@@ -340,7 +340,7 @@ public class ChessGame2Players: BaseChessGame
                     return true;
                 }
             
-                if (Board[oldRow + i, oldCol] != null)
+                if (Board[i, oldCol] != null)
                     break;
             }
         }
@@ -350,7 +350,7 @@ public class ChessGame2Players: BaseChessGame
             // Ход вправо
             for (i = oldCol + 1; i <= 7; ++i)
             {
-                if (oldCol + i == newCol)
+                if (i == newCol)
                 {
                     await ValideKillPLayer(newRow, newCol);
                     Board[newRow, newCol] = piece;
@@ -360,14 +360,14 @@ public class ChessGame2Players: BaseChessGame
                     return true;
                 }
             
-                if (Board[oldRow, oldCol + i] != null)
+                if (Board[oldRow, i] != null)
                     break;
             }
             
             // Ход влево
             for (i = oldCol - 1; i >= 0; --i)
             {
-                if (oldCol + i == newCol)
+                if (i == newCol)
                 {
                     await ValideKillPLayer(newRow, newCol);
                     Board[newRow, newCol] = piece;
@@ -377,7 +377,7 @@ public class ChessGame2Players: BaseChessGame
                     return true;
                 }
             
-                if (Board[oldRow, oldCol + i] != null)
+                if (Board[oldRow, i] != null)
                     break;
             }
         }
