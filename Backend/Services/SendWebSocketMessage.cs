@@ -321,11 +321,9 @@ public class SendWebSocketMessage
     /// <param name="players"></param>
     public async Task SendMessageStateReverseTimeInActivePlayer(List<ChessPlayer> players, ReversTimeAnActivePlayer reversTimeAnActivePlayer)
     {
-        Console.WriteLine("Попытка отправить сообщение");
         var message = JsonConvert.SerializeObject(reversTimeAnActivePlayer);
         var buffer = Encoding.UTF8.GetBytes(message);
-
-        Console.WriteLine("Проходимся по списку");
+        
         foreach (var player in players)
         {
             try
@@ -334,10 +332,8 @@ public class SendWebSocketMessage
                 var ws = _webSocketService.GetWebSocket(player.Id);
                 if (ws != null && ws.State == WebSocketState.Open)
                 {
-                    Console.WriteLine("Отправка сообщения...");
                     await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
                         CancellationToken.None);
-                    Console.WriteLine("Сообщение отправлено");
                 }
                 else
                     Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");

@@ -13,12 +13,12 @@
             <ColumnDefinition Width="*"></ColumnDefinition>
             <ColumnDefinition Width="270"></ColumnDefinition>
         </Grid.ColumnDefinitions>
-        
+
         <Grid.RowDefinitions>
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
-        
+
         <Border
             x:Name="ProcessingGame"
             Grid.RowSpan="2"
@@ -37,10 +37,12 @@
                 <Run Foreground="Gray">Ожидайте...</Run>
             </TextBlock>
         </Border>
-        
+
         <TextBlock
+            Grid.Row="0"
+            Grid.Column="0"
             x:Name="ReverseTime"
-            Grid.RowSpan="3"
+            Grid.RowSpan="2"
             Grid.ColumnSpan="3"
             Panel.ZIndex="1"
             VerticalAlignment="Center"
@@ -55,7 +57,7 @@
             <LineBreak></LineBreak>
             <Run x:Name="ReverTimeText" FontSize="50" Text="5"></Run>
         </TextBlock>
-        
+
         <!-- Верхнее меню -->
         <Border
             Grid.Row="0"
@@ -71,7 +73,7 @@
                     <ColumnDefinition></ColumnDefinition>
                     <ColumnDefinition Width="Auto"></ColumnDefinition>
                 </Grid.ColumnDefinitions>
-                
+
                 <TextBlock
                     Grid.Column="0"
                     VerticalAlignment="Center"
@@ -83,7 +85,7 @@
                     Text="Игра 2x2"
                     Margin="20 0 0 0">
                 </TextBlock>
-                
+
                 <TextBlock
                     x:Name="GameTime"
                     Grid.Column="1"
@@ -93,9 +95,9 @@
                     Foreground="Black"
                     FontFamily="Montserrat"
                     FontSize="17"
-                    Text="00:00">
+                    Text="00:00:00">
                 </TextBlock>
-                
+
                 <Border
                     x:Name="LeaveGame"
                     Grid.Column="2"
@@ -118,60 +120,70 @@
                 </Border>
             </Grid>
         </Border>
-        
+
         <!-- Боковое меню (левое) -->
         <StackPanel
-            x:Name="StackPanelPlayer"
             Grid.Row="1"
             Grid.Column="0"
             Margin="0 30">
-            
-            <Border
-                Background="#E0E0E0"
-                Margin="10 0"
-                CornerRadius="10">
-                <StackPanel>
-                    <TextBlock
-                        Text="Игроки"
-                        HorizontalAlignment="Center"
-                        FontFamily="Montserrat"
-                        FontWeight="Bold"
-                        FontSize="20"
-                        Margin="0 10">
-                    </TextBlock>
-                    
-                    <DataGrid
-                        x:Name="PlayerDataGrid"
-                        Margin="5"
-                        VerticalScrollBarVisibility="Hidden">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header=" " IsReadOnly="True" CanUserResize="False" Width="auto"
-                                                Binding="{Binding Number}">
-                            </DataGridTextColumn>
-                            
-                            <DataGridTextColumn Header="Статус" IsReadOnly="True" CanUserResize="False" Width="auto"
-                                                Binding="{Binding Number}">
-                            </DataGridTextColumn>
-                            
-                            <DataGridTextColumn Header="Никнейм" IsReadOnly="True" CanUserResize="False" Width="*"
-                                                Binding="{Binding Number}">
-                            </DataGridTextColumn>
-                            
-                            <DataGridTextColumn Header="Здоровье" IsReadOnly="True" CanUserResize="False" Width="auto"
-                                                Binding="{Binding Number}">
-                            </DataGridTextColumn>
-                            
-                        </DataGrid.Columns>
-                    </DataGrid>
+                <StackPanel
+                    x:Name="StackPanelPlayer">
+
+                    <Border
+                        Background="#E0E0E0"
+                        Margin="10 0"
+                        CornerRadius="10">
+                        <StackPanel>
+                            <TextBlock
+                                Text="Игроки"
+                                HorizontalAlignment="Center"
+                                FontFamily="Montserrat"
+                                FontWeight="Bold"
+                                FontSize="20"
+                                Margin="0 10">
+                            </TextBlock>
+
+                            <DataGrid
+                                x:Name="PlayerDataGrid"
+                                Margin="5"
+                                VerticalScrollBarVisibility="Hidden">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header=" " IsReadOnly="True" CanUserResize="False" Width="auto"
+                                                        Binding="{Binding Number}">
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Статус" IsReadOnly="True" CanUserResize="False"
+                                                        Width="auto"
+                                                        Binding="{Binding Number}">
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Никнейм" IsReadOnly="True" CanUserResize="False" Width="*"
+                                                        Binding="{Binding Number}">
+                                    </DataGridTextColumn>
+
+                                    <DataGridTextColumn Header="Здоровье" IsReadOnly="True" CanUserResize="False"
+                                                        Width="auto"
+                                                        Binding="{Binding Number}">
+                                    </DataGridTextColumn>
+
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </StackPanel>
+                    </Border>
+
                 </StackPanel>
-            </Border>
-            
+
+                <StackPanel
+                    x:Name="OfflinePlayers"
+                    Margin="0 10">
+
+                </StackPanel>
         </StackPanel>
-        
+
         <!-- Шахматное поле -->
-        <Viewbox  Grid.Row="1" Grid.Column="1">
+        <Viewbox Grid.Row="1" Grid.Column="1">
             <Grid x:Name="ChessBoardGrid" ShowGridLines="False" Width="400" Height="400" Margin="20">
-                
+
                 <ItemsControl>
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -182,5 +194,12 @@
                 </ItemsControl>
             </Grid>
         </Viewbox>
+
+        <StackPanel
+            x:Name="RightStackPanel"
+            Grid.Column="2"
+            Grid.Row="1"
+            Margin="0 30">
+        </StackPanel>
     </Grid>
 </Page>
