@@ -31,4 +31,16 @@ public partial class SetGameIdControl : UserControl
     {
         _closeMenu();
     }
+
+    public void SetTextError(string error)
+    {
+        TextError.Text = error;
+        ClearTextAfterDelay();
+    }
+    
+    private async void ClearTextAfterDelay()
+    {
+        await Task.Delay(3000);
+        TextError.Text = string.Empty;
+    }
 }

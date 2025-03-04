@@ -23,19 +23,20 @@
             <TextBlock
                 x:Name="NameTextBox"
                 Grid.Column="0"
-                Text="Бобик999"
                 Margin="10 0 0 0"
                 VerticalAlignment="Center"
                 FontFamily="Montserrat"
                 FontWeight="SemiBold"
                 Foreground="Black"
-                FontSize="15">
+                FontSize="14">
+                <Run x:Name="MainText"></Run>
+                <Run FontSize="12" x:Name="AddText" Foreground="Gray"></Run>
             </TextBlock>
             
             <TextBlock
                 x:Name="TimeTextBox"
                 Grid.Column="1"
-                Text="25:00"
+                Text="00:00"
                 Margin="10 0 0 0"
                 VerticalAlignment="Center"
                 FontFamily="Montserrat"

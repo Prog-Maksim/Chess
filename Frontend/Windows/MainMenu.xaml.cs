@@ -110,7 +110,7 @@ public partial class MainMenu : Page
         CreateGame.Content = "Создать игру";
         CreateGame.IsEnabled = true;
     }
-
+    
     private async Task SendRequestInGame(string gameId)
     {
         HttpClient client = new HttpClient();
@@ -134,7 +134,6 @@ public partial class MainMenu : Page
     }
 
     private SetGameIdControl? SetGameIdControl;
-
     public delegate void CloseMenu();
     private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
     {
@@ -159,6 +158,7 @@ public partial class MainMenu : Page
     private void GameId(string gameId)
     {
         _gameId = gameId;
+        // TODO: Реализовать вывод информации об ошибке
         _ = SendRequestInGame(gameId);
     }
 

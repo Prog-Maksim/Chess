@@ -372,6 +372,7 @@ public abstract class BaseChessGame
             StatusCode = 200,
             Success = true,
             PlayerId = playerId,
+            Nickname = player.Name,
             State = false,
             Time = TimeSpan.FromMinutes(1)
         };
@@ -397,17 +398,6 @@ public abstract class BaseChessGame
                     var player = Players.FirstOrDefault(p => p.Id == playerId);
                     if (player == null || player.State != PlayerState.InActive)
                     {
-                        PlayerIsActive playerIsActive = new PlayerIsActive
-                        {
-                            MessageType = "PlayerIsActive",
-                            Message = "Игрок подключился",
-                            StatusCode = 200,
-                            Success = true,
-                            PlayerId = playerId,
-                            State = true,
-                            Time = TimeSpan.FromSeconds(remainingTime)
-                        };
-                        await WebSocketMessage.Value.SendMessageStateActivePlayer(Players, playerIsActive);
                         return;
                     }
                     
@@ -454,6 +444,19 @@ public abstract class BaseChessGame
             State = GameState.InProgress;
             if (_playerTimers.TryGetValue(playerId, out var cts))
             {
+                PlayerIsActive playerIsActive = new PlayerIsActive
+                {
+                    MessageType = "PlayerIsActive",
+                    Message = "Игрок подключился",
+                    StatusCode = 200,
+                    Success = true,
+                    PlayerId = playerId,
+                    Nickname = player.Name,
+                    State = true,
+                    Time = TimeSpan.FromSeconds(1)
+                };
+                _ = WebSocketMessage.Value.SendMessageStateActivePlayer(Players, playerIsActive);
+                
                 cts.Cancel();
                 _playerTimers.Remove(playerId);
             }

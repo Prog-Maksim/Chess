@@ -1,4 +1,4 @@
-﻿namespace Backend.Models.Response.WebSockerMessage;
+﻿namespace Frontend.Models.WebSockerMessage;
 
 public class PlayerIsActive: BaseWebSocketMessage
 {

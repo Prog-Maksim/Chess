@@ -16,7 +16,7 @@
            <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="0" Opacity="0.35"></DropShadowEffect>
        </Border.Effect>
        
-       <Grid ShowGridLines="True">
+       <Grid ShowGridLines="False">
            <Grid.RowDefinitions>
                <RowDefinition Height="Auto"></RowDefinition>
                <RowDefinition></RowDefinition>
@@ -47,12 +47,25 @@
                Text="Присоединение к игре">
            </TextBlock>
            
+           <TextBlock
+               Grid.Row="1"
+               x:Name="TextError"
+               VerticalAlignment="Top"
+               HorizontalAlignment="Center"
+               FontFamily="Montserrat"
+               FontSize="15"
+               Foreground="Red"
+               TextWrapping="Wrap"
+               FontWeight="Regular">
+           </TextBlock>
+           
            <TextBox
                x:Name="GameIdTextBox"
                Grid.Row="1"
                Tag="Код игры"
                Width="280"
-               Margin="10 0"
+               VerticalAlignment="Bottom"
+               Margin="10 0 10 5"
                Style="{StaticResource TextBoxStyle}">
            </TextBox>
            

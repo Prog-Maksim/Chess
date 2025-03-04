@@ -31,25 +31,25 @@ public partial class GameMenu : Page
     // размер поля
     private int _gameSize;
     
-    public GameMenu()
-    {
-        InitializeComponent();
-    }
-
+    
     private readonly WebSocketService _webSocketService;
     private GameIdControl? _gameIdControl;
+    private readonly MainMenu _mainMenu;
 
     public delegate void ExitGame();
     public delegate void ContinueGame();
 
-    private readonly MainMenu _mainMenu;
+
+    public GameMenu()
+    {
+        InitializeComponent();
+    }
     
     public GameMenu(string gameId, WebSocketService webSocket, MainMenu mainMenu, bool create = false): this()
     {
         _gameId = gameId;
         _players = new Dictionary<string, PlayerTimeMenu>();
         _mainMenu = mainMenu;
-        
         _webSocketService = webSocket;
         
         webSocket.OnDurationGame += UpdateGameTime;
@@ -58,20 +58,58 @@ public partial class GameMenu : Page
         webSocket.OnUpdateBoard += WebSocketOnUpdateBoard;
         webSocket.OnReverseTimer += WebSocketOnReverseTimer;
         webSocket.OnGameOverPlayer += WebSocketOnGameOverPlayer;
+        webSocket.OnIsActivePlayer += WebSocketOnIsActivePlayer;
+        webSocket.OnReverseTimeAnActivePlayer += WebSocketOnReverseTimeAnActivePlayer;
         
-        _ = GetGameData(gameId);
+        _ = GetGameData();
+        WaitingGame(create);
+    }
 
+    private void WaitingGame(bool create)
+    {
         if (create)
         {
             GameTime.Text = "Ожидание";
             GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
-            _gameIdControl = new GameIdControl(gameId);
+            _gameIdControl = new GameIdControl(_gameId);
             StackPanelPlayer.Children.Insert(0, _gameIdControl);
             _playerTurn = true;
             _playerIdTern = SaveRepository.ReadId();
         }
     }
 
+    private Dictionary<string, PlayerTimeMenu> _anActivePlayers = new ();
+    private void WebSocketOnIsActivePlayer(object? sender, PlayerIsActive e)
+    {
+        if (e.State)
+        {
+            if (_anActivePlayers.ContainsKey(e.PlayerId))
+            {
+                OfflinePlayers.Children.Remove(_anActivePlayers[e.PlayerId]);
+                _anActivePlayers.Remove(e.PlayerId);
+            }
+        }
+        else
+        {
+            if (!_anActivePlayers.ContainsKey(e.PlayerId))
+            {
+                PlayerTimeMenu anActivePlayer = new PlayerTimeMenu(e.Nickname, "не в сети", e.Time);
+                anActivePlayer.IsOffline();
+                _anActivePlayers.Add(e.PlayerId, anActivePlayer);
+                OfflinePlayers.Children.Add(anActivePlayer);
+            }
+        }
+    }
+    private void WebSocketOnReverseTimeAnActivePlayer(object? sender, ReversTimeAnActivePlayer e)
+    {
+        if (_anActivePlayers.ContainsKey(e.PlayerId))
+        {
+            PlayerTimeMenu anActivePlayer = _anActivePlayers[e.PlayerId];
+            anActivePlayer.UpdateTime(e.Time);
+        }
+    }
+    
+    
     private GameOverMessage GameOver;
     private void WebSocketOnGameOverPlayer(object? sender, GameOverPlayer e)
     {
@@ -107,10 +145,9 @@ public partial class GameMenu : Page
         }
     }
 
-    public async Task GetGameData(string gameId)
+    private async Task GetGameData()
     {
-        Console.WriteLine(gameId);
-        string url = Url.BaseUrl + "Game/playing-field?gameId=" + gameId;
+        string url = Url.BaseUrl + "Game/playing-field?gameId=" + _gameId;
         
         using (HttpClient client = new HttpClient())
         {
@@ -129,6 +166,7 @@ public partial class GameMenu : Page
                 _gameSize = gameData.Board.Count;
                 GenerateChessBoard(_gameSize);
 
+                SearchYouColor(gameData.Board);
                 AddPersons(gameData.Players);
                 UpdateBoard(gameData.Board);
                 
@@ -146,6 +184,36 @@ public partial class GameMenu : Page
             {
                 Console.WriteLine(e);
             }
+        }
+    }
+
+    private void SearchYouColor(List<List<GameBoard?>> board)
+    {
+        for (int i = 0; i < board.Count; i++)
+        {
+            for (int j = 0; j < board[i].Count; j++)
+            {
+                var piece = board[i][j];
+
+                if (piece != null)
+                {
+                    if (piece.PersonId == SaveRepository.ReadId())
+                    {
+                        CreateColorMenu(piece.Color);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+
+    private YouColorMenu? _colorMenu;
+    private void CreateColorMenu(string color)
+    {
+        if (_colorMenu == null)
+        {
+            _colorMenu = new YouColorMenu(color);
+            RightStackPanel.Children.Insert(0, _colorMenu);
         }
     }
 
@@ -186,6 +254,8 @@ public partial class GameMenu : Page
                     Margin = new Thickness(_gameSize == 8? 7: 3),
                     Cursor = Cursors.Hand
                 };
+                
+                Panel.SetZIndex(image, 3);
 
                 image.MouseLeftButtonDown += (sender, args) =>
                 {
@@ -199,25 +269,23 @@ public partial class GameMenu : Page
         }
     }
 
+    private Border? _selectionHighlight;
     private bool isSelect;
     private AddressTheBoard? StartPoint;
     private void ClickTheGameBoard(PieceType? type, int row, int col)
     {
-        if (isSelect && StartPoint.Row == row && StartPoint.Col == col)
+        if (isSelect && StartPoint?.Row == row && StartPoint?.Col == col)
         {
             StartPoint = null;
             isSelect = false;
+            return;
         }
         
         if (!isSelect)
         {
             if (type != null)
             {
-                StartPoint = new AddressTheBoard
-                {
-                    Row = row,
-                    Col = col,
-                };
+                StartPoint = new AddressTheBoard { Row = row, Col = col };
                 isSelect = true;
             }
             else
@@ -228,8 +296,48 @@ public partial class GameMenu : Page
         else
         {
             if (StartPoint != null)
+            {
                 _ = SendMoveRequestAsync(StartPoint.Row, StartPoint.Col, row, col);
+            }
         }
+    }
+    
+    /// <summary>
+    /// Добавляет белый квадрат под выделенную фигуру
+    /// </summary>
+    private void ShowSelectionHighlight(int row, int col)
+    {
+        RemoveSelectionHighlight(); // Убираем предыдущее выделение
+
+        _selectionHighlight = new Border
+        {
+            Background = Brushes.White,
+            CornerRadius = new CornerRadius(5),
+            Margin = new Thickness(3)
+        };
+
+        Grid.SetRow(_selectionHighlight, row);
+        Grid.SetColumn(_selectionHighlight, col);
+        // Устанавливаем ZIndex ниже фигур
+        Panel.SetZIndex(_selectionHighlight, 1);
+
+        // Вставляем выделение перед всеми изображениями
+        ChessBoardGrid.Children.Insert(0, _selectionHighlight);
+    }
+
+    /// <summary>
+    /// Удаляет выделение фигуры
+    /// </summary>
+    private void RemoveSelectionHighlight()
+    {
+        if (_selectionHighlight != null)
+        {
+            ChessBoardGrid.Children.Remove(_selectionHighlight);
+            _selectionHighlight = null;
+        }
+
+        StartPoint = null;
+        isSelect = false;
     }
 
     private async Task SendMoveRequestAsync(int fromRow, int fromCol, int toRow, int toCol)
