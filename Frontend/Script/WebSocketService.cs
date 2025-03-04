@@ -76,6 +76,7 @@ public class WebSocketService
             catch (Exception ex)
             {
                 Console.WriteLine($"WebSocket connection error: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
                 OnIsConnected?.Invoke(this, false);
                 _retryCount++;
 
@@ -199,9 +200,17 @@ public class WebSocketService
     /// </summary>
     public event EventHandler<FinishGame>? OnGameFinished;
     /// <summary>
-    /// Событие прогирыша игрока
+    /// Событие проигрыша игрока
     /// </summary>
     public event EventHandler<GameOverPlayer>? OnGameOverPlayer;
+    /// <summary>
+    /// Событие статуса пользователя (активен не активен)
+    /// </summary>
+    public event EventHandler<PlayerIsActive>? OnIsActivePlayer;
+    /// <summary>
+    /// Время, которое осталось у игрока на перезаход в игру
+    /// </summary>
+    public event EventHandler<ReversTimeAnActivePlayer>? OnReverseTimeAnActivePlayer;
 
     private async Task ParseMessages(string message)
     {
@@ -295,6 +304,20 @@ public class WebSocketService
             
             if (result != null)
                 OnGameOverPlayer?.Invoke(this, result);
+        }
+        else if (message.Contains("PlayerIsActive"))
+        {
+            var result = JsonSerializer.Deserialize<PlayerIsActive>(message);
+            
+            if (result != null)
+                OnIsActivePlayer?.Invoke(this, result);
+        }
+        else if (message.Contains("InActiveTime"))
+        {
+            var result = JsonSerializer.Deserialize<ReversTimeAnActivePlayer>(message);
+            
+            if (result != null)
+                OnReverseTimeAnActivePlayer?.Invoke(this, result);
         }
     }
 }
