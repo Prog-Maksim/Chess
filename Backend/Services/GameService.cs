@@ -23,27 +23,28 @@ public class GameService
     }
 
     /// <summary>
-    /// Метод создания игры на 2 игрока
+    /// Метод создания игры
     /// </summary>
     /// <param name="nameGame"></param>
     /// <param name="players"></param>
     /// <param name="personId">Идентификатор игрока</param>
     /// <param name="name">Никнейм пользователя</param>
+    /// <param name="isPrivate"></param>
     /// <returns>Идентификатор игры</returns>
-    public string CreateGame(string nameGame, int players, string personId, string name)
+    public string CreateGame(string nameGame, int players, string personId, string name, bool isPrivate)
     {
         DeleteGame deleteGame = DeleteGameHandler;
         ChessPlayer player = new ChessPlayer(personId, name);
 
         if (players == 2)
         {
-            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, _sendWebSocketMessage, deleteGame);
+            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame);
             GetAllGames.Add(chessGame2Players);
             return chessGame2Players.GameId;
         }
         
         Console.WriteLine("Создание игры на 4 игроков");
-        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, _sendWebSocketMessage, deleteGame);
+        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame);
         GetAllGames.Add(chessGame4Players);
         return chessGame4Players.GameId;
     }

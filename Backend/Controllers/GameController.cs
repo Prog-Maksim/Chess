@@ -40,7 +40,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
         
-        string gameId = gameService.CreateGame(name, players, dataToken.PersonId, dataToken.Nickname);
+        string gameId = gameService.CreateGame(name, players, dataToken.PersonId, dataToken.Nickname, isPrivate);
         
         return Ok(new CreateGame
         {

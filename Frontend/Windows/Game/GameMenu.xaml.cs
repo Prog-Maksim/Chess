@@ -52,6 +52,7 @@ public partial class GameMenu : Page
         _mainMenu = mainMenu;
         _webSocketService = webSocket;
         
+        webSocket.OnJoinTheGame += WebSocketOnJoinTheGame;
         webSocket.OnDurationGame += UpdateGameTime;
         webSocket.OnAddPerson += WebSocketOnAddPerson; 
         webSocket.OnRemainingTimePerson += WebSocketOnRemainingTimePerson;
@@ -67,6 +68,7 @@ public partial class GameMenu : Page
         _ = GetGameData();
         WaitingGame(create);
     }
+
     private void WaitingGame(bool create)
     {
         if (create)
@@ -84,6 +86,26 @@ public partial class GameMenu : Page
     {
         GameTime.Text = "Ожидание";
         GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+    }
+
+    public delegate void DeleteMenu(JoinTheRequestControl menu);
+    private JoinTheRequestControl? _joinTheRequestControl;
+    private void WebSocketOnJoinTheGame(object? sender, JoinTheGame e)
+    {
+        if (_joinTheRequestControl == null)
+        {
+            DeleteMenu deleteMenu = menu =>
+            {
+                _joinTheRequestControl = null;
+                StackPanelPlayer.Children.Remove(menu);
+            };
+            _joinTheRequestControl = new JoinTheRequestControl(_gameId, deleteMenu);
+            StackPanelPlayer.Children.Insert(0 , _joinTheRequestControl);
+            
+            _joinTheRequestControl.AddPlayer(e.Nickname, e.PersonId);
+            return;
+        }
+        _joinTheRequestControl.AddPlayer(e.Nickname, e.PersonId);
     }
     
     private void WebSocketOnUpdateColor(object? sender, UpdateColorPlayer e)

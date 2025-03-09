@@ -158,7 +158,10 @@ public partial class MainMenu : Page
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
         
         var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
-        await client.PostAsync(url, content);
+        var response = await client.PostAsync(url, content);
+        
+        string responseContent = await response.Content.ReadAsStringAsync();
+        MessageBox.Show(responseContent);
     }
     
     private void StartGame(object? sender, ResultJoinTheGame result)
