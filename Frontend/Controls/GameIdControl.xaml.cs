@@ -18,6 +18,13 @@ public partial class GameIdControl : UserControl
 
     private void CopyIcon_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        Clipboard.SetText(GameIdText.Text);
+        try
+        {
+            Clipboard.SetText(GameIdText.Text);
+        }
+        catch
+        {
+            MessageBox.Show("Не удалось скопировать id карты \n\nВозможно объект буфера обмена занят другим процессом\nПовторите попытку еще раз", "Chess-online", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
     }
 }
