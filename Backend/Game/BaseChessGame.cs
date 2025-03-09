@@ -16,8 +16,8 @@ public abstract class BaseChessGame
     public List<ChessPlayer> WaitingPlayers { get; } = new();
     public GameState State { get; set; } = GameState.WaitingForPlayers;
     public string OwnerId { get; set; }
-    public bool IsGamePrivate { get; set; } = false;
-    public int CurrentPlayerIndex = 0; 
+    public bool IsGamePrivate { get; set; }
+    public int CurrentPlayerIndex; 
     private Timer? _gameTimer;
     public TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
     
@@ -30,7 +30,7 @@ public abstract class BaseChessGame
     /// <param name="boardSize">Размер поля</param>
     /// <param name="player"></param>
     /// <param name="webSocketMessage"></param>
-    protected BaseChessGame(int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, GameService.DeleteGame deleteGame)
+    protected BaseChessGame(string name, int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, GameService.DeleteGame deleteGame)
     {
         Random rnd = new();
         GameId = $"{rnd.Next(9999)}-{rnd.Next(9999)}-{rnd.Next(9999)}";
@@ -53,7 +53,7 @@ public abstract class BaseChessGame
     /// <param name="player"></param>
     /// <param name="isGamePrivate">Приватная ли игра</param>
     /// <param name="socketMessage"></param>
-    protected BaseChessGame(int boardSize, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame): this(boardSize, player, socketMessage, deleteGame)
+    protected BaseChessGame(string name, int boardSize, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame): this(name, boardSize, player, socketMessage, deleteGame)
     {
         IsGamePrivate = isGamePrivate;
     }
@@ -63,9 +63,9 @@ public abstract class BaseChessGame
     /// </summary>
     /// <param name="player">Обьект игрока</param>
     /// <returns></returns>
-    protected async Task<bool> AddPlayer(ChessPlayer player)
+    private async Task<bool> AddPlayer(ChessPlayer player)
     {
-        if (Players.Count < RequiredPlayers())
+        if (Players.Count < RequiredPlayers() && Players.All(p => p.Id != player.Id))
         {
             Players.Add(player);
             player.OnTimeUpdate += HandlePlayerTimeUpdate;
@@ -193,6 +193,12 @@ public abstract class BaseChessGame
     /// </summary>
     /// <param name="player">Игрок</param>
     protected abstract Task InitializePlayerPieces(ChessPlayer player);
+
+    /// <summary>
+    /// Перерисовывает игровое поле
+    /// </summary>
+    /// <returns></returns>
+    protected abstract Task UpdateGameBoard();
     
     /// <summary>
     /// Добавление фигуры на карту
@@ -203,20 +209,6 @@ public abstract class BaseChessGame
     protected void AddPieceToBoard(ChessPiece piece, int col, int row)
     {
         Board[col, row] = piece;
-    }
-
-    /// <summary>
-    /// Обновление позиции фигуры на карте
-    /// </summary>
-    /// <param name="piece"></param>
-    /// <param name="oldCol"></param>
-    /// <param name="oldRow"></param>
-    /// <param name="newCol"></param>
-    /// <param name="newRow"></param>
-    public virtual void UpdatePieceToBoard(ChessPiece piece, int oldCol, int oldRow, int newCol, int newRow)
-    {
-        Board[newCol, newRow] = piece;
-        Board[oldCol, oldRow] = null;
     }
     
     /// <summary>
@@ -357,8 +349,16 @@ public abstract class BaseChessGame
     {
         if (_playerTimers.ContainsKey(playerId))
             return;
-        
+
         var player = Players.FirstOrDefault(p => p.Id == playerId);
+        
+        if (State == GameState.WaitingForPlayers)
+        {
+            Players.Remove(player);
+            _ = WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
+            return;
+        }
+        
         player.State = PlayerState.InActive;
         State = GameState.Stopped;
         
@@ -380,7 +380,7 @@ public abstract class BaseChessGame
         
 
         StoppedAllPlayers();
-        Task.Run(async () => PlayerReverseTimerAcync(playerId, cts), cts.Token);
+        Task.Run(async () => PlayerReverseTimerAsync(playerId, cts), cts.Token);
     }
 
     /// <summary>
@@ -412,9 +412,9 @@ public abstract class BaseChessGame
     /// </summary>
     /// <param name="playerId"></param>
     /// <param name="cts"></param>
-    private async Task PlayerReverseTimerAcync(string playerId, CancellationTokenSource cts)
+    private async Task PlayerReverseTimerAsync(string playerId, CancellationTokenSource cts)
     {
-        const int timeoutSeconds = 60;
+        const int timeoutSeconds = 10;
             int remainingTime = timeoutSeconds;
             
             try
@@ -448,14 +448,17 @@ public abstract class BaseChessGame
                 var disconnectedPlayer = Players.FirstOrDefault(p => p.Id == playerId);
                 if (disconnectedPlayer != null && disconnectedPlayer.State == PlayerState.InActive)
                 {
-                    disconnectedPlayer.State = PlayerState.Disconnected;
+                    await DeletePieceInAnActivePlayer(playerId);
+                    await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
                     
-                    if (Players.Where(p => p.State == PlayerState.InActive).Count() <= 1)
+                    disconnectedPlayer.State = PlayerState.Disconnected;
+
+                    if (Players.Where(p => p.State == PlayerState.InActive).Count() == 0)
                     {
                         State = GameState.InProgress;
                         ResumeAllPlayers();
+                        await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
                     }
-                    Console.WriteLine($"Игрок {playerId} отключен из-за не активности.");
                 }
             }
             catch (TaskCanceledException) { }
@@ -463,6 +466,22 @@ public abstract class BaseChessGame
             {
                 _playerTimers.Remove(playerId);
             }
+    }
+
+    private async Task DeletePieceInAnActivePlayer(string playerId)
+    {
+        for (int i = 0; i < Board.GetLength(0); i++)
+        {
+            for (int j = 0; j < Board.GetLength(1); j++)
+            {
+                if (Board[i, j] != null && Board[i, j].OwnerId == playerId)
+                {
+                    Board[i, j] = null;
+                }
+            }
+        }
+
+        await SendMessageUpdateBoard();
     }
 
     /// <summary>
@@ -495,7 +514,7 @@ public abstract class BaseChessGame
                 _playerTimers.Remove(playerId);
             }
 
-            if (Players.Where(p => p.State == PlayerState.InActive).Count() <= 1)
+            if (Players.Where(p => p.State == PlayerState.InActive).Count() == 0)
             {
                 State = GameState.InProgress;
                 ResumeAllPlayers();
@@ -505,12 +524,27 @@ public abstract class BaseChessGame
         }
     }
 
+    /// <summary>
+    /// Выход игрока из игры
+    /// </summary>
+    /// <param name="playerId"></param>
+    /// <returns></returns>
     public virtual bool ExitTheGame(string playerId)
     {
         var player = Players.FirstOrDefault(p => p.Id == playerId);
-
+        
         if (player == null)
             return false;
+        
+        _ = WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
+        
+        if (State == GameState.WaitingForPlayers)
+        {
+            Players.Remove(player);
+            UpdateGameBoard();
+            
+            return true;
+        }
 
         if (player.State != PlayerState.Active)
             return true;
