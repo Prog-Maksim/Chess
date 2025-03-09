@@ -25,5 +25,11 @@ public enum PlayerState
     /// <summary>
     /// Игрок вышел из игры или отключился
     /// </summary>
-    Disconnected
+    Disconnected,
+    
+    /// <summary>
+    /// Остановлен
+    /// </summary>
+    Stopped
 }
+
