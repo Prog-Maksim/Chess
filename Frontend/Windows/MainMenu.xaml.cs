@@ -74,11 +74,48 @@ public partial class MainMenu : Page
         webSocket.OnResultJoinTheGame += StartGame;
     }
 
+    public delegate void CloseMenu();
+    
+    private CreateGameControl? CreateGameControl;
     private void CreateGame_OnClick(object sender, RoutedEventArgs e)
     {
-        CreateGame.Content = "загрузка";
-        CreateGame.IsEnabled = false;
-        _ = SendCreateGame();
+        if (CreateGameControl != null)
+            return;
+        
+        CloseMenu closeMenu = () =>
+        {
+            MainGrid.Children.Remove(CreateGameControl);
+            SetGameIdControl = null;
+            CoopButton_OnClick(sender, e);
+        };
+        CreateGameControl = new CreateGameControl(mainWindow, this, closeMenu);
+        
+        Grid.SetRowSpan(CreateGameControl, 4);
+        Grid.SetColumnSpan(CreateGameControl, 4);
+        Panel.SetZIndex(CreateGameControl, 2);
+        MainGrid.Children.Add(CreateGameControl);
+    }
+    
+    
+    private SetGameIdControl? SetGameIdControl;
+    private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
+    {
+        if (SetGameIdControl != null)
+            return;
+        
+        GetGameId getGameId = GameId;
+        CloseMenu closeMenu = () =>
+        {
+            MainGrid.Children.Remove(SetGameIdControl);
+            SetGameIdControl = null;
+            CoopButton_OnClick(sender, e);
+        };
+        SetGameIdControl = new SetGameIdControl(getGameId, closeMenu);
+        
+        Grid.SetRowSpan(SetGameIdControl, 4);
+        Grid.SetColumnSpan(SetGameIdControl, 4);
+        Panel.SetZIndex(SetGameIdControl, 2);
+        MainGrid.Children.Add(SetGameIdControl);
     }
 
     private string? _gameId;
@@ -131,28 +168,6 @@ public partial class MainMenu : Page
             Console.WriteLine($"GameId: {_gameId}");
             mainWindow.OpenGameWindow(_gameId, this);
         }
-    }
-
-    private SetGameIdControl? SetGameIdControl;
-    public delegate void CloseMenu();
-    private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
-    {
-        if (SetGameIdControl != null)
-            return;
-        
-        GetGameId getGameId = GameId;
-        CloseMenu closeMenu = () =>
-        {
-            MainGrid.Children.Remove(SetGameIdControl);
-            SetGameIdControl = null;
-            CoopButton_OnClick(sender, e);
-        };
-        SetGameIdControl = new SetGameIdControl(getGameId, closeMenu);
-        
-        Grid.SetRowSpan(SetGameIdControl, 4);
-        Grid.SetColumnSpan(SetGameIdControl, 4);
-        Panel.SetZIndex(SetGameIdControl, 2);
-        MainGrid.Children.Add(SetGameIdControl);
     }
 
     private void GameId(string gameId)
