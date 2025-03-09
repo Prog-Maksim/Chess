@@ -1,4 +1,5 @@
 ﻿using System.Net.WebSockets;
+using Backend.Enums;
 using Backend.Game;
 using Backend.Game.Shapes;
 using Backend.Models.Response;
@@ -24,18 +25,27 @@ public class GameService
     /// <summary>
     /// Метод создания игры на 2 игрока
     /// </summary>
+    /// <param name="nameGame"></param>
+    /// <param name="players"></param>
     /// <param name="personId">Идентификатор игрока</param>
     /// <param name="name">Никнейм пользователя</param>
     /// <returns>Идентификатор игры</returns>
-    public string CreateGame2Players(string personId, string name, WebSocket client)
+    public string CreateGame(string nameGame, int players, string personId, string name)
     {
         DeleteGame deleteGame = DeleteGameHandler;
-        
         ChessPlayer player = new ChessPlayer(personId, name);
-        ChessGame2Players chessGame2Players = new ChessGame2Players(player, _sendWebSocketMessage, deleteGame);
-        GetAllGames.Add(chessGame2Players);
 
-        return chessGame2Players.GameId;
+        if (players == 2)
+        {
+            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, _sendWebSocketMessage, deleteGame);
+            GetAllGames.Add(chessGame2Players);
+            return chessGame2Players.GameId;
+        }
+        
+        Console.WriteLine("Создание игры на 4 игроков");
+        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, _sendWebSocketMessage, deleteGame);
+        GetAllGames.Add(chessGame4Players);
+        return chessGame4Players.GameId;
     }
 
     private void DeleteGameHandler(string gameId)
@@ -86,6 +96,7 @@ public class GameService
             PersonId = playerId,
             GameId = gameId,
             GameName = game.GameName,
+            GameState = game.State,
 
             CurrentPlayer = game.Players[game.CurrentPlayerIndex].Id,
         };

@@ -12,8 +12,15 @@ public partial class YouColorMenu : UserControl
 
     public YouColorMenu(string color): this()
     {
-        if (color == "#000000")
-            TextBlock.Foreground = Brushes.White;
+        if (color == "#eeeeee")
+            TextBlock.Foreground = Brushes.Black;
+        MainBorder.Background = (Brush)new BrushConverter().ConvertFrom(color);
+    }
+
+    public void UpdateColor(string color)
+    {
+        if (color == "#eeeeee")
+            TextBlock.Foreground = Brushes.Black;
         MainBorder.Background = (Brush)new BrushConverter().ConvertFrom(color);
     }
 }

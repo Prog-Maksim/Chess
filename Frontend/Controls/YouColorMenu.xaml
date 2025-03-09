@@ -27,7 +27,7 @@
         
         <TextBlock
             x:Name="TextBlock"
-            Foreground="Black"
+            Foreground="White"
             VerticalAlignment="Center"
             HorizontalAlignment="Center"
             Margin="10 0 0 0"

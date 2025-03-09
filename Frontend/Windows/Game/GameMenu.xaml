@@ -75,6 +75,7 @@
                 </Grid.ColumnDefinitions>
 
                 <TextBlock
+                    x:Name="GameName"
                     Grid.Column="0"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
@@ -82,7 +83,6 @@
                     Foreground="Black"
                     FontFamily="Montserrat"
                     FontSize="17"
-                    Text="Игра 2x2"
                     Margin="20 0 0 0">
                 </TextBlock>
 

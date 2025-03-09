@@ -1,4 +1,5 @@
-﻿using System.Net.WebSockets;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Net.WebSockets;
 using Backend.Models.Response;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -33,18 +34,18 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     
     [Authorize]
     [HttpPost("create-game")]
-    public async Task<IActionResult> CreateGame()
+    public async Task<IActionResult> CreateGame([Required] string name, [Required] int players, [Required] bool isPrivate)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
         
-        string gameId = gameService.CreateGame2Players(dataToken.PersonId, dataToken.Nickname, webSocketService.GetWebSocket(dataToken.PersonId));
+        string gameId = gameService.CreateGame(name, players, dataToken.PersonId, dataToken.Nickname);
         
         return Ok(new CreateGame
         {
             Success = true,
-            Message = "Игра 2 на 2 успешно создана",
+            Message = $"Игра `{name}` успешно создана",
             GameId = gameId
         });
     }

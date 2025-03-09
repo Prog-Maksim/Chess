@@ -7,15 +7,14 @@ namespace Backend.Game;
 
 public class ChessGame2Players: BaseChessGame
 {
-    public ChessGame2Players(ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(8, player, socketMessage, deleteGame)
+    public ChessGame2Players(string name, ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(name, 8, player, socketMessage, deleteGame)
     {
         GameName = "Игра 2x2"; 
     }
-    public ChessGame2Players(ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(8, player, isGamePrivate, socketMessage, deleteGame) { }
+    public ChessGame2Players(string name, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(name, 8, player, isGamePrivate, socketMessage, deleteGame) { }
 
     protected override int RequiredPlayers() => 2;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(3);
-    
     
     protected override async Task HandlePlayerTimeUpdate(ChessPlayer player)
     {
@@ -112,11 +111,13 @@ public class ChessGame2Players: BaseChessGame
         await SendMessageUpdateBoard();
     }
     
+    protected override async Task UpdateGameBoard() { }
+    
     // Действия
     protected override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)
     {
         if (newRow > 7 || newCol > 7 || newRow < 0 || newCol < 0)
-            throw new ArgumentOutOfRangeException("Значение newCol или newRow должно быть в диапазоне от 0 до 7");
+            throw new ArgumentOutOfRangeException("Значение newCol или newRow должно быть в диапазоне от 0 до 8");
         
         var piece = Board[oldRow, oldCol];
 

@@ -50,4 +50,9 @@ public partial class PlayerTimeMenu : UserControl
     {
         MainBorder.Background = Brushes.Red;
     }
+
+    public string GetNickname()
+    {
+        return MainText.Text;
+    }
 }
