@@ -10,6 +10,8 @@
                 <ResourceDictionary Source="Styles/ClickButtonStyle.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Styles/TextBoxStyle.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Styles/PasswordBoxStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Styles/ToggleButtonStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Styles/CheckBoxStyle.xaml"></ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>
