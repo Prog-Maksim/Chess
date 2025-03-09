@@ -61,21 +61,49 @@ public partial class GameMenu : Page
         webSocket.OnIsActivePlayer += WebSocketOnIsActivePlayer;
         webSocket.OnReverseTimeAnActivePlayer += WebSocketOnReverseTimeAnActivePlayer;
         webSocket.OnGameFinished += WebSocketOnGameFinished;
+        webSocket.OnRemovePlayer += WebSocketOnRemovePlayer;
+        webSocket.OnUpdateColor += WebSocketOnUpdateColor;
         
         _ = GetGameData();
         WaitingGame(create);
     }
-
     private void WaitingGame(bool create)
     {
         if (create)
         {
-            GameTime.Text = "Ожидание";
-            GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+            SetTextInWaiting();
             _gameIdControl = new GameIdControl(_gameId);
             StackPanelPlayer.Children.Insert(0, _gameIdControl);
+            
             _playerTurn = true;
             _playerIdTern = SaveRepository.ReadId();
+        }
+    }
+
+    private void SetTextInWaiting()
+    {
+        GameTime.Text = "Ожидание";
+        GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+    }
+    
+    private void WebSocketOnUpdateColor(object? sender, UpdateColorPlayer e)
+    {
+        if (_colorMenu != null)
+            _colorMenu.UpdateColor(e.Color);
+    }
+
+    private void WebSocketOnRemovePlayer(object? sender, RemovePlayer e)
+    {
+        if (_anActivePlayers.ContainsKey(e.PlayerId))
+        {
+            OfflinePlayers.Children.Remove(_anActivePlayers[e.PlayerId]);
+            _anActivePlayers.Remove(e.PlayerId);
+        }
+
+        if (!_gameState && _players.ContainsKey(e.PlayerId))
+        {
+            StackPanelPlayer.Children.Remove(_players[e.PlayerId]);
+            _players.Remove(e.PlayerId);
         }
     }
     
@@ -180,8 +208,12 @@ public partial class GameMenu : Page
                 string responseContent = await response.Content.ReadAsStringAsync();
                 var gameData = JsonSerializer.Deserialize<GameData>(responseContent);
 
+                if (gameData.GameState == GameState.WaitingForPlayers)
+                    SetTextInWaiting();
+
                 _playerIdTern = gameData.CurrentPlayer;
                 _gameSize = gameData.Board.Count;
+                GameName.Text = gameData.GameName;
                 GenerateChessBoard(_gameSize);
 
                 SearchYouColor(gameData.Board);
