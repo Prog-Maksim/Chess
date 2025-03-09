@@ -18,9 +18,9 @@ public partial class Auth : Page
     private string state = "registration";
     private MainWindow.OpenMainWindowDelegate? func;
 
-    private Controls.TextBox _nickname;
-    private Controls.TextBox _email;
-    private Controls.PasswordBox _password;
+    private TextBox _nickname;
+    private TextBox _email;
+    private PasswordBox _password;
     
     public Auth()
     {
