@@ -34,6 +34,11 @@ public class GameData
     /// Текущий играющий игрок
     /// </summary>
     public string CurrentPlayer { get; set; }
+    
+    /// <summary>
+    /// Состояние игры
+    /// </summary>
+    public GameState GameState { get; set; }
 }
 
 public class GameBoardData
