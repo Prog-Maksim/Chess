@@ -60,6 +60,7 @@ public partial class GameMenu : Page
         webSocket.OnGameOverPlayer += WebSocketOnGameOverPlayer;
         webSocket.OnIsActivePlayer += WebSocketOnIsActivePlayer;
         webSocket.OnReverseTimeAnActivePlayer += WebSocketOnReverseTimeAnActivePlayer;
+        webSocket.OnGameFinished += WebSocketOnGameFinished;
         
         _ = GetGameData();
         WaitingGame(create);
@@ -76,6 +77,23 @@ public partial class GameMenu : Page
             _playerTurn = true;
             _playerIdTern = SaveRepository.ReadId();
         }
+    }
+    
+    private void WebSocketOnGameFinished(object? sender, FinishGame e)
+    {
+        if (e.Winner == SaveRepository.ReadId())
+            MessageBox.Show("Поздравляем \n\nИгра была завершена. Вы победили", "Игра завершена");
+        else
+        {
+            if (_players.ContainsKey(e.Winner))
+            {
+                string nickname = _players[e.Winner].GetNickname();
+                MessageBox.Show($"Игра завершена. \n\nВы проиграли!\nПобедил игрок: {nickname}.", "Игра завершена");
+            }
+            else
+                MessageBox.Show($"Игра завершена. \n\nВы проиграли!", "Игра завершена");
+        }
+        _mainMenu.OpenMainMenu();
     }
 
     private Dictionary<string, PlayerTimeMenu> _anActivePlayers = new ();
@@ -174,15 +192,15 @@ public partial class GameMenu : Page
             }
             catch (HttpRequestException e)
             {
-                Console.WriteLine($"Ошибка HTTP: {e.Message}");
+                MessageBox.Show($"Ошибка HTTP: {e.Message} \n\n{e.StackTrace}");
             }
             catch (JsonException e)
             {
-                Console.WriteLine($"Ошибка при десериализации JSON: {e.Message}");
+                MessageBox.Show($"Ошибка при десериализации JSON: {e.Message} \n\n{e.StackTrace}");
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                MessageBox.Show($"{e.Message} \n\n{e.StackTrace}");
             }
         }
     }
