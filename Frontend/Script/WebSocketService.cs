@@ -211,6 +211,14 @@ public class WebSocketService
     /// Время, которое осталось у игрока на перезаход в игру
     /// </summary>
     public event EventHandler<ReversTimeAnActivePlayer>? OnReverseTimeAnActivePlayer;
+    /// <summary>
+    /// Игрок был удален из игры или выбыд
+    /// </summary>
+    public event EventHandler<RemovePlayer>? OnRemovePlayer;
+    /// <summary>
+    /// У игрока изменился цвет
+    /// </summary>
+    public event EventHandler<UpdateColorPlayer>? OnUpdateColor;
 
     private async Task ParseMessages(string message)
     {
@@ -318,6 +326,20 @@ public class WebSocketService
             
             if (result != null)
                 OnReverseTimeAnActivePlayer?.Invoke(this, result);
+        }
+        else if (message.Contains("RemovePlayer"))
+        {
+            var result = JsonSerializer.Deserialize<RemovePlayer>(message);
+            
+            if (result != null)
+                OnRemovePlayer?.Invoke(this, result);
+        }
+        else if (message.Contains("UpdateColor"))
+        {
+            var result = JsonSerializer.Deserialize<UpdateColorPlayer>(message);
+            
+            if (result != null)
+                OnUpdateColor?.Invoke(this, result);
         }
     }
 }
