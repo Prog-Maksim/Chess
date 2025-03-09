@@ -379,9 +379,39 @@ public abstract class BaseChessGame
         _ = WebSocketMessage.Value.SendMessageStateActivePlayer(Players, playerIsActive);
         
 
+        StoppedAllPlayers();
         Task.Run(async () => PlayerReverseTimerAcync(playerId, cts), cts.Token);
     }
 
+    /// <summary>
+    /// Останавливаем всех игроков
+    /// </summary>
+    private void StoppedAllPlayers()
+    {
+        foreach (var player in Players)
+        {
+            if (player.State == PlayerState.Active)
+                player.State = PlayerState.Stopped;
+        }
+    }
+
+    /// <summary>
+    /// Возобновляем остановленных игрокв
+    /// </summary>
+    private void ResumeAllPlayers()
+    {
+        foreach (var player in Players)
+        {
+            if (player.State == PlayerState.Stopped)
+                player.State = PlayerState.Active;
+        }
+    }
+    
+    /// <summary>
+    /// Таймер отсчета времени до бана игрока
+    /// </summary>
+    /// <param name="playerId"></param>
+    /// <param name="cts"></param>
     private async Task PlayerReverseTimerAcync(string playerId, CancellationTokenSource cts)
     {
         const int timeoutSeconds = 60;
@@ -419,7 +449,12 @@ public abstract class BaseChessGame
                 if (disconnectedPlayer != null && disconnectedPlayer.State == PlayerState.InActive)
                 {
                     disconnectedPlayer.State = PlayerState.Disconnected;
-                    State = GameState.InProgress;
+                    
+                    if (Players.Where(p => p.State == PlayerState.InActive).Count() <= 1)
+                    {
+                        State = GameState.InProgress;
+                        ResumeAllPlayers();
+                    }
                     Console.WriteLine($"Игрок {playerId} отключен из-за не активности.");
                 }
             }
@@ -441,7 +476,6 @@ public abstract class BaseChessGame
         if (player != null && player.State == PlayerState.InActive)
         {
             player.State = PlayerState.Active;
-            State = GameState.InProgress;
             if (_playerTimers.TryGetValue(playerId, out var cts))
             {
                 PlayerIsActive playerIsActive = new PlayerIsActive
@@ -461,6 +495,12 @@ public abstract class BaseChessGame
                 _playerTimers.Remove(playerId);
             }
 
+            if (Players.Where(p => p.State == PlayerState.InActive).Count() <= 1)
+            {
+                State = GameState.InProgress;
+                ResumeAllPlayers();
+            }
+            
             Console.WriteLine($"Игрок {playerId} снова активен.");
         }
     }
