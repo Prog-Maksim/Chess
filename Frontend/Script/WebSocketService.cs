@@ -224,10 +224,11 @@ public class WebSocketService
     {
         if (message.Contains("Join"))
         {
-        //     var result = JsonSerializer.Deserialize<JoinTheGame>(message);
-        //     
-        //     if (result != null)
-        //         OnJoinTheGame?.Invoke(this, result);
+            Console.WriteLine(message);
+            var result = JsonSerializer.Deserialize<JoinTheGame>(message);
+            
+            if (result != null)
+                OnJoinTheGame?.Invoke(this, result);
         }
         if (message.Contains("JoinResult"))
         {

@@ -36,7 +36,7 @@ public class SendWebSocketMessage
         var message = JsonConvert.SerializeObject(joinTheGame);
         var buffer = Encoding.UTF8.GetBytes(message);
         
-        var ws = _webSocketService.GetWebSocket(player.Id);
+        var ws = _webSocketService.GetWebSocket(owner.Id);
         if (ws != null && ws.State == WebSocketState.Open)
         {
             await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,

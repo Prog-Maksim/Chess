@@ -1,0 +1,76 @@
+﻿<UserControl x:Class="Frontend.Controls.MenuJoinTheRequest"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Frontend.Controls"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             mc:Ignorable="d"
+             d:Background="#E0E0E0">
+    <Grid MinWidth="200" Margin="0 0 0 10">
+        
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        
+        <TextBlock
+            x:Name="CountNumber"
+            Grid.Column="0"
+            VerticalAlignment="Center"
+            FontFamily="Montserrat"
+            Foreground="#6E6E6E"
+            FontWeight="Bold"
+            Margin="5 0">
+        </TextBlock>
+        
+        <Border
+            Grid.Column="1"
+            CornerRadius="5"
+            Background="#CFCFCF"
+            Height="30">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock
+                    x:Name="NamePlayer"
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    Margin="10 0"
+                    FontFamily="Montserrat"
+                    FontWeight="Bold">
+                </TextBlock>
+                
+                <iconPacks:PackIconCoolicons
+                    x:Name="Approve"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Margin="5 0"
+                    Foreground="#00D620"
+                    Kind="Check"
+                    Cursor="Hand"
+                    MouseLeftButtonDown="Approve_OnMouseLeftButtonDown">
+                </iconPacks:PackIconCoolicons>
+                
+                <iconPacks:PackIconEvaIcons 
+                    x:Name="Reject"
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    Margin="10 0 10 0"
+                    Width="13"
+                    Cursor="Hand"
+                    Foreground="Red"
+                    Kind="Close"
+                    MouseLeftButtonDown="Reject_OnMouseLeftButtonDown">
+                </iconPacks:PackIconEvaIcons>
+            </Grid>
+        </Border>
+        
+    </Grid>
+</UserControl>
