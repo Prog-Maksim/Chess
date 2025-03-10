@@ -33,7 +33,7 @@ public abstract class BaseChessGame
     protected BaseChessGame(string name, int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, GameService.DeleteGame deleteGame)
     {
         Random rnd = new();
-        GameId = $"{rnd.Next(9999)}-{rnd.Next(9999)}-{rnd.Next(9999)}";
+        GameId = $"{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}";
         
         BoardSize = boardSize;
         Board = new ChessPiece?[boardSize, boardSize];
