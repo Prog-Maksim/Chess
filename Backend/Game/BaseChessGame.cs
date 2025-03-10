@@ -91,10 +91,8 @@ public abstract class BaseChessGame
     /// <param name="player"></param>
     public async Task RequestJoin(ChessPlayer player)
     {
-        Console.WriteLine("Вступление в игру");
         if (player.Id == OwnerId || !IsGamePrivate)
         {
-            Console.WriteLine("Автоматическое разрешение вступить в игру");
             player.Approve();
             await AddPlayer(player);
 
@@ -104,8 +102,6 @@ public abstract class BaseChessGame
             return;
         }
         
-        Console.WriteLine("Игрок ожидает разрешения вступить в игру");
-        
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
         await WebSocketMessage.Value.SendMessageJoinTheGame(player, owner);
         
@@ -113,7 +109,7 @@ public abstract class BaseChessGame
     }
     
     /// <summary>
-    /// Метод разрешаюший пользователю вступить в игру
+    /// Метод разрешающий пользователю вступить в игру
     /// </summary>
     /// <param name="ownerId"></param>
     /// <param name="playerId"></param>

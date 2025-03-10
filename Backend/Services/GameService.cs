@@ -25,11 +25,11 @@ public class GameService
     /// <summary>
     /// Метод создания игры
     /// </summary>
-    /// <param name="nameGame"></param>
-    /// <param name="players"></param>
+    /// <param name="nameGame">Название игры</param>
+    /// <param name="players">Кол-во игроков</param>
     /// <param name="personId">Идентификатор игрока</param>
     /// <param name="name">Никнейм пользователя</param>
-    /// <param name="isPrivate"></param>
+    /// <param name="isPrivate">Приватная ли игра</param>
     /// <returns>Идентификатор игры</returns>
     public string CreateGame(string nameGame, int players, string personId, string name, bool isPrivate)
     {
@@ -43,7 +43,6 @@ public class GameService
             return chessGame2Players.GameId;
         }
         
-        Console.WriteLine("Создание игры на 4 игроков");
         ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame);
         GetAllGames.Add(chessGame4Players);
         return chessGame4Players.GameId;
@@ -63,19 +62,33 @@ public class GameService
     /// <param name="gameId">Идентификатор игры</param>
     /// <param name="playerId">Идентификатор игрока</param>
     /// <param name="nickname">Никнейм пользователя</param>
-    /// <param name="client">WebSocket игрока</param>
     /// <exception cref="KeyNotFoundException">Данная игра не найдена</exception>
-    public async Task JoinGame(string gameId, string playerId, string nickname, WebSocket client)
+    public async Task<BaseResponse> JoinGame(string gameId, string playerId, string nickname)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
         
         if (game == null)
-            throw new KeyNotFoundException("Данная игра не найдена");
+            return new BaseResponse { Message = "Данная игра не найдена", Error = "NotFound", StatusCode = 404 };
         
         ChessPlayer player = new ChessPlayer(playerId, nickname);
         await game.RequestJoin(player);
+        return new BaseResponse
+        {
+            StatusCode = 200,
+            Success = true,
+            Message = "Заявка на вступление в игру оставлена! ожидайте"
+        };
     }
 
+    /// <summary>
+    /// Возвращает информацию об игре
+    /// </summary>
+    /// <param name="gameId">Идентификатор игры</param>
+    /// <param name="playerId">Идентификатор игрока</param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException">Данная игра не найдена</exception>
+    /// <exception cref="NullReferenceException">Данный игрок не найден</exception>
+    /// <exception cref="UnauthorizedAccessException">У данного игрока нет доступа к игре</exception>
     public GameData GetBoard(string gameId, string playerId)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
@@ -149,6 +162,14 @@ public class GameService
         return data;
     }
 
+    /// <summary>
+    /// Выдает разрешение на вступление в игру
+    /// </summary>
+    /// <param name="gameId">Идентификатор игры</param>
+    /// <param name="playerId">Идентификатор игрока (кому выдается разрешение)</param>
+    /// <param name="sendPersonId">Кто выдает разрешение</param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException">Данная игра не найдена</exception>
     public async Task<bool> ApprovePersonTheGame(string gameId, string playerId, string sendPersonId)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
@@ -159,6 +180,14 @@ public class GameService
         return await game.ApprovePlayer(sendPersonId, playerId);
     }
     
+    /// <summary>
+    /// Запрещает пользователю в игре
+    /// </summary>
+    /// <param name="gameId">Идентификатор игры</param>
+    /// <param name="playerId">Идентификатор игрока</param>
+    /// <param name="sendPersonId">Кто запрещает в игре</param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException">Данная игра не найдена</exception>
     public async Task<bool> RejectPersonTheGame(string gameId, string playerId, string sendPersonId)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
@@ -169,6 +198,17 @@ public class GameService
         return await game.RejectPlayer(sendPersonId, playerId);
     }
 
+    /// <summary>
+    /// Перемещает фигуры
+    /// </summary>
+    /// <param name="gameId">Идентификатор игры</param>
+    /// <param name="personId">Идентификатор игрока</param>
+    /// <param name="oldRow">Текущий ряд фигуры</param>
+    /// <param name="oldCol">Текущая строка фигуры</param>
+    /// <param name="newRow">Новый ряд фигуры</param>
+    /// <param name="newCol">Новая строка фигуры</param>
+    /// <returns></returns>
+    /// <exception cref="KeyNotFoundException">Данная игра не найдена</exception>
     public async Task<bool> Moving(string gameId, string personId, int oldRow, int oldCol, int newRow, int newCol)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
@@ -179,6 +219,12 @@ public class GameService
         return await game.MakeAMove(personId, oldRow, oldCol, newRow, newCol);
     }
 
+    /// <summary>
+    /// Позволяет игроку выйти из игры
+    /// </summary>
+    /// <param name="gameId">Идентификатор игры</param>
+    /// <param name="personId">Идентификатор игрока</param>
+    /// <exception cref="KeyNotFoundException">Данная игра не найдена</exception>
     public async Task LeaveTheGame(string gameId, string personId)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
@@ -189,6 +235,10 @@ public class GameService
         game.ExitTheGame(personId);
     }
 
+    /// <summary>
+    /// Обозначает пользователя как неактивным
+    /// </summary>
+    /// <param name="playerId">Идентификатор игрока</param>
     public void SetUserIsInActive(string playerId)
     {
         foreach (var game in GetAllGames)
@@ -200,6 +250,10 @@ public class GameService
         }
     }
     
+    /// <summary>
+    /// Обозначает пользователя как активным
+    /// </summary>
+    /// <param name="playerId">Идентификатор игрока</param>
     public void SetUserIsActive(string playerId)
     {
         foreach (var game in GetAllGames)
