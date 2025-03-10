@@ -18,6 +18,14 @@
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
+        
+        <StackPanel
+            x:Name="Notify"
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Left">
+        </StackPanel>
 
         <Border
             x:Name="ProcessingGame"
