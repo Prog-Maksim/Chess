@@ -96,7 +96,7 @@ public abstract class BaseChessGame
             player.Approve();
             await AddPlayer(player);
 
-            await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
+            await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, GameId, true);
             await WebSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
             
             return;
@@ -122,7 +122,7 @@ public abstract class BaseChessGame
         if (player == null) 
             return false;
         
-        await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, true);
+        await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, GameId, true);
         await WebSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
 
         player.Approve();
@@ -148,7 +148,7 @@ public abstract class BaseChessGame
         WaitingPlayers.Remove(player);
         
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
-        await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, false);
+        await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, GameId, false);
         
         return true;
     }
