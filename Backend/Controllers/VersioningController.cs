@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers;
@@ -14,8 +15,19 @@ public class VersioningController: ControllerBase
     private const string ApiVersion = "[ALPHA] 01.00.000";
     private static readonly HashSet<string> AllowedTags = new() { "BETA", "ALPHA", "RELEASE" };
     
+    /// <summary>
+    /// Проверяет версию клиента
+    /// </summary>
+    /// <param name="version">Версия в формате: [Tag] xx.xx.xxx</param>
+    /// <returns></returns>
+    /// <response code="200">Результат, сходятся ли версии</response>
+    /// <response code="400">Некорректный формат версии</response>
+    /// <response code="500">Ошибка версии на сервере</response>
     [AllowAnonymous]
     [HttpGet("check-version")]
+    [ProducesResponseType(typeof(BadRequest),StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     public async Task<IActionResult> CheckVersionClient([Required][FromQuery] string version)
     {
         if (!TryParseVersion(version, out var clientTag, out var clientMajor, out var clientMinor))

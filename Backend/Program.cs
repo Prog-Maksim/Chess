@@ -14,7 +14,6 @@ using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
-using Newtonsoft.Json.Serialization;
 using Serilog;
 using Serilog.Events;
 

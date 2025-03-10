@@ -51,6 +51,6 @@ public class AuthService
 
         var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
         
-        return  new Token { Success = true, Message = "Вы успешно авторизовались!", AccessToken = accessToken, PersonId = person.PersonId };
+        return new Token { Success = true, Message = "Вы успешно авторизовались!", AccessToken = accessToken, PersonId = person.PersonId };
     }
 }

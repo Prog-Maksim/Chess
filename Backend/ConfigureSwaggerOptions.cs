@@ -19,9 +19,9 @@ public class ConfigureSwaggerOptions: IConfigureOptions<SwaggerGenOptions>
                 description.GroupName,
                 new OpenApiInfo
                 {
-                    Title = $"Jewelry store API {description.ApiVersion}",
+                    Title = $"Chess-online API {description.ApiVersion}",
                     Version = description.ApiVersion.ToString(),
-                    Description = "ASP.NET Basic web API for jewelry store",
+                    Description = "ASP.NET Basic web API for chess",
                     Contact = new OpenApiContact
                     {
                         Name = "Telegram Contact",
