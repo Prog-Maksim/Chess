@@ -51,7 +51,7 @@ public class SendWebSocketMessage
     /// </summary>
     /// <param name="player"></param>
     /// <param name="success"></param>
-    public async Task SendMessageResultJoinTheGame(ChessPlayer player, bool success)
+    public async Task SendMessageResultJoinTheGame(ChessPlayer player, string gameId, bool success)
     {
         ResultJoinTheGame joinTheGame = new ResultJoinTheGame
         {
@@ -59,6 +59,7 @@ public class SendWebSocketMessage
             StatusCode = 200,
             Success = true,
             Status = success,
+            GameId = gameId,
             Message = "Заявка на вступление в игру " + (success ? "принята!" : "отклонена!")
         };
 

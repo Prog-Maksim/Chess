@@ -49,12 +49,12 @@
            
            <TextBlock
                Grid.Row="1"
-               x:Name="TextError"
+               x:Name="InformText"
                VerticalAlignment="Top"
                HorizontalAlignment="Center"
                FontFamily="Montserrat"
                FontSize="15"
-               Foreground="Red"
+               Foreground="Black"
                TextWrapping="Wrap"
                FontWeight="Regular">
            </TextBlock>

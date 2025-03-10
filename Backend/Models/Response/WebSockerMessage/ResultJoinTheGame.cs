@@ -6,4 +6,5 @@
 public class ResultJoinTheGame: BaseWebSocketMessage
 {
     public bool Status { get; set; }
+    public required string GameId { get; set; }
 }

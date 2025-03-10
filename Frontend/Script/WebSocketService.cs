@@ -222,20 +222,20 @@ public class WebSocketService
 
     private async Task ParseMessages(string message)
     {
-        if (message.Contains("Join"))
-        {
-            Console.WriteLine(message);
-            var result = JsonSerializer.Deserialize<JoinTheGame>(message);
-            
-            if (result != null)
-                OnJoinTheGame?.Invoke(this, result);
-        }
         if (message.Contains("JoinResult"))
         {
             var result = JsonSerializer.Deserialize<ResultJoinTheGame>(message);
             
             if (result != null)
                 OnResultJoinTheGame?.Invoke(this, result);
+        }
+        else if (message.Contains("Join"))
+        {
+            Console.WriteLine(message);
+            var result = JsonSerializer.Deserialize<JoinTheGame>(message);
+            
+            if (result != null)
+                OnJoinTheGame?.Invoke(this, result);
         }
         else if (message.Contains("ReverseTimer"))
         {
