@@ -72,6 +72,7 @@ public partial class GameMenu : Page
         webSocket.OnUpdateColor += WebSocketOnUpdateColor;
         webSocket.OnUpdateKillPiece += WebSocketOnUpdateKillPiece;
         webSocket.OnUpdateScore += WebSocketOnUpdateScore;
+        webSocket.OnNewMove += WebSocketOnNewMove;
         
         _ = GetGameData();
         WaitingGame(create);
@@ -131,6 +132,11 @@ public partial class GameMenu : Page
         GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
     }
     
+    private void WebSocketOnNewMove(object? sender, NewMove e)
+    {
+        string nickname = _players[e.Move.PlayerId].GetNickname();
+        MoveMenu.AddMove(nickname, e.Move.StartRow, e.Move.StartColumn, e.Move.EndRow, e.Move.EndColumn, e.Move.Duration);
+    }
     
     private void WebSocketOnUpdateScore(object? sender, UpdateScore e)
     {
@@ -197,7 +203,7 @@ public partial class GameMenu : Page
     private void WebSocketOnGameFinished(object? sender, FinishGame e)
     {
         if (e.IsWinner)
-            MessageBox.Show("Поздравляем \n\nИгра была завершена. Вы победили", "Игра завершена");
+            MessageBox.Show($"Поздравляем \n\nИгра была завершена. Вы победили \n\nВы заработали: {e.Score} очков", "Игра завершена");
         else
         {
             if (_players.ContainsKey(e.WinnerId))

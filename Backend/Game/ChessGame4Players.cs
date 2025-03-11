@@ -259,6 +259,7 @@ public class ChessGame4Players : BaseChessGame
 
         NextTurn();
         await SendMessageUpdateBoard();
+        await AddNewMoveAsync(personId, oldRow, oldCol, newRow, newCol, person.GetRemainingTime());
         
         return true;
     }

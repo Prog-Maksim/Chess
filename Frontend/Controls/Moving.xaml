@@ -1,0 +1,70 @@
+﻿<UserControl x:Class="Frontend.Controls.Moving"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Frontend.Controls"
+             mc:Ignorable="d"
+             Background="Transparent"
+             d:DesignHeight="300" d:DesignWidth="350">
+    <Border
+        MaxHeight="500"
+        Background="#E0E0E0"
+        Margin="10 0 10 10"
+        CornerRadius="10">
+        <Grid ShowGridLines="False">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="40"></RowDefinition>
+                <RowDefinition></RowDefinition>
+            </Grid.RowDefinitions>
+            
+            <TextBlock
+                Grid.Row="0"
+                Text="ходы"
+                FontSize="18"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                FontWeight="Bold"
+                FontFamily="Montserrat">
+            </TextBlock>
+            
+            <ScrollViewer 
+                Grid.Row="1"
+                VerticalScrollBarVisibility="Auto"
+                MaxHeight="170">
+                <DataGrid
+                    x:Name="PlayerDataGrid"
+                    Margin="10 0 10 10"
+                    Style="{StaticResource DataGridStyle1}"
+                    CellStyle="{StaticResource DataGridCellStyle1}"
+                    ColumnHeaderStyle="{StaticResource DataGridColumnHeaderStyle1}"
+                    RowStyle="{StaticResource DataGridRowStyle1}"
+                    VerticalScrollBarVisibility="Hidden"
+                    HorizontalScrollBarVisibility="Hidden">
+                
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Игрок" IsReadOnly="True" CanUserResize="False"
+                                            Width="auto"
+                                            Binding="{Binding Nickname}" />
+                    
+                        <DataGridTextColumn Header="Ход" IsReadOnly="True" CanUserResize="False"
+                                            Width="auto"
+                                            Binding="{Binding Move}" />
+                    
+                        <DataGridTextColumn Header="Время" IsReadOnly="True" CanUserResize="False"
+                                            Width="auto"
+                                            Binding="{Binding TimeDelta, StringFormat={}{0:mm\\:ss} c}">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="TextAlignment" Value="Right"/>
+                                    <Setter Property="HorizontalAlignment" Value="Right"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                    </DataGrid.Columns>
+
+                </DataGrid>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>

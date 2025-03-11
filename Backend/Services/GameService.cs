@@ -111,6 +111,7 @@ public class GameService
             GameName = game.GameName,
             GameState = game.State,
             Score = player.Score,
+            Moves = game.Moves,
             KillPiece = player.GetListKillPiece(),
             CurrentPlayer = game.Players[game.CurrentPlayerIndex].Id,
         };

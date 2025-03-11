@@ -1,4 +1,5 @@
 ﻿using Backend.Enums;
+using Backend.Game;
 
 namespace Backend.Models.Response;
 
@@ -13,6 +14,11 @@ public class GameData
     /// Кол-во очков у игрока
     /// </summary>
     public required int Score { get; set; }
+    
+    /// <summary>
+    /// Текущие ходы игроков за игру
+    /// </summary>
+    public required List<Move> Moves { get; set; }
     
     /// <summary>
     /// Кол-во и тип убитых фигур

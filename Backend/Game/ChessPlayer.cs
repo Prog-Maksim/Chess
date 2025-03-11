@@ -71,6 +71,14 @@ public class ChessPlayer
         _turnTimer = new Timer(_ => Task.Run(UpdateTime), null, 1000, 1000);
     }
 
+    public TimeSpan GetRemainingTime()
+    {
+        if (_turnStartTime == null)
+            return TimeSpan.Zero;
+
+        return DateTime.UtcNow - _turnStartTime.Value;
+    }
+
     /// <summary>
     /// Завершение хода – уменьшаем оставшееся время
     /// </summary>

@@ -21,7 +21,8 @@ public abstract class BaseChessGame
     public bool IsGamePrivate { get; set; }
     public int CurrentPlayerIndex; 
     private Timer? _gameTimer;
-    protected TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
+    private TimeSpan GameDurationSeconds { get; set; } = TimeSpan.Zero;
+    public List<Move> Moves { get; set; } = new();
     
     protected readonly Lazy<SendWebSocketMessage> WebSocketMessage;
     private readonly IUserDataRepository _userDataRepository;
@@ -304,7 +305,23 @@ public abstract class BaseChessGame
     /// </summary>
     /// <returns></returns>
     protected virtual TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(1);
-    
+
+    protected async Task AddNewMoveAsync(string playerId, int startRow, int startCol, int endRow, int endCol, TimeSpan timeMove)
+    {
+        Move move = new Move
+        {
+            MoveId = Guid.NewGuid().ToString(),
+            PlayerId = playerId,
+            DataMove = DateTime.Now,
+            StartRow = startRow,
+            StartColumn = startCol,
+            EndRow = endRow,
+            EndColumn = endCol,
+            Duration = timeMove
+        };
+        Moves.Add(move);
+        await WebSocketMessage.Value.SendMessageNewMoving(Players, move);
+    }
     protected abstract Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol);
 
     public async Task<bool> MakeAMove(string personId, int oldRow, int oldCol, int newRow, int newCol)
