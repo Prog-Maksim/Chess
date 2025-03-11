@@ -1,6 +1,6 @@
-﻿using Backend.Enums;
+﻿using Frontend.Enums;
 
-namespace Backend.Models.Response.WebSocketMessage;
+namespace Frontend.Models.WebSocketMessage;
 
 public class KillAllPiece: BaseWebSocketMessage
 {

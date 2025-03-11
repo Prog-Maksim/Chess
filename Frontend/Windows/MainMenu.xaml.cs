@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using Frontend.Controls;
 using Frontend.Controls.Message;
-using Frontend.Models.WebSockerMessage;
+using Frontend.Models.WebSocketMessage;
 using Frontend.Script;
 
 namespace Frontend.Windows;

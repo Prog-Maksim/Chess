@@ -1,4 +1,4 @@
-﻿namespace Frontend.Models.WebSockerMessage;
+﻿namespace Frontend.Models.WebSocketMessage;
 
 /// <summary>
 /// Заявка на вступление в игру

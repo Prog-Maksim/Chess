@@ -28,6 +28,7 @@ builder.Services.AddScoped<AuthService>();
 
 // Регистрация репозиториев
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddSingleton<IUserDataRepository, UserDataRepository>();
 
 builder.Services.AddSingleton<WebSocketService>();
 builder.Services.AddSingleton<SendWebSocketMessage>();

@@ -246,22 +246,20 @@ public class SendWebSocketMessage
     /// Сообщения о завершении игры
     /// </summary>
     /// <param name="players"></param>
-    public async Task SendMessageFinishGame(List<ChessPlayer> players, FinishGame finish)
+    public async Task SendMessageFinishGame(ChessPlayer player, FinishGame finish)
     {
         var message = JsonConvert.SerializeObject(finish);
         var buffer = Encoding.UTF8.GetBytes(message);
-
-        foreach (var player in players)
+        
+        var ws = _webSocketService.GetWebSocket(player.Id);
+        if (ws != null && ws.State == WebSocketState.Open)
         {
-            var ws = _webSocketService.GetWebSocket(player.Id);
-            if (ws != null && ws.State == WebSocketState.Open)
-            {
-                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
-                    CancellationToken.None);
-            }
-            else
-                Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+            await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                CancellationToken.None);
         }
+        else
+            Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        
     }
     
     /// <summary>
@@ -462,7 +460,7 @@ public class SendWebSocketMessage
     }
 
     /// <summary>
-    /// Сообщение, Обновление какие фигуры убил пользователб
+    /// Сообщение, Обновление какие фигуры убил пользователm
     /// </summary>
     /// <param name="player"></param>
     public async Task SendMessageUpdateKillPiece(ChessPlayer player, List<ChessPiece>? killPiece)
@@ -472,7 +470,7 @@ public class SendWebSocketMessage
             MessageType = "KillPiece",
             Message = "Обновление убитых фигур",
             StatusCode = 200,
-            KillPiece = killPiece,
+            KillPiece = killPiece.Select(p => p.Type).ToList(),
             Success = true
         };
         

@@ -1,8 +1,6 @@
-﻿using System.Net.WebSockets;
-using Backend.Enums;
-using Backend.Game;
-using Backend.Game.Shapes;
+﻿using Backend.Game;
 using Backend.Models.Response;
+using Backend.Repository.Interfaces;
 
 namespace Backend.Services;
 
@@ -13,13 +11,15 @@ public class GameService
     /// </summary>
     private List<BaseChessGame> GetAllGames { get; set; }
     private Lazy<SendWebSocketMessage> _sendWebSocketMessage;
+    protected readonly IUserDataRepository _userDataRepository;
 
     public delegate void DeleteGame(string gameId);
     
-    public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage)
+    public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage, IUserDataRepository userDataRepository)
     {
         GetAllGames = new List<BaseChessGame>();
         _sendWebSocketMessage = sendWebSocketMessage;
+        _userDataRepository = userDataRepository;
     }
 
     /// <summary>
@@ -38,12 +38,12 @@ public class GameService
 
         if (players == 2)
         {
-            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame);
+            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
             GetAllGames.Add(chessGame2Players);
             return chessGame2Players.GameId;
         }
         
-        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame);
+        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
         GetAllGames.Add(chessGame4Players);
         return chessGame4Players.GameId;
     }

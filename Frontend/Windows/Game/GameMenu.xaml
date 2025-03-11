@@ -7,11 +7,11 @@
       xmlns:frame="clr-namespace:Frontend.Controls"
       mc:Ignorable="d"
       Title="GameMenu" d:DesignHeight="700" d:DesignWidth="1300">
-    <Grid x:Name="MainGrid">
+    <Grid x:Name="MainGrid" ShowGridLines="False">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="270"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="270"></ColumnDefinition>
+            <ColumnDefinition Width="350"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
@@ -203,11 +203,14 @@
             </Grid>
         </Viewbox>
 
+        <!-- Боковое меню (правое) -->
         <StackPanel
             x:Name="RightStackPanel"
             Grid.Column="2"
             Grid.Row="1"
             Margin="0 30">
+            <frame:UserScoreControl x:Name="ScoreMenu"/>
+            <frame:KillPieceControl x:Name="KillPieceControl"/>
         </StackPanel>
     </Grid>
 </Page>

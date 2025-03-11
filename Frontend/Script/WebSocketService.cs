@@ -4,7 +4,7 @@ using System.Text;
 using System.Text.Json;
 using System.Windows;
 using Frontend.Models.Request;
-using Frontend.Models.WebSockerMessage;
+using Frontend.Models.WebSocketMessage;
 
 namespace Frontend.Script;
 
@@ -219,6 +219,14 @@ public class WebSocketService
     /// У игрока изменился цвет
     /// </summary>
     public event EventHandler<UpdateColorPlayer>? OnUpdateColor;
+    /// <summary>
+    /// Событие обновления кол-ва убитых фигур
+    /// </summary>
+    public event EventHandler<KillAllPiece>? OnUpdateKillPiece;
+    /// <summary>
+    /// События обновления заработанных очков
+    /// </summary>
+    public event EventHandler<UpdateScore>? OnUpdateScore;
 
     private async Task ParseMessages(string message)
     {
@@ -341,6 +349,20 @@ public class WebSocketService
             
             if (result != null)
                 OnUpdateColor?.Invoke(this, result);
+        }
+        else if (message.Contains("KillPiece"))
+        {
+            var result = JsonSerializer.Deserialize<KillAllPiece>(message);
+            
+            if (result != null)
+                OnUpdateKillPiece?.Invoke(this, result);
+        }
+        else if (message.Contains("Score"))
+        {
+            var result = JsonSerializer.Deserialize<UpdateScore>(message);
+            
+            if (result != null)
+                OnUpdateScore?.Invoke(this, result);
         }
     }
 }

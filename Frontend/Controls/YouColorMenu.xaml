@@ -7,17 +7,13 @@
              xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
              mc:Ignorable="d"
              Background="Transparent"
-             d:DesignHeight="300" d:DesignWidth="300">
+             d:DesignHeight="300" d:DesignWidth="350">
     <Border
         x:Name="MainBorder"
         Height="40"
         Background="White"
         Margin="10 0 10 10"
         CornerRadius="10">
-        
-        <Border.Effect>
-            <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="0" Opacity="0.35"></DropShadowEffect>
-        </Border.Effect>
         
         <Border.ToolTip>
             <ToolTip>
@@ -31,7 +27,7 @@
             VerticalAlignment="Center"
             HorizontalAlignment="Center"
             Margin="10 0 0 0"
-            FontWeight="Bold"
+            FontWeight="Black"
             FontFamily="Montserrat"
             FontSize="15">
             <Run Text="Ваши фигуры" />

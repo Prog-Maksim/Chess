@@ -1,4 +1,4 @@
-﻿namespace Backend.Models.Response.WebSocketMessage;
+﻿namespace Frontend.Models.WebSocketMessage;
 
 public class FinishGame: BaseWebSocketMessage
 {

@@ -2,6 +2,8 @@
 using Backend.Game.Shapes;
 using Backend.Models.Response;
 using Backend.Models.Response.WebSocketMessage;
+using Backend.Repository;
+using Backend.Repository.Interfaces;
 using Backend.Services;
 
 namespace Backend.Game;
@@ -22,6 +24,7 @@ public abstract class BaseChessGame
     protected TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
     
     protected readonly Lazy<SendWebSocketMessage> WebSocketMessage;
+    private readonly IUserDataRepository _userDataRepository;
     private GameService.DeleteGame _deleteGame;
 
     /// <summary>
@@ -30,7 +33,8 @@ public abstract class BaseChessGame
     /// <param name="boardSize">Размер поля</param>
     /// <param name="player"></param>
     /// <param name="webSocketMessage"></param>
-    protected BaseChessGame(string name, int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, GameService.DeleteGame deleteGame)
+    protected BaseChessGame(string name, int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, 
+        GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository)
     {
         Random rnd = new();
         GameId = $"{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}";
@@ -43,6 +47,7 @@ public abstract class BaseChessGame
         _ = AddPlayer(player);
         
         WebSocketMessage = webSocketMessage;
+        _userDataRepository = userDataRepository;
         _deleteGame = deleteGame;
     }
 
@@ -53,7 +58,9 @@ public abstract class BaseChessGame
     /// <param name="player"></param>
     /// <param name="isGamePrivate">Приватная ли игра</param>
     /// <param name="socketMessage"></param>
-    protected BaseChessGame(string name, int boardSize, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame): this(name, boardSize, player, socketMessage, deleteGame)
+    protected BaseChessGame(string name, int boardSize, ChessPlayer player, bool isGamePrivate, 
+        Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository): 
+        this(name, boardSize, player, socketMessage, deleteGame, userDataRepository)
     {
         IsGamePrivate = isGamePrivate;
     }
@@ -235,7 +242,7 @@ public abstract class BaseChessGame
             GameDurationSeconds += TimeSpan.FromSeconds(1);
             await WebSocketMessage.Value.SendMessageTimerGame(Players, GameDurationSeconds);
 
-            CheckThePlayers();
+            await CheckThePlayers();
 
             // Если время игры превышено, завершаем
             if (GameDurationSeconds >= MaxGameTimeInSeconds())
@@ -308,20 +315,32 @@ public abstract class BaseChessGame
     /// <summary>
     /// Объявление победы
     /// </summary>
-    protected virtual void DeclarationVictory(ChessPlayer player)
+    protected virtual async Task DeclarationVictory(ChessPlayer player)
     {
-        FinishGame finish = new FinishGame
+        player.Score *= 2;
+        
+        foreach (var user in Players)
         {
-            MessageType = "Finished",
-            Message = "Игра завершена",
-            StatusCode = 200,
-            Success = true,
-            Winner = player.Id
-        };
-
-        _ = WebSocketMessage.Value.SendMessageFinishGame(Players, finish);
-
-        // TODO: Добавить начисление очков
+            if (user.State == PlayerState.Disconnected)
+            {
+                user.Score = 0;
+                user.Score = -50;
+            }
+            
+            FinishGame finish = new FinishGame
+            {
+                MessageType = "Finished",
+                Message = "Игра завершена",
+                StatusCode = 200,
+                Success = true,
+                WinnerId = player.Id,
+                IsWinner = user.Id == player.Id,
+                Score = player.Score
+            };
+            await WebSocketMessage.Value.SendMessageFinishGame(user, finish);
+            await _userDataRepository.UpdateScore(user.Id, user.Score);
+        }
+        
         
         foreach (var pl in Players)
             pl.EndTurn();
@@ -333,12 +352,19 @@ public abstract class BaseChessGame
     /// <summary>
     /// Проверка активных игроков
     /// </summary>
-    private void CheckThePlayers()
+    private async Task CheckThePlayers()
     {
         var players = Players.Where(p => p.State == PlayerState.Active).ToList();
-
+        
         if (players.Count == 1)
-            DeclarationVictory(players.First());
+        {
+            Console.WriteLine("Закрытие игры");
+            
+            if (State == GameState.InProgress)
+                await DeclarationVictory(players.First());
+            else
+                _deleteGame(GameId);
+        }
     }
     
     private readonly Dictionary<string, CancellationTokenSource> _playerTimers = new();

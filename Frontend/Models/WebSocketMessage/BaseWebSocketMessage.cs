@@ -1,4 +1,4 @@
-﻿namespace Frontend.Models.WebSockerMessage;
+﻿namespace Frontend.Models.WebSocketMessage;
 public class BaseWebSocketMessage
 {
     public required string MessageType { get; set; }

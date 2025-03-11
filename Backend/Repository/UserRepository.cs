@@ -42,8 +42,4 @@ public class UserRepository: IUserRepository
     {
         await _usersCollection.InsertOneAsync(user);
     }
-
-    public async Task SaveChangesAsync()
-    {
-    }
 }

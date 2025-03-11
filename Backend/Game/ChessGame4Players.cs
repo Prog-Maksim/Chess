@@ -1,15 +1,16 @@
 ﻿using Backend.Game.Shapes;
+using Backend.Repository.Interfaces;
 using Backend.Services;
 
 namespace Backend.Game;
 
 public class ChessGame4Players : BaseChessGame
 {
-    public ChessGame4Players(string name, ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(name, 16, player, socketMessage, deleteGame)
+    public ChessGame4Players(string name, ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, player, socketMessage, deleteGame, userDataRepository)
     {
         GameName = name; 
     }
-    public ChessGame4Players(string name, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(name, 16, player, isGamePrivate, socketMessage, deleteGame) { }
+    public ChessGame4Players(string name, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, player, isGamePrivate, socketMessage, deleteGame, userDataRepository) { }
 
     protected override int RequiredPlayers() => 4;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(4);
@@ -244,12 +245,14 @@ public class ChessGame4Players : BaseChessGame
             return false;
 
         var person = Players.FirstOrDefault(p => p.Id == personId);
-
-        if (piece.OwnerId == person.Id)
+        if (piece.OwnerId != person.Id)
             return false;
 
-        person.Score += piece.Score;
-        await person.AddKillPiece(piece);
+        if (Board[newRow, newCol] != null)
+        {
+            person.Score += Board[newRow, newCol].Score;
+            await person.AddKillPiece(Board[newRow, newCol]);
+        }
         
         Board[newRow, newCol] = piece;
         Board[oldRow, oldCol] = null;
@@ -257,6 +260,6 @@ public class ChessGame4Players : BaseChessGame
         NextTurn();
         await SendMessageUpdateBoard();
         
-        return false;
+        return true;
     }
 }

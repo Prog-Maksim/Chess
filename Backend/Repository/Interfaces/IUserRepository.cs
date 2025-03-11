@@ -32,10 +32,4 @@ public interface IUserRepository
     /// <param name="user">Пользователь</param>
     /// <returns></returns>
     Task AddUserAsync(Person user);
-    
-    /// <summary>
-    /// Сохраняет изменентя в БД
-    /// </summary>
-    /// <returns></returns>
-    Task SaveChangesAsync();
 }
