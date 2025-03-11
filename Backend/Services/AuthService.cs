@@ -53,4 +53,18 @@ public class AuthService
         
         return new Token { Success = true, Message = "Вы успешно авторизовались!", AccessToken = accessToken, PersonId = person.PersonId };
     }
+
+    public async Task<BaseResponse> UpdatePasswordAsync(string playerId, string oldPassword, string newPassword)
+    {
+        var person = await _userRepository.GetUserByIdAsync(playerId);
+        
+        if (person == null)
+            return new BaseResponse { Message = "Данный пользователь не найден", Error = "NotFound", StatusCode = 404 };
+        
+        if (_passwordHasher.VerifyHashedPassword(person, person.Password, oldPassword) != PasswordVerificationResult.Success)
+            return new BaseResponse { Message = "Пароль не верен!", Error = "Forbidden", StatusCode = 403 };
+
+        await _userRepository.UpdatePasswordAsync(playerId, newPassword);
+        return new BaseResponse { Success = true, Message = "Пароль успешно обновлен!"};
+    }
 }

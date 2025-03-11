@@ -30,7 +30,7 @@ public class AuthController(AuthService authService): ControllerBase
         var result = await authService.RegisterUserAsync(user);
         
         if (!result.Success)
-            return StatusCode(result.StatusCode, result.Message);
+            return StatusCode(result.StatusCode, result);
         
         return Ok(result);
     }
@@ -55,8 +55,27 @@ public class AuthController(AuthService authService): ControllerBase
         var result = await authService.LoginUserAsync(user);
         
         if (!result.Success)
-            return StatusCode(result.StatusCode, result.Message);
+            return StatusCode(result.StatusCode, result);
         
+        return Ok(result);
+    }
+
+
+    [Authorize]
+    [MapToApiVersion("1.0")]
+    [HttpPut("password")]
+    public async Task<IActionResult> UpdatePassword(UpdatePassword password)
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+
+        var result =
+            await authService.UpdatePasswordAsync(dataToken.PersonId, password.OldPassword, password.NewPassword);
+
+        if (!result.Success)
+            return StatusCode(result.StatusCode, result);
+
         return Ok(result);
     }
 }
