@@ -103,7 +103,6 @@ public class GameService
 
         if (game.IsGamePrivate && !player.IsApproved)
             throw new UnauthorizedAccessException("У вас нет доступа к этой игре");
-
         
         GameData data = new GameData
         {
@@ -111,7 +110,8 @@ public class GameService
             GameId = gameId,
             GameName = game.GameName,
             GameState = game.State,
-
+            Score = player.Score,
+            KillPiece = player.GetListKillPiece(),
             CurrentPlayer = game.Players[game.CurrentPlayerIndex].Id,
         };
         data.Players = new List<GamePlayer>();

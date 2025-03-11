@@ -50,6 +50,12 @@ public class ChessPlayer
         KillPiece.Add(piece);
         await _message.SendMessageUpdateKillPiece(this, KillPiece);
     }
+
+    public List<PieceType> GetListKillPiece()
+    {
+        List<PieceType> pieces = KillPiece.Select(p => p.Type).ToList();
+        return pieces;
+    }
     
     /// <summary>
     /// Одобряет игрока для входа в игру

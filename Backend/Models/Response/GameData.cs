@@ -10,6 +10,16 @@ public class GameData
     public required string PersonId { get; set; }
     
     /// <summary>
+    /// Кол-во очков у игрока
+    /// </summary>
+    public required int Score { get; set; }
+    
+    /// <summary>
+    /// Кол-во и тип убитых фигур
+    /// </summary>
+    public required List<PieceType> KillPiece { get; set; }
+    
+    /// <summary>
     /// Идентификатор игры
     /// </summary>
     public required string GameId { get; set; }
@@ -56,6 +66,8 @@ public class GameBoard
     /// </summary>
     public required string PersonId { get; set; }
 }
+
+// TODO: Добавить кол-во очков у игрока, убитые фигуры, (для каждого индивидуально), все ходы
 
 public class GamePlayer
 {
