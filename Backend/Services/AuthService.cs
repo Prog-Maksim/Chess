@@ -10,11 +10,14 @@ namespace Backend.Services;
 public class AuthService
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserDataRepository _userDataRepository;
+    
     private readonly PasswordHasher<Person> _passwordHasher = new();
 
-    public AuthService(IUserRepository userRepository)
+    public AuthService(IUserRepository userRepository, IUserDataRepository userDataRepository)
     {
         _userRepository = userRepository;
+        _userDataRepository = userDataRepository;
     }
 
     public async Task<BaseResponse> RegisterUserAsync(RegistrationUser user)
@@ -31,9 +34,15 @@ public class AuthService
             Email = user.Email
         };
         person.Password = _passwordHasher.HashPassword(person, user.Password);
+
+        UserData data = new UserData
+        {
+            PersonId = person.PersonId,
+            Score = 0
+        };
         
         await _userRepository.AddUserAsync(person);
-        await _userRepository.SaveChangesAsync();
+        await _userDataRepository.AddUserDataAsync(data);
 
         var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
 
@@ -52,5 +61,19 @@ public class AuthService
         var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
         
         return new Token { Success = true, Message = "Вы успешно авторизовались!", AccessToken = accessToken, PersonId = person.PersonId };
+    }
+
+    public async Task<BaseResponse> UpdatePasswordAsync(string playerId, string oldPassword, string newPassword)
+    {
+        var person = await _userRepository.GetUserByIdAsync(playerId);
+        
+        if (person == null)
+            return new BaseResponse { Message = "Данный пользователь не найден", Error = "NotFound", StatusCode = 404 };
+        
+        if (_passwordHasher.VerifyHashedPassword(person, person.Password, oldPassword) != PasswordVerificationResult.Success)
+            return new BaseResponse { Message = "Пароль не верен!", Error = "Forbidden", StatusCode = 403 };
+
+        await _userRepository.UpdatePasswordAsync(playerId, newPassword);
+        return new BaseResponse { Success = true, Message = "Пароль успешно обновлен!"};
     }
 }

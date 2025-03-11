@@ -23,6 +23,18 @@
       <Resource Include="Image\Notify\warning.png" />
       <None Remove="Image\Notify\restart.png" />
       <Resource Include="Image\Notify\restart.png" />
+      <None Remove="Image\Piece\Bishop.png" />
+      <Resource Include="Image\Piece\Bishop.png" />
+      <None Remove="Image\Piece\King.png" />
+      <Resource Include="Image\Piece\King.png" />
+      <None Remove="Image\Piece\Knight.png" />
+      <Resource Include="Image\Piece\Knight.png" />
+      <None Remove="Image\Piece\Pawn.png" />
+      <Resource Include="Image\Piece\Pawn.png" />
+      <None Remove="Image\Piece\Queen.png" />
+      <Resource Include="Image\Piece\Queen.png" />
+      <None Remove="Image\Piece\Rook.png" />
+      <Resource Include="Image\Piece\Rook.png" />
     </ItemGroup>
 
     <ItemGroup>

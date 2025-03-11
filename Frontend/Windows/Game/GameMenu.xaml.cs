@@ -8,10 +8,11 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Frontend.Controls;
+using Frontend.Controls.Message;
 using Frontend.Enums;
 using Frontend.Models;
 using Frontend.Models.Request;
-using Frontend.Models.WebSockerMessage;
+using Frontend.Models.WebSocketMessage;
 using Frontend.Script;
 
 namespace Frontend.Windows.Game;
@@ -52,6 +53,11 @@ public partial class GameMenu : Page
         _mainMenu = mainMenu;
         _webSocketService = webSocket;
         
+        webSocket.OnIsConnected += ClientOnIsConnected;
+        webSocket.OnConnectRetry += ClientOnConnectRetry;
+        webSocket.OnFailedConnect += ClientOnFailedConnect;
+        
+        
         webSocket.OnJoinTheGame += WebSocketOnJoinTheGame;
         webSocket.OnDurationGame += UpdateGameTime;
         webSocket.OnAddPerson += WebSocketOnAddPerson; 
@@ -64,9 +70,46 @@ public partial class GameMenu : Page
         webSocket.OnGameFinished += WebSocketOnGameFinished;
         webSocket.OnRemovePlayer += WebSocketOnRemovePlayer;
         webSocket.OnUpdateColor += WebSocketOnUpdateColor;
+        webSocket.OnUpdateKillPiece += WebSocketOnUpdateKillPiece;
+        webSocket.OnUpdateScore += WebSocketOnUpdateScore;
         
         _ = GetGameData();
         WaitingGame(create);
+    }
+
+
+    private void ClientOnFailedConnect(object? sender, EventArgs e)
+    {
+        MainMenu.RetryConnect deleteNotify = () =>
+        {
+            RemoveWarningAfterDelay(0);
+            _ = _webSocketService.ConnectAsync(SaveRepository.ReadToken());
+        };
+        FailedMessageConnect warningRetryConnect = new FailedMessageConnect(deleteNotify);
+        warningRetryConnect.Margin = new Thickness(0, 10, 0, 35);
+        Notify.Children.Add(warningRetryConnect);
+    }
+
+    private void ClientOnConnectRetry(object? sender, EventArgs e)
+    {
+        RemoveWarningAfterDelay(0);
+        
+        WarningRetryConnect warningRetryConnect = new WarningRetryConnect();
+        warningRetryConnect.Margin = new Thickness(0, 10, 0, 35);
+        Notify.Children.Add(warningRetryConnect);
+        
+        RemoveWarningAfterDelay();
+    }
+    
+    private void ClientOnIsConnected(object? sender, bool e)
+    {
+        
+    }
+    
+    private async void RemoveWarningAfterDelay(int time = 1500)
+    {
+        await Task.Delay(time);
+        Notify.Children.Clear();
     }
 
     private void WaitingGame(bool create)
@@ -86,6 +129,28 @@ public partial class GameMenu : Page
     {
         GameTime.Text = "Ожидание";
         GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+    }
+    
+    
+    private void WebSocketOnUpdateScore(object? sender, UpdateScore e)
+    {
+        ScoreMenu.UpdateScore(e.Score);
+    }
+
+    private void WebSocketOnUpdateKillPiece(object? sender, KillAllPiece e)
+    {
+        if (e.KillPiece == null)
+            return;
+
+        var pieceCounts = e.KillPiece
+            .GroupBy(p => p)
+            .ToDictionary(g => g.Key, g => g.Count());
+        
+        foreach (PieceType pieceType in Enum.GetValues(typeof(PieceType)))
+        {
+            int count = pieceCounts.GetValueOrDefault(pieceType, 0);
+            KillPieceControl.UpdateKillPiece(pieceType, count);
+        }
     }
 
     public delegate void DeleteMenu(JoinTheRequestControl menu);
@@ -131,17 +196,17 @@ public partial class GameMenu : Page
     
     private void WebSocketOnGameFinished(object? sender, FinishGame e)
     {
-        if (e.Winner == SaveRepository.ReadId())
+        if (e.IsWinner)
             MessageBox.Show("Поздравляем \n\nИгра была завершена. Вы победили", "Игра завершена");
         else
         {
-            if (_players.ContainsKey(e.Winner))
+            if (_players.ContainsKey(e.WinnerId))
             {
-                string nickname = _players[e.Winner].GetNickname();
-                MessageBox.Show($"Игра завершена. \n\nВы проиграли!\nПобедил игрок: {nickname}.", "Игра завершена");
+                string nickname = _players[e.WinnerId].GetNickname();
+                MessageBox.Show($"Игра завершена. \n\nВы проиграли!\nПобедил игрок: {nickname}. \n\nВы заработали: {e.Score} очков", "Игра завершена");
             }
             else
-                MessageBox.Show($"Игра завершена. \n\nВы проиграли!", "Игра завершена");
+                MessageBox.Show($"Игра завершена. \n\nВы проиграли! \n\nВы заработали: {e.Score} очков", "Игра завершена");
         }
         _mainMenu.OpenMainMenu();
     }
@@ -247,14 +312,17 @@ public partial class GameMenu : Page
             catch (HttpRequestException e)
             {
                 MessageBox.Show($"Ошибка HTTP: {e.Message} \n\n{e.StackTrace}");
+                _mainMenu.OpenMainMenu();
             }
             catch (JsonException e)
             {
                 MessageBox.Show($"Ошибка при десериализации JSON: {e.Message} \n\n{e.StackTrace}");
+                _mainMenu.OpenMainMenu();
             }
             catch (Exception e)
             {
                 MessageBox.Show($"{e.Message} \n\n{e.StackTrace}");
+                _mainMenu.OpenMainMenu();
             }
         }
     }

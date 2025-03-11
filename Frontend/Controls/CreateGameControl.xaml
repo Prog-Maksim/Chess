@@ -9,6 +9,7 @@
              Background="Transparent"
              Height="400" Width="300">
     <Border
+        IsHitTestVisible="True"
         Background="White"
         CornerRadius="20" Padding="10 0 10 10">
         
@@ -26,17 +27,20 @@
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
             
-            <iconPacks:PackIconEvaIcons 
+            <Border
                 Grid.Row="0"
-                Kind="Close"
                 VerticalAlignment="Center"
                 HorizontalAlignment="Right"
-                Width="20"
-                Height="20"
                 Cursor="Hand"
-                Foreground="Red"
+                Background="White"
                 MouseLeftButtonDown="UIElement_OnMouseLeftButtonDown">
-            </iconPacks:PackIconEvaIcons>
+                <iconPacks:PackIconEvaIcons 
+                    Kind="Close"
+                    Width="20"
+                    Height="20"
+                    Foreground="Red">
+                </iconPacks:PackIconEvaIcons>
+            </Border>
            
             <TextBlock
                 Grid.Row="1"

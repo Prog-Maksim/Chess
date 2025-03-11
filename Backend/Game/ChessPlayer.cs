@@ -1,5 +1,6 @@
 ﻿using Backend.Enums;
 using Backend.Game.Shapes;
+using Backend.Services;
 
 namespace Backend.Game;
 
@@ -18,14 +19,42 @@ public class ChessPlayer
     public TimeSpan RemainingTime { get; private set; } = TimeSpan.FromMinutes(25); // Время на ход
     private Timer? _turnTimer;
     private DateTime? _turnStartTime;
+
+    private List<ChessPiece> KillPiece = new ();
+
+    private int _score;
+
+    public int Score
+    {
+        get => _score;
+        set
+        {
+            _score = value;
+            _ = _message.SendMessageUpdateScore(this, _score);
+        }
+    }
     
     // Событие, которое вызывается, когда время обновляется
     public event Func<ChessPlayer, Task>? OnTimeUpdate;
+    private readonly SendWebSocketMessage _message;
     
-    public ChessPlayer(string id, string name)
+    public ChessPlayer(string id, string name, SendWebSocketMessage message)
     {
         Id = id;
         Name = name;
+        _message = message;
+    }
+
+    public async Task AddKillPiece(ChessPiece piece)
+    {
+        KillPiece.Add(piece);
+        await _message.SendMessageUpdateKillPiece(this, KillPiece);
+    }
+
+    public List<PieceType> GetListKillPiece()
+    {
+        List<PieceType> pieces = KillPiece.Select(p => p.Type).ToList();
+        return pieces;
     }
     
     /// <summary>

@@ -1,8 +1,6 @@
-﻿using System.Net.WebSockets;
-using Backend.Enums;
-using Backend.Game;
-using Backend.Game.Shapes;
+﻿using Backend.Game;
 using Backend.Models.Response;
+using Backend.Repository.Interfaces;
 
 namespace Backend.Services;
 
@@ -13,13 +11,15 @@ public class GameService
     /// </summary>
     private List<BaseChessGame> GetAllGames { get; set; }
     private Lazy<SendWebSocketMessage> _sendWebSocketMessage;
+    protected readonly IUserDataRepository _userDataRepository;
 
     public delegate void DeleteGame(string gameId);
     
-    public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage)
+    public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage, IUserDataRepository userDataRepository)
     {
         GetAllGames = new List<BaseChessGame>();
         _sendWebSocketMessage = sendWebSocketMessage;
+        _userDataRepository = userDataRepository;
     }
 
     /// <summary>
@@ -34,16 +34,16 @@ public class GameService
     public string CreateGame(string nameGame, int players, string personId, string name, bool isPrivate)
     {
         DeleteGame deleteGame = DeleteGameHandler;
-        ChessPlayer player = new ChessPlayer(personId, name);
+        ChessPlayer player = new ChessPlayer(personId, name, _sendWebSocketMessage.Value);
 
         if (players == 2)
         {
-            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame);
+            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
             GetAllGames.Add(chessGame2Players);
             return chessGame2Players.GameId;
         }
         
-        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame);
+        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
         GetAllGames.Add(chessGame4Players);
         return chessGame4Players.GameId;
     }
@@ -70,7 +70,7 @@ public class GameService
         if (game == null)
             return new BaseResponse { Message = "Данная игра не найдена", Error = "NotFound", StatusCode = 404 };
         
-        ChessPlayer player = new ChessPlayer(playerId, nickname);
+        ChessPlayer player = new ChessPlayer(playerId, nickname, _sendWebSocketMessage.Value);
         await game.RequestJoin(player);
         return new BaseResponse
         {
@@ -103,7 +103,6 @@ public class GameService
 
         if (game.IsGamePrivate && !player.IsApproved)
             throw new UnauthorizedAccessException("У вас нет доступа к этой игре");
-
         
         GameData data = new GameData
         {
@@ -111,7 +110,8 @@ public class GameService
             GameId = gameId,
             GameName = game.GameName,
             GameState = game.State,
-
+            Score = player.Score,
+            KillPiece = player.GetListKillPiece(),
             CurrentPlayer = game.Players[game.CurrentPlayerIndex].Id,
         };
         data.Players = new List<GamePlayer>();

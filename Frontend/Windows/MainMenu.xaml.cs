@@ -1,13 +1,9 @@
-﻿using System.Net.Http;
-using System.Text;
-using System.Text.Json;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using Frontend.Controls;
 using Frontend.Controls.Message;
-using Frontend.Models;
-using Frontend.Models.WebSockerMessage;
+using Frontend.Models.WebSocketMessage;
 using Frontend.Script;
 
 namespace Frontend.Windows;
@@ -55,17 +51,17 @@ public partial class MainMenu : Page
         RemoveWarningAfterDelay();
     }
     
-    private async void RemoveWarningAfterDelay(int time = 1500)
-    {
-        await Task.Delay(time);
-        Notify.Child = null;
-    }
-
     private void ClientOnIsConnected(object? sender, bool e)
     {
         CoopButton.IsEnabled = e;
         CreateGame.IsEnabled = e;
         JoinTheGame.IsEnabled = e;
+    }
+    
+    private async void RemoveWarningAfterDelay(int time = 1500)
+    {
+        await Task.Delay(time);
+        Notify.Child = null;
     }
 
     public MainMenu(WebSocketService webSocket, MainWindow mainWindow): this()
@@ -76,108 +72,59 @@ public partial class MainMenu : Page
 
     public delegate void CloseMenu();
     
-    private CreateGameControl? CreateGameControl;
+    private CreateGameControl? _createGameControl;
     private void CreateGame_OnClick(object sender, RoutedEventArgs e)
     {
-        if (CreateGameControl != null)
+        if (_createGameControl != null)
             return;
         
         CloseMenu closeMenu = () =>
         {
-            MainGrid.Children.Remove(CreateGameControl);
-            SetGameIdControl = null;
+            MainGrid.Children.Remove(_createGameControl);
+            _createGameControl = null;
             CoopButton_OnClick(sender, e);
         };
-        CreateGameControl = new CreateGameControl(mainWindow, this, closeMenu);
+        _createGameControl = new CreateGameControl(mainWindow, this, closeMenu);
         
-        Grid.SetRowSpan(CreateGameControl, 4);
-        Grid.SetColumnSpan(CreateGameControl, 4);
-        Panel.SetZIndex(CreateGameControl, 2);
-        MainGrid.Children.Add(CreateGameControl);
+        Grid.SetRowSpan(_createGameControl, 4);
+        Grid.SetColumnSpan(_createGameControl, 4);
+        Panel.SetZIndex(_createGameControl, 2);
+        MainGrid.Children.Add(_createGameControl);
     }
     
     
-    private SetGameIdControl? SetGameIdControl;
+    private SetGameIdControl? _setGameIdControl;
     private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
     {
-        if (SetGameIdControl != null)
+        if (_setGameIdControl != null)
             return;
         
-        GetGameId getGameId = GameId;
         CloseMenu closeMenu = () =>
         {
-            MainGrid.Children.Remove(SetGameIdControl);
-            SetGameIdControl = null;
+            MainGrid.Children.Remove(_setGameIdControl);
+            _setGameIdControl = null;
             CoopButton_OnClick(sender, e);
         };
-        SetGameIdControl = new SetGameIdControl(getGameId, closeMenu);
+        _setGameIdControl = new SetGameIdControl(closeMenu);
         
-        Grid.SetRowSpan(SetGameIdControl, 4);
-        Grid.SetColumnSpan(SetGameIdControl, 4);
-        Panel.SetZIndex(SetGameIdControl, 2);
-        MainGrid.Children.Add(SetGameIdControl);
-    }
-
-    private string? _gameId;
-
-    private async Task SendCreateGame()
-    {
-        HttpClient client = new HttpClient();
-        var url = Url.BaseUrl + "Game/create-game";
-        
-        client.DefaultRequestHeaders.Clear();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
-        
-        var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
-        HttpResponseMessage response = await client.PostAsync(url, content);
-        
-        if (response.IsSuccessStatusCode)
-        {
-            string responseBody = await response.Content.ReadAsStringAsync();
-            var data = JsonSerializer.Deserialize<CreateGame>(responseBody);
-
-            Console.WriteLine($"GameId: {data.gameId}");
-            mainWindow.OpenGameWindow(data.gameId, this, true);
-        }
-        else
-        {
-            MessageBox.Show("Не удалось создать игру!");
-        }
-        
-        CreateGame.Content = "Создать игру";
-        CreateGame.IsEnabled = true;
-    }
-    
-    private async Task SendRequestInGame(string gameId)
-    {
-        HttpClient client = new HttpClient();
-        
-        var url = Url.BaseUrl + $"Game/login-game?gameId={gameId}";
-        
-        client.DefaultRequestHeaders.Clear();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
-        
-        var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
-        var response = await client.PostAsync(url, content);
-        
-        string responseContent = await response.Content.ReadAsStringAsync();
-        MessageBox.Show(responseContent);
+        Grid.SetRowSpan(_setGameIdControl, 4);
+        Grid.SetColumnSpan(_setGameIdControl, 4);
+        Panel.SetZIndex(_setGameIdControl, 2);
+        MainGrid.Children.Add(_setGameIdControl);
     }
     
     private void StartGame(object? sender, ResultJoinTheGame result)
     {
-        if (_gameId != null)
+        if (result.Status)
+            mainWindow.OpenGameWindow(result.GameId, this);
+        else
         {
-            Console.WriteLine($"GameId: {_gameId}");
-            mainWindow.OpenGameWindow(_gameId, this);
+            if (_setGameIdControl != null)
+                _setGameIdControl.SetTextError("Вам запретили войти в игру", true);
         }
-    }
-
-    private void GameId(string gameId)
-    {
-        _gameId = gameId;
-        // TODO: Реализовать вывод информации об ошибке
-        _ = SendRequestInGame(gameId);
+        
+        if (_setGameIdControl != null)
+            _setGameIdControl.SetButtonEnabled();
     }
 
     public void OpenMainMenu()

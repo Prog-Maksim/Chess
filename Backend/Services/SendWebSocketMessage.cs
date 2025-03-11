@@ -1,8 +1,9 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
 using Backend.Game;
+using Backend.Game.Shapes;
 using Backend.Models.Response;
-using Backend.Models.Response.WebSockerMessage;
+using Backend.Models.Response.WebSocketMessage;
 using Newtonsoft.Json;
 
 namespace Backend.Services;
@@ -51,7 +52,7 @@ public class SendWebSocketMessage
     /// </summary>
     /// <param name="player"></param>
     /// <param name="success"></param>
-    public async Task SendMessageResultJoinTheGame(ChessPlayer player, bool success)
+    public async Task SendMessageResultJoinTheGame(ChessPlayer player, string gameId, bool success)
     {
         ResultJoinTheGame joinTheGame = new ResultJoinTheGame
         {
@@ -59,6 +60,7 @@ public class SendWebSocketMessage
             StatusCode = 200,
             Success = true,
             Status = success,
+            GameId = gameId,
             Message = "Заявка на вступление в игру " + (success ? "принята!" : "отклонена!")
         };
 
@@ -244,22 +246,20 @@ public class SendWebSocketMessage
     /// Сообщения о завершении игры
     /// </summary>
     /// <param name="players"></param>
-    public async Task SendMessageFinishGame(List<ChessPlayer> players, FinishGame finish)
+    public async Task SendMessageFinishGame(ChessPlayer player, FinishGame finish)
     {
         var message = JsonConvert.SerializeObject(finish);
         var buffer = Encoding.UTF8.GetBytes(message);
-
-        foreach (var player in players)
+        
+        var ws = _webSocketService.GetWebSocket(player.Id);
+        if (ws != null && ws.State == WebSocketState.Open)
         {
-            var ws = _webSocketService.GetWebSocket(player.Id);
-            if (ws != null && ws.State == WebSocketState.Open)
-            {
-                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
-                    CancellationToken.None);
-            }
-            else
-                Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+            await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                CancellationToken.None);
         }
+        else
+            Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        
     }
     
     /// <summary>
@@ -399,6 +399,78 @@ public class SendWebSocketMessage
             Message = "Ваш цвет фигур был изменен",
             StatusCode = 200,
             Color = player.Color,
+            Success = true
+        };
+        
+        var message = JsonConvert.SerializeObject(removePlayer);
+        var buffer = Encoding.UTF8.GetBytes(message);
+        
+        try
+        {
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
+            {
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                    CancellationToken.None);
+            }
+            else
+                Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error: " + e);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Сообщение, Обновление очков у пользователя
+    /// </summary>
+    /// <param name="player"></param>
+    public async Task SendMessageUpdateScore(ChessPlayer player, int score)
+    {
+        UpdateScore removePlayer = new UpdateScore
+        {
+            MessageType = "Score",
+            Message = "Обновление очков",
+            StatusCode = 200,
+            Score = score,
+            Success = true
+        };
+        
+        var message = JsonConvert.SerializeObject(removePlayer);
+        var buffer = Encoding.UTF8.GetBytes(message);
+        
+        try
+        {
+            var ws = _webSocketService.GetWebSocket(player.Id);
+            if (ws != null && ws.State == WebSocketState.Open)
+            {
+                await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                    CancellationToken.None);
+            }
+            else
+                Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error: " + e);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Сообщение, Обновление какие фигуры убил пользователm
+    /// </summary>
+    /// <param name="player"></param>
+    public async Task SendMessageUpdateKillPiece(ChessPlayer player, List<ChessPiece>? killPiece)
+    {
+        KillAllPiece removePlayer = new KillAllPiece
+        {
+            MessageType = "KillPiece",
+            Message = "Обновление убитых фигур",
+            StatusCode = 200,
+            KillPiece = killPiece.Select(p => p.Type).ToList(),
             Success = true
         };
         

@@ -7,17 +7,25 @@
       xmlns:frame="clr-namespace:Frontend.Controls"
       mc:Ignorable="d"
       Title="GameMenu" d:DesignHeight="700" d:DesignWidth="1300">
-    <Grid x:Name="MainGrid">
+    <Grid x:Name="MainGrid" ShowGridLines="False">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="270"></ColumnDefinition>
             <ColumnDefinition Width="*"></ColumnDefinition>
-            <ColumnDefinition Width="270"></ColumnDefinition>
+            <ColumnDefinition Width="350"></ColumnDefinition>
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
             <RowDefinition Height="50"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
+        
+        <StackPanel
+            x:Name="Notify"
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            HorizontalAlignment="Left">
+        </StackPanel>
 
         <Border
             x:Name="ProcessingGame"
@@ -195,11 +203,14 @@
             </Grid>
         </Viewbox>
 
+        <!-- Боковое меню (правое) -->
         <StackPanel
             x:Name="RightStackPanel"
             Grid.Column="2"
             Grid.Row="1"
             Margin="0 30">
+            <frame:UserScoreControl x:Name="ScoreMenu"/>
+            <frame:KillPieceControl x:Name="KillPieceControl"/>
         </StackPanel>
     </Grid>
 </Page>

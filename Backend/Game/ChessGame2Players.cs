@@ -1,17 +1,18 @@
 ﻿using Backend.Enums;
 using Backend.Game.Shapes;
 using Backend.Models.Response;
+using Backend.Repository.Interfaces;
 using Backend.Services;
 
 namespace Backend.Game;
 
 public class ChessGame2Players: BaseChessGame
 {
-    public ChessGame2Players(string name, ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(name, 8, player, socketMessage, deleteGame)
+    public ChessGame2Players(string name, ChessPlayer player, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 8, player, socketMessage, deleteGame, userDataRepository)
     {
         GameName = "Игра 2x2"; 
     }
-    public ChessGame2Players(string name, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame) : base(name, 8, player, isGamePrivate, socketMessage, deleteGame) { }
+    public ChessGame2Players(string name, ChessPlayer player, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 8, player, isGamePrivate, socketMessage, deleteGame, userDataRepository) { }
 
     protected override int RequiredPlayers() => 2;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(3);
