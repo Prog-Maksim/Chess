@@ -237,11 +237,20 @@ public class ChessGame4Players : BaseChessGame
         
         var piece = Board[oldRow, oldCol];
 
+        if (piece == null)
+            return false;
+
         if (piece.OwnerId != personId)
             return false;
 
         var person = Players.FirstOrDefault(p => p.Id == personId);
 
+        if (piece.OwnerId == person.Id)
+            return false;
+
+        person.Score += piece.Score;
+        await person.AddKillPiece(piece);
+        
         Board[newRow, newCol] = piece;
         Board[oldRow, oldCol] = null;
 

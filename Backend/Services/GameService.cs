@@ -34,7 +34,7 @@ public class GameService
     public string CreateGame(string nameGame, int players, string personId, string name, bool isPrivate)
     {
         DeleteGame deleteGame = DeleteGameHandler;
-        ChessPlayer player = new ChessPlayer(personId, name);
+        ChessPlayer player = new ChessPlayer(personId, name, _sendWebSocketMessage.Value);
 
         if (players == 2)
         {
@@ -70,7 +70,7 @@ public class GameService
         if (game == null)
             return new BaseResponse { Message = "Данная игра не найдена", Error = "NotFound", StatusCode = 404 };
         
-        ChessPlayer player = new ChessPlayer(playerId, nickname);
+        ChessPlayer player = new ChessPlayer(playerId, nickname, _sendWebSocketMessage.Value);
         await game.RequestJoin(player);
         return new BaseResponse
         {

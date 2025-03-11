@@ -7,14 +7,17 @@ namespace Backend.Game.Shapes;
 /// </summary>
 public abstract class ChessPiece
 {
+    public int Score { get; private set; }
+    
     public string ChessPieceId { get; set; } = Guid.NewGuid().ToString();
     public bool IsFirstMove { get; set; } = true;
     public PieceType Type { get; }
     public string OwnerId { get; set; }
     
     
-    public ChessPiece(PieceType type, string ownerId)
+    public ChessPiece(PieceType type, string ownerId, int score)
     {
+        Score = score;
         Type = type;
         OwnerId = ownerId;
     }

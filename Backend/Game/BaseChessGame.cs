@@ -1,7 +1,7 @@
 ﻿using Backend.Enums;
 using Backend.Game.Shapes;
 using Backend.Models.Response;
-using Backend.Models.Response.WebSockerMessage;
+using Backend.Models.Response.WebSocketMessage;
 using Backend.Services;
 
 namespace Backend.Game;
@@ -13,13 +13,13 @@ public abstract class BaseChessGame
     public int BoardSize { get; set; }
     public ChessPiece?[,] Board { get; set; }
     public List<ChessPlayer> Players { get; set; } = new();
-    public List<ChessPlayer> WaitingPlayers { get; } = new();
+    private List<ChessPlayer> WaitingPlayers { get; } = new();
     public GameState State { get; set; } = GameState.WaitingForPlayers;
-    public string OwnerId { get; set; }
+    private string OwnerId { get; set; }
     public bool IsGamePrivate { get; set; }
     public int CurrentPlayerIndex; 
     private Timer? _gameTimer;
-    public TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
+    protected TimeSpan GameDurationSeconds { get; private set; } = TimeSpan.Zero;
     
     protected readonly Lazy<SendWebSocketMessage> WebSocketMessage;
     private GameService.DeleteGame _deleteGame;
@@ -321,6 +321,8 @@ public abstract class BaseChessGame
 
         _ = WebSocketMessage.Value.SendMessageFinishGame(Players, finish);
 
+        // TODO: Добавить начисление очков
+        
         foreach (var pl in Players)
             pl.EndTurn();
         
