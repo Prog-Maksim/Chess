@@ -25,6 +25,7 @@ public class AuthController(AuthService authService): ControllerBase
     [HttpPost("registration")]
     [ProducesResponseType(typeof(Token), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RegistrationUser(RegistrationUser user)
     {
         var result = await authService.RegisterUserAsync(user);
@@ -50,6 +51,7 @@ public class AuthController(AuthService authService): ControllerBase
     [ProducesResponseType(typeof(Token), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AuthorizationUser(AuthUser user)
     {
         var result = await authService.LoginUserAsync(user);
@@ -61,9 +63,22 @@ public class AuthController(AuthService authService): ControllerBase
     }
 
 
+    /// <summary>
+    /// Обновление пароля
+    /// </summary>
+    /// <param name="password">Информация о пароле</param>
+    /// <returns></returns>
+    /// <response code="200">Успешное обновление пароля</response>
+    /// <response code="403">Пароль не верен</response>
+    /// <response code="404">Данный пользователь не найден</response>
+    /// <response code="400">Невалидные данные</response>
     [Authorize]
     [MapToApiVersion("1.0")]
     [HttpPut("password")]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdatePassword(UpdatePassword password)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
