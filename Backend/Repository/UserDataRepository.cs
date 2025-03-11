@@ -21,6 +21,17 @@ public class UserDataRepository: IUserDataRepository
 
     public async Task UpdateScore(string playerId, int score)
     {
-        
+        var filter = Builders<UserData>.Filter.Eq(p => p.Id, playerId);
+        var update = Builders<UserData>.Update.Set(p => p.Score, score);
+
+        await _usersCollection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task<int> GetScore(string playerId)
+    {
+        var filter = Builders<UserData>.Filter.Eq(p => p.Id, playerId);
+        var result = await _usersCollection.Find(filter).FirstOrDefaultAsync();
+
+        return result.Score;
     }
 }
