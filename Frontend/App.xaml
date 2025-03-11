@@ -12,6 +12,7 @@
                 <ResourceDictionary Source="Styles/PasswordBoxStyle.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Styles/ToggleButtonStyle.xaml"></ResourceDictionary>
                 <ResourceDictionary Source="Styles/CheckBoxStyle.xaml"></ResourceDictionary>
+                <ResourceDictionary Source="Styles/DataGrid.xaml"></ResourceDictionary>
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

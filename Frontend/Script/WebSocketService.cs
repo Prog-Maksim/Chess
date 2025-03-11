@@ -227,6 +227,10 @@ public class WebSocketService
     /// События обновления заработанных очков
     /// </summary>
     public event EventHandler<UpdateScore>? OnUpdateScore;
+    /// <summary>
+    /// Событие, новых ход игроков
+    /// </summary>
+    public event EventHandler<NewMove>? OnNewMove;
 
     private async Task ParseMessages(string message)
     {
@@ -363,6 +367,13 @@ public class WebSocketService
             
             if (result != null)
                 OnUpdateScore?.Invoke(this, result);
+        }
+        else if (message.Contains("moving"))
+        {
+            var result = JsonSerializer.Deserialize<NewMove>(message);
+            
+            if (result != null)
+                OnNewMove?.Invoke(this, result);
         }
     }
 }

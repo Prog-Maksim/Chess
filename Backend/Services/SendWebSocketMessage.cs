@@ -341,7 +341,6 @@ public class SendWebSocketMessage
             catch (Exception e)
             {
                 Console.WriteLine("Error: " + e);
-                throw;
             }
         }
     }
@@ -382,7 +381,6 @@ public class SendWebSocketMessage
             catch (Exception e)
             {
                 Console.WriteLine("Error: " + e);
-                throw;
             }
         }
     }
@@ -419,7 +417,6 @@ public class SendWebSocketMessage
         catch (Exception e)
         {
             Console.WriteLine("Error: " + e);
-            throw;
         }
     }
 
@@ -455,12 +452,11 @@ public class SendWebSocketMessage
         catch (Exception e)
         {
             Console.WriteLine("Error: " + e);
-            throw;
         }
     }
 
     /// <summary>
-    /// Сообщение, Обновление какие фигуры убил пользователm
+    /// Сообщение, Обновление какие фигуры убил пользователь
     /// </summary>
     /// <param name="player"></param>
     public async Task SendMessageUpdateKillPiece(ChessPlayer player, List<ChessPiece>? killPiece)
@@ -491,7 +487,44 @@ public class SendWebSocketMessage
         catch (Exception e)
         {
             Console.WriteLine("Error: " + e);
-            throw;
+        }
+    }
+
+    /// <summary>
+    /// Сообщение, Новых ход пользователя
+    /// </summary>
+    /// <param name="players"></param>
+    public async Task SendMessageNewMoving(List<ChessPlayer> players, Move move)
+    {
+        NewMove removePlayer = new NewMove
+        {
+            MessageType = "moving",
+            Message = "Новый ход",
+            Move = move,
+            StatusCode = 200,
+            Success = true
+        };
+        
+        var message = JsonConvert.SerializeObject(removePlayer);
+        var buffer = Encoding.UTF8.GetBytes(message);
+        
+        foreach (var player in players)
+        {
+            try
+            {
+                var ws = _webSocketService.GetWebSocket(player.Id);
+                if (ws != null && ws.State == WebSocketState.Open)
+                {
+                    await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                        CancellationToken.None);
+                }
+                else
+                    Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error: " + e);
+            }
         }
     }
 }
