@@ -45,30 +45,34 @@
                     FontWeight="Bold">
                 </TextBlock>
                 
-                <iconPacks:PackIconCoolicons
-                    x:Name="Approve"
+                <Border
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
-                    Margin="5 0"
-                    Foreground="#00D620"
-                    Kind="Check"
-                    Cursor="Hand"
-                    MouseLeftButtonDown="Approve_OnMouseLeftButtonDown">
-                </iconPacks:PackIconCoolicons>
+                    Margin="5 0">
+                    <iconPacks:PackIconCoolicons
+                        x:Name="Approve"
+                        Foreground="#00D620"
+                        Kind="Check"
+                        Cursor="Hand"
+                        MouseLeftButtonDown="Approve_OnMouseLeftButtonDown">
+                    </iconPacks:PackIconCoolicons>
+                </Border>
                 
-                <iconPacks:PackIconEvaIcons 
-                    x:Name="Reject"
+                <Border
                     Grid.Column="2"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
-                    Margin="10 0 10 0"
-                    Width="13"
-                    Cursor="Hand"
-                    Foreground="Red"
-                    Kind="Close"
-                    MouseLeftButtonDown="Reject_OnMouseLeftButtonDown">
-                </iconPacks:PackIconEvaIcons>
+                    Margin="10 0 10 0">
+                    <iconPacks:PackIconEvaIcons 
+                        x:Name="Reject"
+                        Width="13"
+                        Cursor="Hand"
+                        Foreground="Red"
+                        Kind="Close"
+                        MouseLeftButtonDown="Reject_OnMouseLeftButtonDown">
+                    </iconPacks:PackIconEvaIcons>
+                </Border>
             </Grid>
         </Border>
         

@@ -72,45 +72,45 @@ public partial class MainMenu : Page
 
     public delegate void CloseMenu();
     
-    private CreateGameControl? CreateGameControl;
+    private CreateGameControl? _createGameControl;
     private void CreateGame_OnClick(object sender, RoutedEventArgs e)
     {
-        if (CreateGameControl != null)
+        if (_createGameControl != null)
             return;
         
         CloseMenu closeMenu = () =>
         {
-            MainGrid.Children.Remove(CreateGameControl);
-            SetGameIdControl = null;
+            MainGrid.Children.Remove(_createGameControl);
+            _createGameControl = null;
             CoopButton_OnClick(sender, e);
         };
-        CreateGameControl = new CreateGameControl(mainWindow, this, closeMenu);
+        _createGameControl = new CreateGameControl(mainWindow, this, closeMenu);
         
-        Grid.SetRowSpan(CreateGameControl, 4);
-        Grid.SetColumnSpan(CreateGameControl, 4);
-        Panel.SetZIndex(CreateGameControl, 2);
-        MainGrid.Children.Add(CreateGameControl);
+        Grid.SetRowSpan(_createGameControl, 4);
+        Grid.SetColumnSpan(_createGameControl, 4);
+        Panel.SetZIndex(_createGameControl, 2);
+        MainGrid.Children.Add(_createGameControl);
     }
     
     
-    private SetGameIdControl? SetGameIdControl;
+    private SetGameIdControl? _setGameIdControl;
     private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
     {
-        if (SetGameIdControl != null)
+        if (_setGameIdControl != null)
             return;
         
         CloseMenu closeMenu = () =>
         {
-            MainGrid.Children.Remove(SetGameIdControl);
-            SetGameIdControl = null;
+            MainGrid.Children.Remove(_setGameIdControl);
+            _setGameIdControl = null;
             CoopButton_OnClick(sender, e);
         };
-        SetGameIdControl = new SetGameIdControl(closeMenu);
+        _setGameIdControl = new SetGameIdControl(closeMenu);
         
-        Grid.SetRowSpan(SetGameIdControl, 4);
-        Grid.SetColumnSpan(SetGameIdControl, 4);
-        Panel.SetZIndex(SetGameIdControl, 2);
-        MainGrid.Children.Add(SetGameIdControl);
+        Grid.SetRowSpan(_setGameIdControl, 4);
+        Grid.SetColumnSpan(_setGameIdControl, 4);
+        Panel.SetZIndex(_setGameIdControl, 2);
+        MainGrid.Children.Add(_setGameIdControl);
     }
     
     private void StartGame(object? sender, ResultJoinTheGame result)
@@ -119,12 +119,12 @@ public partial class MainMenu : Page
             mainWindow.OpenGameWindow(result.GameId, this);
         else
         {
-            if (SetGameIdControl != null)
-                SetGameIdControl.SetTextError("Вам запретили войти в игру", true);
+            if (_setGameIdControl != null)
+                _setGameIdControl.SetTextError("Вам запретили войти в игру", true);
         }
         
-        if (SetGameIdControl != null)
-            SetGameIdControl.SetButtonEnabled();
+        if (_setGameIdControl != null)
+            _setGameIdControl.SetButtonEnabled();
     }
 
     public void OpenMainMenu()

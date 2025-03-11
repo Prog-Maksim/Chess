@@ -23,18 +23,21 @@
                <RowDefinition></RowDefinition>
            </Grid.RowDefinitions>
            
-           <iconPacks:PackIconEvaIcons 
+           <Border
                Grid.Row="0"
-               Kind="Close"
+               Cursor="Hand"
                VerticalAlignment="Center"
                HorizontalAlignment="Right"
                Margin="20 0"
-               Width="20"
-               Height="20"
-               Cursor="Hand"
-               Foreground="Red"
+               Background="Transparent"
                MouseLeftButtonDown="UIElement_OnMouseLeftButtonDown">
-           </iconPacks:PackIconEvaIcons>
+               <iconPacks:PackIconEvaIcons 
+                   Kind="Close"
+                   Width="20"
+                   Height="20"
+                   Foreground="Red">
+               </iconPacks:PackIconEvaIcons>
+           </Border>
            
            <TextBlock
                Grid.Row="0"
