@@ -244,6 +244,9 @@ public abstract class BaseChessGame
 
             await CheckThePlayers();
 
+            if (Players[CurrentPlayerIndex].IsOutOfTime())
+                NextTurn();
+
             // Если время игры превышено, завершаем
             if (GameDurationSeconds >= MaxGameTimeInSeconds())
             {
@@ -443,57 +446,57 @@ public abstract class BaseChessGame
     private async Task PlayerReverseTimerAsync(string playerId, CancellationTokenSource cts)
     {
         const int timeoutSeconds = 60;
-            int remainingTime = timeoutSeconds;
+        int remainingTime = timeoutSeconds;
             
-            try
+        try
+        {
+            while (remainingTime > 0)
             {
-                while (remainingTime > 0)
+                await Task.Delay(1000, cts.Token);
+
+                remainingTime--;
+
+                var player = Players.FirstOrDefault(p => p.Id == playerId);
+                if (player == null || player.State != PlayerState.InActive)
                 {
-                    await Task.Delay(1000, cts.Token);
-
-                    remainingTime--;
-
-                    var player = Players.FirstOrDefault(p => p.Id == playerId);
-                    if (player == null || player.State != PlayerState.InActive)
-                    {
-                        return;
-                    }
-                    
-                    Console.WriteLine($"Игрок {playerId} отключится через {remainingTime} сек.");
-                    ReversTimeAnActivePlayer reversTime = new ReversTimeAnActivePlayer()
-                    {
-                        MessageType = "InActiveTime",
-                        Message = $"У игрока осталось времени: {TimeSpan.FromSeconds(remainingTime)}",
-                        StatusCode = 200,
-                        Success = true,
-                        PlayerId = playerId,
-                        Time = TimeSpan.FromSeconds(remainingTime)
-                    };
-                    await WebSocketMessage.Value.SendMessageStateReverseTimeInActivePlayer(Players, reversTime);
-                    Console.WriteLine("Сообщение отправлено");
+                    return;
                 }
+                    
+                Console.WriteLine($"Игрок {playerId} отключится через {remainingTime} сек.");
+                ReversTimeAnActivePlayer reversTime = new ReversTimeAnActivePlayer()
+                {
+                    MessageType = "InActiveTime",
+                    Message = $"У игрока осталось времени: {TimeSpan.FromSeconds(remainingTime)}",
+                    StatusCode = 200,
+                    Success = true,
+                    PlayerId = playerId,
+                    Time = TimeSpan.FromSeconds(remainingTime)
+                };
+                await WebSocketMessage.Value.SendMessageStateReverseTimeInActivePlayer(Players, reversTime);
+                Console.WriteLine("Сообщение отправлено");
+            }
                 
-                var disconnectedPlayer = Players.FirstOrDefault(p => p.Id == playerId);
-                if (disconnectedPlayer != null && disconnectedPlayer.State == PlayerState.InActive)
-                {
-                    await DeletePieceInAnActivePlayer(playerId);
-                    await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
+            var disconnectedPlayer = Players.FirstOrDefault(p => p.Id == playerId);
+            if (disconnectedPlayer != null && disconnectedPlayer.State == PlayerState.InActive)
+            {
+                await DeletePieceInAnActivePlayer(playerId);
+                await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
                     
-                    disconnectedPlayer.State = PlayerState.Disconnected;
+                disconnectedPlayer.State = PlayerState.Disconnected;
 
-                    if (Players.Where(p => p.State == PlayerState.InActive).Count() == 0)
-                    {
-                        State = GameState.InProgress;
-                        ResumeAllPlayers();
-                        await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
-                    }
+                if (Players.Where(p => p.State == PlayerState.InActive).Count() == 0)
+                {
+                    State = GameState.InProgress;
+                    ResumeAllPlayers();
+                    await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
                 }
             }
-            catch (TaskCanceledException) { }
-            finally
-            {
-                _playerTimers.Remove(playerId);
-            }
+        }
+        catch (TaskCanceledException) { }
+        finally
+        {
+            _playerTimers.Remove(playerId);
+        }
     }
 
     private async Task DeletePieceInAnActivePlayer(string playerId)
