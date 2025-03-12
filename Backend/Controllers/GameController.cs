@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net.WebSockets;
+using Backend.Enums;
 using Backend.Models.Response;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -45,25 +46,26 @@ public class GameController(WebSocketService webSocketService, GameService gameS
             Message = "Запрос не является Web Socket"
         });
     }
-    
+
     /// <summary>
     /// Создание игры
     /// </summary>
     /// <param name="name">Название игры</param>
     /// <param name="players">Кол-во игроков</param>
     /// <param name="isPrivate">Приватная ли игра</param>
+    /// <param name="mode">Тип игры</param>
     /// <returns></returns>
     /// <response code="200">Успешное создание игры</response>
     [Authorize]
     [HttpPost("create-game")]
     [ProducesResponseType(typeof(CreateGame), StatusCodes.Status200OK)]
-    public async Task<IActionResult> CreateGame([Required] string name, [Required] int players, [Required] bool isPrivate)
+    public async Task<IActionResult> CreateGame([Required] string name, [Required] int players, [Required] bool isPrivate, GameMode mode = GameMode.Rapid)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
         
-        string gameId = gameService.CreateGame(name, players, dataToken.PersonId, dataToken.Nickname, isPrivate);
+        string gameId = gameService.CreateGame(name, players, dataToken.PersonId, dataToken.Nickname, isPrivate, mode);
         
         return Ok(new CreateGame
         {

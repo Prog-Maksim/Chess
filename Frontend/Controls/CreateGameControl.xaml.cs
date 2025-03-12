@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Frontend.Enums;
 using Frontend.Models;
 using Frontend.Script;
 using Frontend.Windows;
@@ -31,13 +32,13 @@ public partial class CreateGameControl : UserControl
     }
     
     
-    private async Task SendCreateGame(string name, int players = 2, bool isPrivate = false)
+    private async Task SendCreateGame(string name, GameMode mode, int players = 2, bool isPrivate = false)
     {
         Click.Content = "загрузка...";
         Click.IsEnabled = false;
         
         HttpClient client = new HttpClient();
-        var url = Url.BaseUrl + $"Game/create-game?name={name}&players={players}&isPrivate={isPrivate}";
+        var url = Url.BaseUrl + $"Game/create-game?name={name}&players={players}&isPrivate={isPrivate}&mode={mode}";
         
         client.DefaultRequestHeaders.Clear();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
@@ -75,8 +76,9 @@ public partial class CreateGameControl : UserControl
         
         int players = ToggleButton.IsChecked == true ? 4 : 2;
         bool isPrivate = CheckBox.IsChecked?? false;
+        var gameMode = (GameMode)ComboBox.SelectedIndex;
         
-        _ = SendCreateGame(name, players, isPrivate);
+        _ = SendCreateGame(name, gameMode, players, isPrivate);
     }
     
     private async void RemoveWarningAfterDelay(int time = 1500)

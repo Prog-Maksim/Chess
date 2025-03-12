@@ -1,4 +1,10 @@
-﻿using Backend.Game;
+﻿using Backend.Enums;
+using Backend.Game;
+using Backend.Game.GameModes;
+using Backend.Game.GameModes.Blitz;
+using Backend.Game.GameModes.Bullet;
+using Backend.Game.GameModes.Classical;
+using Backend.Game.GameModes.Rapid;
 using Backend.Models.Response;
 using Backend.Repository.Interfaces;
 
@@ -30,22 +36,59 @@ public class GameService
     /// <param name="personId">Идентификатор игрока</param>
     /// <param name="name">Никнейм пользователя</param>
     /// <param name="isPrivate">Приватная ли игра</param>
+    /// <param name="gameMode">Тип игры</param>
     /// <returns>Идентификатор игры</returns>
-    public string CreateGame(string nameGame, int players, string personId, string name, bool isPrivate)
+    public string CreateGame(string nameGame, int players, string personId, string name, bool isPrivate, GameMode gameMode)
     {
         DeleteGame deleteGame = DeleteGameHandler;
-        ChessPlayer player = new ChessPlayer(personId, name, _sendWebSocketMessage.Value);
+        IGameMode mode = GetGameSettings(gameMode, players);
+        
+        ChessPlayer player = new ChessPlayer(personId, name, _sendWebSocketMessage.Value, mode);
 
         if (players == 2)
         {
-            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
+            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
             GetAllGames.Add(chessGame2Players);
             return chessGame2Players.GameId;
         }
         
-        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
+        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
         GetAllGames.Add(chessGame4Players);
         return chessGame4Players.GameId;
+    }
+
+    private IGameMode GetGameSettings(GameMode mode, int playerCount)
+    {
+        if (mode == GameMode.Classic)
+        {
+            if (playerCount == 2)
+                return new Classical2Player();
+            if (playerCount == 4)
+                return new Classical4Player();
+        }
+        if (mode == GameMode.Rapid)
+        {
+            if (playerCount == 2)
+                return new Rapid2Player();
+            if (playerCount == 4)
+                return new Rapid4Player();
+        }
+        if (mode == GameMode.Blitz)
+        {
+            if (playerCount == 2)
+                return new Blitz2Player();
+            if (playerCount == 4)
+                return new Blitz4Player();
+        }
+        if (mode == GameMode.Bullet)
+        {
+            if (playerCount == 2)
+                return new Bullet2Player();
+            if (playerCount == 4)
+                return new Bullet4Player();
+        }
+
+        throw new NullReferenceException();
     }
 
     private void DeleteGameHandler(string gameId)
@@ -70,7 +113,7 @@ public class GameService
         if (game == null)
             return new BaseResponse { Message = "Данная игра не найдена", Error = "NotFound", StatusCode = 404 };
         
-        ChessPlayer player = new ChessPlayer(playerId, nickname, _sendWebSocketMessage.Value);
+        ChessPlayer player = new ChessPlayer(playerId, nickname, _sendWebSocketMessage.Value, game.Mode);
         await game.RequestJoin(player);
         return new BaseResponse
         {
