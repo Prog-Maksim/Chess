@@ -1,4 +1,5 @@
-﻿using Backend.Game.Shapes;
+﻿using Backend.Enums;
+using Backend.Game.Shapes;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 
@@ -15,9 +16,9 @@ public class ChessGame4Players : BaseChessGame
     protected override int RequiredPlayers() => 4;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(4);
     
-    protected override async Task HandlePlayerTimeUpdate(ChessPlayer player)
+    protected override async Task HandlePlayerTimeUpdate(ChessPlayer player, TimeSpan time)
     {
-        await WebSocketMessage.Value.SendMessageTimerPersonTheGame(Players, player, player.RemainingTime);
+        await WebSocketMessage.Value.SendMessageTimerPersonTheGame(Players, player, time);
     }
     
     protected override async Task InitializePlayerPieces(ChessPlayer player)
@@ -215,6 +216,9 @@ public class ChessGame4Players : BaseChessGame
 
         for (int i = 0; i < Players.Count; i++)
         {
+            if (Players[i].State != PlayerState.Active)
+                continue;
+            
             if (i == 0)
                 InitializePiecePerson1();
             if (i == 1)

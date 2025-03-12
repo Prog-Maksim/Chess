@@ -1,6 +1,5 @@
 ﻿using Backend.Enums;
 using Backend.Game.Shapes;
-using Backend.Models.Response;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 
@@ -17,9 +16,9 @@ public class ChessGame2Players: BaseChessGame
     protected override int RequiredPlayers() => 2;
     protected override TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(3);
     
-    protected override async Task HandlePlayerTimeUpdate(ChessPlayer player)
+    protected override async Task HandlePlayerTimeUpdate(ChessPlayer player, TimeSpan time)
     {
-        await WebSocketMessage.Value.SendMessageTimerPersonTheGame(Players, player, player.RemainingTime);
+        await WebSocketMessage.Value.SendMessageTimerPersonTheGame(Players, player, time);
     }
     
     protected override async Task InitializePlayerPieces(ChessPlayer player)
@@ -111,8 +110,25 @@ public class ChessGame2Players: BaseChessGame
 
         await SendMessageUpdateBoard();
     }
-    
-    protected override async Task UpdateGameBoard() { }
+
+    protected override async Task UpdateGameBoard()
+    {
+        var players = Players.Where(p =>
+            p.State != PlayerState.Active && p.State != PlayerState.Stopped && p.State != PlayerState.InActive).ToList();
+        
+        for (int i = 0; i < Board.GetLength(0); i++)
+        {
+            for (int j = 0; j < Board.GetLength(1); j++)
+            {
+                if (Board[i, j] != null && players.Select(p => p.Id).Contains(Board[i, j].OwnerId))
+                {
+                    Board[i, j] = null;
+                }
+            }
+        }
+        
+        await SendMessageUpdateBoard();
+    }
     
     // Действия
     protected override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)
