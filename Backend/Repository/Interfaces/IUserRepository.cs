@@ -32,4 +32,11 @@ public interface IUserRepository
     /// <param name="user">Пользователь</param>
     /// <returns></returns>
     Task AddUserAsync(Person user);
+    
+    /// <summary>
+    /// Удаление аккаунта
+    /// </summary>
+    /// <param name="playerId">Идентификатор пользователя</param>
+    /// <returns></returns>
+    Task DeleteAccountAsync(string playerId);
 }

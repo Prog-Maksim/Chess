@@ -34,4 +34,10 @@ public class UserDataRepository: IUserDataRepository
 
         return result.Score;
     }
+
+    public async Task DeleteAccountAsync(string playerId)
+    {
+        var filter = Builders<UserData>.Filter.Eq(p => p.Id, playerId);
+        await _usersCollection.DeleteOneAsync(filter);
+    }
 }

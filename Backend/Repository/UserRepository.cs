@@ -42,4 +42,10 @@ public class UserRepository: IUserRepository
     {
         await _usersCollection.InsertOneAsync(user);
     }
+
+    public async Task DeleteAccountAsync(string playerId)
+    {
+        var filter = Builders<Person>.Filter.Eq(p => p.Id, playerId);
+        await _usersCollection.DeleteOneAsync(filter);
+    }
 }

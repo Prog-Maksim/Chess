@@ -99,7 +99,9 @@ public abstract class BaseChessGame
     /// <param name="player"></param>
     public async Task RequestJoin(ChessPlayer player)
     {
-        if (player.Id == OwnerId || !IsGamePrivate)
+        var user = Players.FirstOrDefault(p => p.Id == player.Id);
+        
+        if (player.Id == OwnerId || !IsGamePrivate || (user != null && user.IsApproved))
         {
             player.Approve();
             await AddPlayer(player);
@@ -337,6 +339,7 @@ public abstract class BaseChessGame
     /// </summary>
     protected virtual async Task DeclarationVictory(ChessPlayer player)
     {
+        State = GameState.Finished;
         player.Score *= 2;
         
         foreach (var user in Players)
@@ -365,7 +368,6 @@ public abstract class BaseChessGame
         foreach (var pl in Players)
             pl.EndTurn();
         
-        State = GameState.Finished;
         _deleteGame(GameId);
     }
 
