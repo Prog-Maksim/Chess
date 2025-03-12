@@ -212,7 +212,7 @@ public class WebSocketService
     /// </summary>
     public event EventHandler<ReversTimeAnActivePlayer>? OnReverseTimeAnActivePlayer;
     /// <summary>
-    /// Игрок был удален из игры или выбыд
+    /// Игрок был удален из игры или выбыл
     /// </summary>
     public event EventHandler<RemovePlayer>? OnRemovePlayer;
     /// <summary>
@@ -231,6 +231,10 @@ public class WebSocketService
     /// Событие, новых ход игроков
     /// </summary>
     public event EventHandler<NewMove>? OnNewMove;
+    /// <summary>
+    /// Событие, новое состояние игры
+    /// </summary>
+    public event EventHandler<GameStateMessage>? OnUpdateGameState;
 
     private async Task ParseMessages(string message)
     {
@@ -374,6 +378,13 @@ public class WebSocketService
             
             if (result != null)
                 OnNewMove?.Invoke(this, result);
+        }
+        else if (message.Contains("StateGame"))
+        {
+            var result = JsonSerializer.Deserialize<GameStateMessage>(message);
+            
+            if (result != null)
+                OnUpdateGameState?.Invoke(this, result);
         }
     }
 }

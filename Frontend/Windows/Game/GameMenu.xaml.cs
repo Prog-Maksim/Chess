@@ -73,11 +73,11 @@ public partial class GameMenu : Page
         webSocket.OnUpdateKillPiece += WebSocketOnUpdateKillPiece;
         webSocket.OnUpdateScore += WebSocketOnUpdateScore;
         webSocket.OnNewMove += WebSocketOnNewMove;
+        webSocket.OnUpdateGameState += WebSocketOnUpdateGameState;
         
         _ = GetGameData();
         WaitingGame(create);
     }
-
 
     private void ClientOnFailedConnect(object? sender, EventArgs e)
     {
@@ -126,10 +126,27 @@ public partial class GameMenu : Page
         }
     }
 
-    private void SetTextInWaiting()
+    private void SetTextInWaiting(string message = "Ожидание", string color = "#7074D5")
     {
-        GameTime.Text = "Ожидание";
-        GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+        GameTime.Text = message;
+        GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom(color);
+    }
+    
+    private string _textGame = String.Empty;
+    private void WebSocketOnUpdateGameState(object? sender, GameStateMessage e)
+    {
+        _gameState = false;
+        
+        if (e.GameState == GameState.Stopped)
+        {
+            _textGame = GameTime.Text;
+            SetTextInWaiting("Пауза");
+        }
+        else if (e.GameState == GameState.InProgress)
+        {
+            _gameState = true;
+            SetTextInWaiting(_textGame, "Black");
+        }
     }
     
     private void WebSocketOnNewMove(object? sender, NewMove e)

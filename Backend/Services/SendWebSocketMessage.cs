@@ -1,5 +1,6 @@
 ﻿using System.Net.WebSockets;
 using System.Text;
+using Backend.Enums;
 using Backend.Game;
 using Backend.Game.Shapes;
 using Backend.Models.Response;
@@ -494,6 +495,7 @@ public class SendWebSocketMessage
     /// Сообщение, Новых ход пользователя
     /// </summary>
     /// <param name="players"></param>
+    /// <param name="move"></param>
     public async Task SendMessageNewMoving(List<ChessPlayer> players, Move move)
     {
         NewMove removePlayer = new NewMove
@@ -527,4 +529,44 @@ public class SendWebSocketMessage
             }
         }
     }
+
+    /// <summary>
+    /// Сообщение, Новое состояние игры
+    /// </summary>
+    /// <param name="players"></param>
+    /// <param name="gameState"></param>
+    public async Task SendMessageUpdateGameState(List<ChessPlayer> players, GameState gameState)
+    {
+        GameStateMessage removePlayer = new GameStateMessage
+        {
+            MessageType = "StateGame",
+            Message = "Новый ход",
+            GameState = gameState,
+            StatusCode = 200,
+            Success = true
+        };
+        
+        var message = JsonConvert.SerializeObject(removePlayer);
+        var buffer = Encoding.UTF8.GetBytes(message);
+        
+        foreach (var player in players)
+        {
+            try
+            {
+                var ws = _webSocketService.GetWebSocket(player.Id);
+                if (ws != null && ws.State == WebSocketState.Open)
+                {
+                    await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                        CancellationToken.None);
+                }
+                else
+                    Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error: " + e);
+            }
+        }
+    }
+        
 }

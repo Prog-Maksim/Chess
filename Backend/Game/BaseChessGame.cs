@@ -2,7 +2,6 @@
 using Backend.Game.Shapes;
 using Backend.Models.Response;
 using Backend.Models.Response.WebSocketMessage;
-using Backend.Repository;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 
@@ -16,7 +15,18 @@ public abstract class BaseChessGame
     public ChessPiece?[,] Board { get; set; }
     public List<ChessPlayer> Players { get; set; } = new();
     private List<ChessPlayer> WaitingPlayers { get; } = new();
-    public GameState State { get; set; } = GameState.WaitingForPlayers;
+
+    private GameState _state = GameState.WaitingForPlayers;
+    public GameState State
+    {
+        get => _state;
+        private set
+        {
+            _state = value;
+            _ = WebSocketMessage.Value.SendMessageUpdateGameState(Players, _state);
+        }
+    }
+
     private string OwnerId { get; set; }
     public bool IsGamePrivate { get; set; }
     public int CurrentPlayerIndex; 
