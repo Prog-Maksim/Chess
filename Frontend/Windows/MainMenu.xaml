@@ -21,7 +21,7 @@
                FontWeight="Bold"
                Margin="0 20 30 40">
                <Run>Очков: </Run>
-               <Run>680</Run>
+               <Run x:Name="ScoreText">0</Run>
            </TextBlock>
        </Viewbox>
         
