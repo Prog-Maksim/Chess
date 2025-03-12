@@ -25,4 +25,11 @@ public interface IUserDataRepository
     /// <param name="playerId">Идентификатор пользователя</param>
     /// <returns></returns>
     public Task<int> GetScore(string playerId);
+    
+    /// <summary>
+    /// Удаление аккаунта
+    /// </summary>
+    /// <param name="playerId">Идентификатор пользователя</param>
+    /// <returns></returns>
+    Task DeleteAccountAsync(string playerId);
 }
