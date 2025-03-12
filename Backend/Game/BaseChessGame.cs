@@ -38,6 +38,7 @@ public abstract class BaseChessGame
         GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository)
     {
         Random rnd = new();
+        GameName = name;
         GameId = $"{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}";
         
         BoardSize = boardSize;

@@ -306,7 +306,9 @@ public partial class GameMenu : Page
 
                 _playerIdTern = gameData.CurrentPlayer;
                 _gameSize = gameData.Board.Count;
+                
                 GameName.Text = gameData.GameName;
+                
                 GenerateChessBoard(_gameSize);
 
                 SearchYouColor(gameData.Board);
