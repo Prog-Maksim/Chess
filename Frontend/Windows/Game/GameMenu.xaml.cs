@@ -551,22 +551,22 @@ public partial class GameMenu : Page
 
     private void WebSocketOnAddPerson(object? sender, AddPerson e)
     {
-        AddPerson(e.PersonId, e.Nickname);
+        AddPerson(e.PersonId, e.Nickname, e.Time);
     }
 
     private void AddPersons(List<GamePlayer> persons)
     {
         foreach (var person in persons)
         {
-            AddPerson(person.PlayerId, person.Nickname);
+            AddPerson(person.PlayerId, person.Nickname, person.Time);
         }
     }
 
-    private void AddPerson(string personId, string nickname)
+    private void AddPerson(string personId, string nickname, TimeSpan time)
     {
         if (!_players.ContainsKey(personId))
         {
-            PlayerTimeMenu playerTimeMenu = new PlayerTimeMenu(nickname, new TimeSpan(hours: 0, minutes: 25, seconds: 0));
+            PlayerTimeMenu playerTimeMenu = new PlayerTimeMenu(nickname, time);
             _players[personId] = playerTimeMenu;
             StackPanelPlayer.Children.Add(playerTimeMenu);
         }

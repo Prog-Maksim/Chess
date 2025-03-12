@@ -16,7 +16,7 @@ public class ChessPlayer: IDisposable
     public bool IsApproved { get; private set; } // Ждет подтверждения
     public List<ChessPiece> Pieces { get; } = new(); // Список фигур игрока
     public PlayerState State { get; set; } = PlayerState.Active; // Статус игрока
-    public TimeSpan RemainingTime { get; private set; } = TimeSpan.FromSeconds(10); // Время на ход
+    public TimeSpan RemainingTime { get; private set; } = TimeSpan.FromSeconds(20); // Время на ход
     private Timer? _turnTimer;
     private DateTime? _turnStartTime;
 
