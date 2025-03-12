@@ -1,4 +1,5 @@
 ﻿using Backend.Enums;
+using Backend.Game.GameModes;
 using Backend.Game.Shapes;
 using Backend.Services;
 
@@ -16,9 +17,10 @@ public class ChessPlayer: IDisposable
     public bool IsApproved { get; private set; } // Ждет подтверждения
     public List<ChessPiece> Pieces { get; } = new(); // Список фигур игрока
     public PlayerState State { get; set; } = PlayerState.Active; // Статус игрока
-    public TimeSpan RemainingTime { get; private set; } = TimeSpan.FromSeconds(10); // Время на ход
+    public TimeSpan RemainingTime { get; private set; }
     private Timer? _turnTimer;
     private DateTime? _turnStartTime;
+    private IGameMode _gameMode;
 
     private List<ChessPiece> KillPiece = new ();
 
@@ -40,11 +42,14 @@ public class ChessPlayer: IDisposable
     public event Func<ChessPlayer, Task>? OnTimeIsLost;
     private readonly SendWebSocketMessage _message;
     
-    public ChessPlayer(string id, string name, SendWebSocketMessage message)
+    public ChessPlayer(string id, string name, SendWebSocketMessage message, IGameMode mode)
     {
         Id = id;
         Name = name;
         _message = message;
+        _gameMode = mode;
+
+        RemainingTime = mode.GetPlayerTimeDuration();
     }
 
     public async Task AddKillPiece(ChessPiece piece)
@@ -82,7 +87,7 @@ public class ChessPlayer: IDisposable
     }
 
     /// <summary>
-    /// Завершение хода – уменьшаем оставшееся время
+    /// Завершение хода
     /// </summary>
     public void EndTurn()
     {
@@ -90,6 +95,8 @@ public class ChessPlayer: IDisposable
         {
             _turnTimer?.Dispose();
             _turnTimer = null;
+            RemainingTime += _gameMode.GetIncrementTime();
+            _ = OnTimeUpdate?.Invoke(this, RemainingTime);
         }
     }
     
@@ -109,7 +116,7 @@ public class ChessPlayer: IDisposable
             await OnTimeIsLost?.Invoke(this);
         }
 
-        await OnTimeUpdate?.Invoke(this, RemainingTime); // Вызываем событие для главного класса
+        await OnTimeUpdate?.Invoke(this, RemainingTime);
     }
 
     /// <summary>

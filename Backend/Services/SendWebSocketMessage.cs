@@ -190,6 +190,7 @@ public class SendWebSocketMessage
             Success = true,
             PersonId = targetPlayer.Id,
             Nickname = targetPlayer.Name,
+            Time = targetPlayer.RemainingTime,
             Message = "Добавлен новый участник"
         };
 

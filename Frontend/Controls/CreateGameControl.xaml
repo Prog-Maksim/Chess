@@ -24,6 +24,7 @@
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
             
@@ -126,9 +127,38 @@
                 </CheckBox>
             </Grid>
             
+            <Grid Grid.Row="5"  Margin="0 3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    FontFamily="Montserrat"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Margin="0 10 30 10"
+                    Text="Тип игры: ">
+                </TextBlock>
+            
+                <ComboBox
+                    x:Name="ComboBox"
+                    Grid.Column="1"
+                    Height="30"
+                    Style="{StaticResource ComboBoxStyle}">
+                    <ComboBoxItem Content="Классика"/>
+                    <ComboBoxItem Content="Рапид" IsSelected="True"/>
+                    <ComboBoxItem Content="Блиц"/>
+                    <ComboBoxItem Content="Буллит"/>
+                </ComboBox>
+            </Grid>
+            
             <Button
                 x:Name="Click"
-                Grid.Row="5"
+                Grid.Row="6"
                 Height="50"
                 Background="#7074D5"
                 VerticalAlignment="Bottom"

@@ -18,7 +18,7 @@
             <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="0" Opacity="0.35"></DropShadowEffect>
         </Border.Effect>
         
-        <Grid ShowGridLines="True">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="60"></RowDefinition>
                 <RowDefinition></RowDefinition>

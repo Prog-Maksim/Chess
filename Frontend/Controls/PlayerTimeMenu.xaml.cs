@@ -13,13 +13,19 @@ public partial class PlayerTimeMenu : UserControl
     public PlayerTimeMenu(string nickname, TimeSpan ts): this()
     {
         MainText.Text = nickname;
-        TimeTextBox.Text = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
+        if (ts.Hours > 0)
+            TimeTextBox.Text = $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        else
+            TimeTextBox.Text = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
     }
     
     public PlayerTimeMenu(string nickname, string addText, TimeSpan ts): this()
     {
         MainText.Text = nickname + " ";
-        TimeTextBox.Text = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
+        if (ts.Hours > 0)
+            TimeTextBox.Text = $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        else
+            TimeTextBox.Text = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
         AddText.Text = addText;
     }
 
@@ -30,7 +36,10 @@ public partial class PlayerTimeMenu : UserControl
 
     public void UpdateTime(TimeSpan ts)
     {
-        TimeTextBox.Text = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
+        if (ts.Hours > 0)
+            TimeTextBox.Text = $"{ts.Hours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+        else
+            TimeTextBox.Text = $"{ts.Minutes:D2}:{ts.Seconds:D2}";
     }
 
     public void IsTern(bool isYou = false)

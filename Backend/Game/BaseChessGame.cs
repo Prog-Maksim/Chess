@@ -1,4 +1,5 @@
 ﻿using Backend.Enums;
+using Backend.Game.GameModes;
 using Backend.Game.Shapes;
 using Backend.Models.Response;
 using Backend.Models.Response.WebSocketMessage;
@@ -16,6 +17,7 @@ public abstract class BaseChessGame
     public List<ChessPlayer> Players { get; set; } = new();
     private List<ChessPlayer> WaitingPlayers { get; } = new();
 
+    
     private GameState _state = GameState.WaitingForPlayers;
     public GameState State
     {
@@ -26,13 +28,16 @@ public abstract class BaseChessGame
             _ = WebSocketMessage.Value.SendMessageUpdateGameState(Players, _state);
         }
     }
-
+    public IGameMode Mode { get; set; }
+    
+    
     private string OwnerId { get; set; }
     public bool IsGamePrivate { get; set; }
     public int CurrentPlayerIndex; 
     private Timer? _gameTimer;
     private TimeSpan GameDurationSeconds { get; set; } = TimeSpan.Zero;
     public List<Move> Moves { get; set; } = new();
+    
     
     protected readonly Lazy<SendWebSocketMessage> WebSocketMessage;
     private readonly IUserDataRepository _userDataRepository;
@@ -41,15 +46,21 @@ public abstract class BaseChessGame
     /// <summary>
     /// Инициализация игры
     /// </summary>
-    /// <param name="boardSize">Размер поля</param>
+    /// <param name="name"></param>
+    /// <param name="boardSize"></param>
+    /// <param name="mode"></param>
     /// <param name="player"></param>
     /// <param name="webSocketMessage"></param>
-    protected BaseChessGame(string name, int boardSize, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, 
+    /// <param name="deleteGame"></param>
+    /// <param name="userDataRepository"></param>
+    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, 
         GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository)
     {
         Random rnd = new();
-        GameName = name;
         GameId = $"{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}";
+        Mode = mode;
+        
+        GameName = name;
         
         BoardSize = boardSize;
         Board = new ChessPiece?[boardSize, boardSize];
@@ -66,13 +77,17 @@ public abstract class BaseChessGame
     /// <summary>
     /// Инициализация игры
     /// </summary>
-    /// <param name="boardSize">Размер поля</param>
+    /// <param name="name"></param>
+    /// <param name="boardSize"></param>
+    /// <param name="mode"></param>
     /// <param name="player"></param>
-    /// <param name="isGamePrivate">Приватная ли игра</param>
+    /// <param name="isGamePrivate"></param>
     /// <param name="socketMessage"></param>
-    protected BaseChessGame(string name, int boardSize, ChessPlayer player, bool isGamePrivate, 
+    /// <param name="deleteGame"></param>
+    /// <param name="userDataRepository"></param>
+    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isGamePrivate, 
         Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository): 
-        this(name, boardSize, player, socketMessage, deleteGame, userDataRepository)
+        this(name, boardSize, mode, player, socketMessage, deleteGame, userDataRepository)
     {
         IsGamePrivate = isGamePrivate;
     }
@@ -125,8 +140,7 @@ public abstract class BaseChessGame
             await WebSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
             return;
         }
-        
-        if (player.Id == OwnerId || !IsGamePrivate)
+        if (!IsGamePrivate)
         {
             player.Approve();
             await AddPlayer(player);
@@ -274,13 +288,6 @@ public abstract class BaseChessGame
 
             if (Players[CurrentPlayerIndex].IsOutOfTime())
                 NextTurn();
-
-            // Если время игры превышено, завершаем
-            if (GameDurationSeconds >= MaxGameTimeInSeconds())
-            {
-                State = GameState.Finished;
-                StopTimer();
-            }
         }
     }
 
@@ -326,12 +333,6 @@ public abstract class BaseChessGame
         _gameTimer?.Dispose();
         _gameTimer = null;
     }
-
-    /// <summary>
-    /// Максимальное время длительности игры
-    /// </summary>
-    /// <returns></returns>
-    protected virtual TimeSpan MaxGameTimeInSeconds() => TimeSpan.FromHours(1);
 
     protected async Task AddNewMoveAsync(string playerId, int startRow, int startCol, int endRow, int endCol, TimeSpan timeMove)
     {
@@ -645,8 +646,6 @@ public abstract class BaseChessGame
     
     ~BaseChessGame()
     {
-        Console.WriteLine("Вызов финализатора -игры");
-        
         StopTimer();
         _gameTimer?.Dispose();
         _gameTimer = null;
