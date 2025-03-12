@@ -2,7 +2,6 @@
 using Backend.Game.Shapes;
 using Backend.Models.Response;
 using Backend.Models.Response.WebSocketMessage;
-using Backend.Repository;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 
@@ -16,7 +15,18 @@ public abstract class BaseChessGame
     public ChessPiece?[,] Board { get; set; }
     public List<ChessPlayer> Players { get; set; } = new();
     private List<ChessPlayer> WaitingPlayers { get; } = new();
-    public GameState State { get; set; } = GameState.WaitingForPlayers;
+
+    private GameState _state = GameState.WaitingForPlayers;
+    public GameState State
+    {
+        get => _state;
+        private set
+        {
+            _state = value;
+            _ = WebSocketMessage.Value.SendMessageUpdateGameState(Players, _state);
+        }
+    }
+
     private string OwnerId { get; set; }
     public bool IsGamePrivate { get; set; }
     public int CurrentPlayerIndex; 
@@ -38,6 +48,7 @@ public abstract class BaseChessGame
         GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository)
     {
         Random rnd = new();
+        GameName = name;
         GameId = $"{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}";
         
         BoardSize = boardSize;
@@ -77,6 +88,7 @@ public abstract class BaseChessGame
         {
             Players.Add(player);
             player.OnTimeUpdate += HandlePlayerTimeUpdate;
+            player.OnTimeIsLost += PlayerOnTimeIsLost;
             await InitializePlayerPieces(player);
             
             if (Players.Count == RequiredPlayers())
@@ -86,12 +98,18 @@ public abstract class BaseChessGame
         }
         return false;
     }
-    
+
+    private async Task PlayerOnTimeIsLost(ChessPlayer arg)
+    {
+        await UpdateGameBoard();
+        await WebSocketMessage.Value.SendMessagePlayerGameOver(Players, arg.Id);
+    }
+
     /// <summary>
     /// Метод вызывается каждую секунду для каждого игрока активного хода 
     /// </summary>
     /// <param name="player"></param>
-    protected abstract Task HandlePlayerTimeUpdate(ChessPlayer player);
+    protected abstract Task HandlePlayerTimeUpdate(ChessPlayer player, TimeSpan time);
     
     /// <summary>
     /// Метод оставления заявки на вступления в игру
@@ -100,8 +118,15 @@ public abstract class BaseChessGame
     public async Task RequestJoin(ChessPlayer player)
     {
         var user = Players.FirstOrDefault(p => p.Id == player.Id);
+
+        if (user != null && user.IsApproved)
+        {
+            await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, GameId, true);
+            await WebSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
+            return;
+        }
         
-        if (player.Id == OwnerId || !IsGamePrivate || (user != null && user.IsApproved))
+        if (player.Id == OwnerId || !IsGamePrivate)
         {
             player.Approve();
             await AddPlayer(player);
@@ -344,29 +369,32 @@ public abstract class BaseChessGame
         
         foreach (var user in Players)
         {
-            if (user.State == PlayerState.Disconnected)
+            try
             {
-                user.Score = 0;
-                user.Score = -50;
+                if (user.State == PlayerState.Disconnected)
+                {
+                    user.Score = 0;
+                    user.Score = -50;
+                }
+
+                FinishGame finish = new FinishGame
+                {
+                    MessageType = "Finished",
+                    Message = "Игра завершена",
+                    StatusCode = 200,
+                    Success = true,
+                    WinnerId = player.Id,
+                    IsWinner = user.Id == player.Id,
+                    Score = player.Score
+                };
+                await WebSocketMessage.Value.SendMessageFinishGame(user, finish);
+                await _userDataRepository.UpdateScore(user.Id, user.Score);
             }
-            
-            FinishGame finish = new FinishGame
+            catch (Exception ex)
             {
-                MessageType = "Finished",
-                Message = "Игра завершена",
-                StatusCode = 200,
-                Success = true,
-                WinnerId = player.Id,
-                IsWinner = user.Id == player.Id,
-                Score = player.Score
-            };
-            await WebSocketMessage.Value.SendMessageFinishGame(user, finish);
-            await _userDataRepository.UpdateScore(user.Id, user.Score);
+                Console.WriteLine(ex.Message);
+            }
         }
-        
-        
-        foreach (var pl in Players)
-            pl.EndTurn();
         
         _deleteGame(GameId);
     }
@@ -380,10 +408,16 @@ public abstract class BaseChessGame
         
         if (players.Count == 1)
         {
-            Console.WriteLine("Закрытие игры");
-            
             if (State == GameState.InProgress)
+            {
+                State = GameState.Finished;
+                
+                foreach (var pl in Players)
+                    pl.EndTurn();
+                
+                StoppedAllPlayers();
                 await DeclarationVictory(players.First());
+            }
             else
                 _deleteGame(GameId);
         }
@@ -401,6 +435,12 @@ public abstract class BaseChessGame
             return;
 
         var player = Players.FirstOrDefault(p => p.Id == playerId);
+        
+        if (State == GameState.Finished)
+        {
+            player.State = PlayerState.Disconnected;
+            return;
+        }
         
         if (State == GameState.WaitingForPlayers)
         {
@@ -602,15 +642,19 @@ public abstract class BaseChessGame
         player.State = PlayerState.Disconnected;
         return true;
     }
-
+    
     ~BaseChessGame()
     {
+        Console.WriteLine("Вызов финализатора -игры");
+        
         StopTimer();
+        _gameTimer?.Dispose();
+        _gameTimer = null;
 
         foreach (var player in Players)
-            player.OnTimeUpdate -= HandlePlayerTimeUpdate;
+            player.Dispose();
         
         Players.Clear();
-        WaitingPlayers.Clear();
+        Players = null;
     }
 }
