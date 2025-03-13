@@ -1,5 +1,8 @@
-﻿using System.Windows;
+﻿using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Media;
 using Frontend.Controls;
 using Frontend.Controls.Message;
@@ -24,6 +27,8 @@ public partial class MainMenu : Page
         client.OnIsConnected += ClientOnIsConnected;
         client.OnConnectRetry += ClientOnConnectRetry;
         client.OnFailedConnect += ClientOnFailedConnect;
+
+        GetScoreAsync();
     }
 
     public delegate void RetryConnect();
@@ -142,5 +147,60 @@ public partial class MainMenu : Page
             CoopButton.Background = (Brush)new BrushConverter().ConvertFrom("#5053A7");
         else
             CoopButton.Background = (Brush)new BrushConverter().ConvertFrom("#7074D5");
+    }
+
+    private async void GetScoreAsync()
+    {
+        using HttpClient client = new HttpClient();
+        
+        string url = Url.BaseUrl + "Profile/get-score";
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
+        
+        try
+        {
+            HttpResponseMessage response = await client.GetAsync(url);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                string responseBody = await response.Content.ReadAsStringAsync();
+                ScoreText.Text = responseBody;
+            }
+            else
+            {
+                Console.WriteLine($"Error: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Request failed: {ex.Message}");
+        }
+    }
+
+    private Settings? _settings;
+    private void ButtonBase_OnClick(object sender, RoutedEventArgs e)
+    {
+        CloseMenu closeMenu = () =>
+        {
+            MainGrid.Children.Remove(_settings);
+            _settings = null;
+        };
+        
+        if (_settings == null)
+        {
+            _settings = new Settings(closeMenu);
+            
+            _settings.VerticalAlignment = VerticalAlignment.Top;
+            _settings.HorizontalAlignment = HorizontalAlignment.Right;
+            _settings.Margin = new Thickness(0, 60,20, 100);
+            
+            Grid.SetRowSpan(_settings, 4);
+            Grid.SetColumnSpan(_settings, 4);
+            Panel.SetZIndex(_settings, 2);
+            MainGrid.Children.Add(_settings);
+        }
+        else
+        {
+            closeMenu();
+        }
     }
 }

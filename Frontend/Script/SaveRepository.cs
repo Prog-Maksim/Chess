@@ -29,6 +29,12 @@ public class SaveRepository
         return File.ReadAllText(fileIdPath);
     }
 
+    public static void DeleteSave()
+    {
+        File.Delete(filePath);
+        File.Delete(fileIdPath);
+    }
+
     public static bool CheckToken()
     {
         return File.Exists(filePath);
