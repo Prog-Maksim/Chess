@@ -36,9 +36,8 @@ public class ProfileController(IUserDataRepository _userDataRepository, IUserRep
     /// <response code="200">Успешно, кол-во очков</response>
     [Authorize]
     [HttpDelete("account")]
-    [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
+    // [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteAccount()
-    
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
@@ -46,7 +45,7 @@ public class ProfileController(IUserDataRepository _userDataRepository, IUserRep
         
         await _userDataRepository.DeleteAccountAsync(dataToken.PersonId);
         await _userRepository.DeleteAccountAsync(dataToken.PersonId);
-
+        
         return Ok(new BaseResponse
         {
             Message = "Аккаунт успешно удален",
