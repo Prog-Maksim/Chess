@@ -5,6 +5,7 @@ using Backend.Game.GameModes.Blitz;
 using Backend.Game.GameModes.Bullet;
 using Backend.Game.GameModes.Classical;
 using Backend.Game.GameModes.Rapid;
+using Backend.Game.Shapes;
 using Backend.Models.Response;
 using Backend.Repository.Interfaces;
 
@@ -16,8 +17,8 @@ public class GameService
     /// Список всех активных игр
     /// </summary>
     private List<BaseChessGame> GetAllGames { get; set; }
-    private Lazy<SendWebSocketMessage> _sendWebSocketMessage;
-    protected readonly IUserDataRepository _userDataRepository;
+    private readonly Lazy<SendWebSocketMessage> _sendWebSocketMessage;
+    private readonly IUserDataRepository _userDataRepository;
 
     public delegate void DeleteGame(string gameId);
     
@@ -33,26 +34,28 @@ public class GameService
     /// </summary>
     /// <param name="nameGame">Название игры</param>
     /// <param name="players">Кол-во игроков</param>
-    /// <param name="personId">Идентификатор игрока</param>
+    /// <param name="playerId">Идентификатор игрока</param>
     /// <param name="name">Никнейм пользователя</param>
     /// <param name="isPrivate">Приватная ли игра</param>
+    /// <param name="isPotion">Доступны ли зелья в игре</param>
     /// <param name="gameMode">Тип игры</param>
     /// <returns>Идентификатор игры</returns>
-    public string CreateGame(string nameGame, int players, string personId, string name, bool isPrivate, GameMode gameMode)
+    public string CreateGame(string nameGame, int players, string playerId, string name, bool isPrivate, bool isPotion, GameMode gameMode)
     {
         DeleteGame deleteGame = DeleteGameHandler;
         IGameMode mode = GetGameSettings(gameMode, players);
-        
-        ChessPlayer player = new ChessPlayer(personId, name, _sendWebSocketMessage.Value, mode);
+
+        var potions = GenerateRandomPotions(isPotion);
+        ChessPlayer player = new ChessPlayer(playerId, name, _sendWebSocketMessage.Value, mode, potions);
 
         if (players == 2)
         {
-            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
+            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPotion, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
             GetAllGames.Add(chessGame2Players);
             return chessGame2Players.GameId;
         }
         
-        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
+        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPotion, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
         GetAllGames.Add(chessGame4Players);
         return chessGame4Players.GameId;
     }
@@ -113,7 +116,11 @@ public class GameService
         if (game == null)
             return new BaseResponse { Message = "Данная игра не найдена", Error = "NotFound", StatusCode = 404 };
         
-        ChessPlayer player = new ChessPlayer(playerId, nickname, _sendWebSocketMessage.Value, game.Mode);
+        ChessPlayer? searchPlayer = game.Players.FirstOrDefault(p => p.Id == playerId);
+        ChessPlayer player;
+        
+        player = searchPlayer ?? new ChessPlayer(playerId, nickname, _sendWebSocketMessage.Value, game.Mode, GenerateRandomPotions(game.IsPotion));
+        
         await game.RequestJoin(player);
         return new BaseResponse
         {
@@ -121,6 +128,23 @@ public class GameService
             Success = true,
             Message = "Заявка на вступление в игру оставлена! ожидайте"
         };
+    }
+
+    /// <summary>
+    /// Генерация зелий
+    /// </summary>
+    /// <param name="isPermission"></param>
+    /// <returns></returns>
+    private List<PotionType> GenerateRandomPotions(bool isPermission)
+    {
+        if (!isPermission)
+            return new List<PotionType>();
+
+        int countPotion = 5;
+        Random random = new Random();
+        var allPotions = Enum.GetValues(typeof(PotionType)).Cast<PotionType>().ToList();
+        var potions = allPotions.OrderBy(_ => random.Next()).Take(countPotion).ToList();
+        return potions;
     }
 
     /// <summary>
@@ -132,7 +156,7 @@ public class GameService
     /// <exception cref="KeyNotFoundException">Данная игра не найдена</exception>
     /// <exception cref="NullReferenceException">Данный игрок не найден</exception>
     /// <exception cref="UnauthorizedAccessException">У данного игрока нет доступа к игре</exception>
-    public GameData GetBoard(string gameId, string playerId)
+    public async Task<GameData> GetBoard(string gameId, string playerId, PersonData potionData)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
         
@@ -143,14 +167,37 @@ public class GameService
 
         if (player == null)
             throw new NullReferenceException("Данный игрок не найден");
-
+        
         if (game.IsGamePrivate && !player.IsApproved)
             throw new UnauthorizedAccessException("У вас нет доступа к этой игре");
+        
+        PotionAvailable potionAvailable = new PotionAvailable
+        {
+            Potions = new List<PotionDataAvailable>()
+        };
+
+        if (game.IsPotion)
+        {
+            var potions = potionData.Potions.Where(x => player.AvailablePotion.Contains(x.Type)).ToList();
+            
+            foreach (var potion in potions)
+            {
+                PotionDataAvailable potionDataAvailable = new PotionDataAvailable
+                {
+                    Type = potion.Type,
+                    PotionId = potion.PotionId,
+                    IsUnlocked = potion.IsUnlocked,
+                    IsAvailable = potion.IsUnlocked && potion.Count > 0
+                };
+                potionAvailable.Potions.Add(potionDataAvailable);
+            }
+        }
         
         GameData data = new GameData
         {
             PersonId = playerId,
             GameId = gameId,
+            PotionAvailable = game.IsPotion? potionAvailable: null,
             GameName = game.GameName,
             GameState = game.State,
             Score = player.Score,
@@ -170,7 +217,7 @@ public class GameService
             };
             data.Players.Add(gamePlayerData);
         }
-
+        
         List<List<GameBoard?>> gameBoards = new();
 
         for (int i = 0; i < game.Board.GetLength(0); i++)
@@ -307,5 +354,31 @@ public class GameService
             if (person != null)
                 game.SetPlayerActive(playerId);
         }
+    }
+
+    public BaseChessGame GetChessGame(string gameId)
+    {
+        var game = GetAllGames.Find(x => x.GameId == gameId);
+
+        if (game == null)
+            throw new NullReferenceException("Данная игра не найдена");
+
+        return game;
+    }
+
+    public ChessPiece? GetChessPiece(BaseChessGame game, int row, int column)
+    {
+        ChessPiece? piece = game.Board[row, column];
+        return piece;
+    }
+
+    public ChessPlayer GetChessPlayer(BaseChessGame game, string playerId)
+    {
+        ChessPlayer? player = game.Players.Find(x => x.Id == playerId);
+        
+        if (player == null)
+            throw new NullReferenceException("Данный игрок не найден");
+
+        return player;
     }
 }

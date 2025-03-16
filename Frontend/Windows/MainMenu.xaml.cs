@@ -1,11 +1,14 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using Frontend.Controls;
 using Frontend.Controls.Message;
+using Frontend.Enums;
+using Frontend.Models;
 using Frontend.Models.WebSocketMessage;
 using Frontend.Script;
 
@@ -27,8 +30,8 @@ public partial class MainMenu : Page
         client.OnIsConnected += ClientOnIsConnected;
         client.OnConnectRetry += ClientOnConnectRetry;
         client.OnFailedConnect += ClientOnFailedConnect;
-
-        GetScoreAsync();
+        
+        _ = GetPlayerDataAsync();
     }
 
     public delegate void RetryConnect();
@@ -58,7 +61,6 @@ public partial class MainMenu : Page
     
     private void ClientOnIsConnected(object? sender, bool e)
     {
-        CoopButton.IsEnabled = e;
         CreateGame.IsEnabled = e;
         JoinTheGame.IsEnabled = e;
     }
@@ -87,7 +89,6 @@ public partial class MainMenu : Page
         {
             MainGrid.Children.Remove(_createGameControl);
             _createGameControl = null;
-            CoopButton_OnClick(sender, e);
         };
         _createGameControl = new CreateGameControl(mainWindow, this, closeMenu);
         
@@ -108,7 +109,6 @@ public partial class MainMenu : Page
         {
             MainGrid.Children.Remove(_setGameIdControl);
             _setGameIdControl = null;
-            CoopButton_OnClick(sender, e);
         };
         _setGameIdControl = new SetGameIdControl(closeMenu);
         
@@ -137,23 +137,12 @@ public partial class MainMenu : Page
         mainWindow.OpenMainWindow();
     }
 
-    private bool _buttonIsOpen;
-    private void CoopButton_OnClick(object sender, RoutedEventArgs e)
+    private async Task GetPlayerDataAsync()
     {
-        CoopPopup.IsOpen = !_buttonIsOpen;
-        _buttonIsOpen = !_buttonIsOpen;
-        
-        if (_buttonIsOpen)
-            CoopButton.Background = (Brush)new BrushConverter().ConvertFrom("#5053A7");
-        else
-            CoopButton.Background = (Brush)new BrushConverter().ConvertFrom("#7074D5");
-    }
-
-    private async void GetScoreAsync()
-    {
+        await LoadPotion();
         using HttpClient client = new HttpClient();
         
-        string url = Url.BaseUrl + "Profile/get-score";
+        string url = Url.BaseUrl + "Profile/get-player-data";
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
         
         try
@@ -163,7 +152,19 @@ public partial class MainMenu : Page
             if (response.IsSuccessStatusCode)
             {
                 string responseBody = await response.Content.ReadAsStringAsync();
-                ScoreText.Text = responseBody;
+                PersonData? data = JsonSerializer.Deserialize<PersonData>(responseBody);
+
+                if (data != null)
+                {
+                    LeagueText.Text = data.League;
+                    LevelText.Text = $"Уровень: {data.Level}";
+                    ScoreText.Text = data.Score.ToString();
+                    
+                    if (data.Potions != null)
+                        InitializePotion(data.Potions);
+                }
+                else
+                    Console.WriteLine($"Не удалось загрузить данные игры");
             }
             else
             {
@@ -201,6 +202,59 @@ public partial class MainMenu : Page
         else
         {
             closeMenu();
+        }
+    }
+
+    private async Task LoadPotion()
+    {
+        using HttpClient client = new HttpClient();
+        
+        string url = Url.BaseUrl + "Potion/get-data-potion";
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, url);
+            request.Headers.Add("Accept", "*/*");
+
+            using HttpResponseMessage response = await client.SendAsync(request);
+            response.EnsureSuccessStatusCode();
+
+            var result = await response.Content.ReadAsStringAsync();
+            List<PotionEntity>? potions = JsonSerializer.Deserialize<List<PotionEntity>>(result);
+
+            if (potions == null)
+                MessageBox.Show("Не удалось загрузить зелья", "Chess-online", MessageBoxButton.OK, MessageBoxImage.Error);
+            
+            PotionAddFrame(potions);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Ошибка при выполнении запроса: {ex.Message}");
+        }
+    }
+
+    private void PotionAddFrame(List<PotionEntity> potions)
+    {
+        foreach (var potion in potions)
+        {
+            PotionAddFrame(potion.PotionId, potion.Name, potion.Description, potion.PurchasePrice, potion.EffectType, potion.UnlockLevel);
+        }
+    }
+
+
+    private Dictionary<string, PotionControl> _potionControls = new ();
+    private void PotionAddFrame(string potionId, string name, string description, int price, PotionType type, int levelUnlock)
+    {
+        PotionControl control = new PotionControl(potionId, name, description, price, type, levelUnlock);
+        PotionStackPanel.Children.Add(control);
+        _potionControls.Add(potionId, control);
+    }
+
+    private void InitializePotion(List<PotionData> potions)
+    {
+        foreach (var potion in potions)
+        {
+            if (_potionControls.ContainsKey(potion.PotionId))
+                _potionControls[potion.PotionId].UnlockPotion(potion.Count, potion.IsPurchased, potion.IsUnlocked);
         }
     }
 }

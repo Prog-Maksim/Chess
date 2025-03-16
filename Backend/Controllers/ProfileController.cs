@@ -1,4 +1,5 @@
-﻿using Backend.Models.Response;
+﻿using Backend.Models.DB;
+using Backend.Models.Response;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -10,7 +11,7 @@ namespace Backend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api-chess/v{version:apiVersion}/[controller]")]
-public class ProfileController(IUserDataRepository _userDataRepository, IUserRepository _userRepository): ControllerBase
+public class ProfileController(IUserDataRepository _userDataRepository, IUserRepository _userRepository, PotionService _potionService): ControllerBase
 {
     /// <summary>
     /// Возвращает кол-во очков у пользователя
@@ -27,6 +28,23 @@ public class ProfileController(IUserDataRepository _userDataRepository, IUserRep
         var dataToken = JwtService.GetJwtTokenData(token);
 
         return Ok(await _userDataRepository.GetScore(dataToken.PersonId));
+    }
+    
+    /// <summary>
+    /// Возвращает данные пользователя
+    /// </summary>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    [Authorize]
+    [HttpGet("get-player-data")]
+    [ProducesResponseType(typeof(PersonData), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPlayerData()
+    {
+        var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
+        var dataToken = JwtService.GetJwtTokenData(token);
+        
+        var data = await _potionService.GetPersonData(dataToken.PersonId);
+        return Ok(data);
     }
     
     /// <summary>

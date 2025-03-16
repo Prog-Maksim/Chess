@@ -31,14 +31,17 @@ public class AuthService
         {
             PersonId = Guid.NewGuid().ToString(),
             Nickname = user.Nickname,
-            Email = user.Email
+            Email = user.Email,
+            Level = 1
         };
         person.Password = _passwordHasher.HashPassword(person, user.Password);
 
         UserData data = new UserData
         {
             PersonId = person.PersonId,
-            Score = 0
+            Score = 0,
+            UnlockedPotions = new List<string>(),
+            GamesPlayerd = 0
         };
         
         await _userRepository.AddUserAsync(person);

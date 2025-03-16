@@ -37,5 +37,19 @@
         <Link>.dockerignore</Link>
       </Content>
     </ItemGroup>
+
+    <ItemGroup>
+      <None Remove="Image\Potion\DoublePoints.png" />
+      <Resource Include="Image\Potion\DoublePoints.png" />
+      <None Remove="Image\Potion\EnlargedPiece.png" />
+      <Resource Include="Image\Potion\EnlargedPiece.png" />
+      <None Remove="Image\Potion\ExtendedMovePiece.png" />
+      <None Remove="Image\Potion\KillPiece.png" />
+      <Resource Include="Image\Potion\KillPiece.png" />
+      <None Remove="Image\Potion\RandomKillPiece.png" />
+      <Resource Include="Image\Potion\RandomKillPiece.png" />
+      <None Remove="Image\Potion\UltimateProtectionPiece.png" />
+      <Resource Include="Image\Potion\UltimateProtectionPiece.png" />
+    </ItemGroup>
     
 </Project>

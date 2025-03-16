@@ -16,6 +16,11 @@ public class GameData
     public required int Score { get; set; }
     
     /// <summary>
+    /// Доступные зелья
+    /// </summary>
+    public required PotionAvailable PotionAvailable { get; set; }
+    
+    /// <summary>
     /// Текущие ходы игроков за игру
     /// </summary>
     public required List<Move> Moves { get; set; }
@@ -72,8 +77,6 @@ public class GameBoard
     /// </summary>
     public required string PersonId { get; set; }
 }
-
-// TODO: Добавить кол-во очков у игрока, убитые фигуры, (для каждого индивидуально), все ходы
 
 public class GamePlayer
 {

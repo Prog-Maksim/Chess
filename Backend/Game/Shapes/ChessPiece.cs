@@ -14,6 +14,14 @@ public abstract class ChessPiece
     public PieceType Type { get; }
     public string OwnerId { get; set; }
     
+    public int Row { get; set; }
+    public int Column { get; set; }
+
+    public int DurationThePotion { get; set; } = 0;
+    public bool IsOriginalEnlarged { get; set; }
+    public bool IsEnlarged { get; set; } = false;
+    public bool IsProtected { get; set; } = false;
+    
     
     public ChessPiece(PieceType type, string ownerId, int score)
     {

@@ -8,11 +8,11 @@ namespace Backend.Game;
 
 public class ChessGame4Players : BaseChessGame
 {
-    public ChessGame4Players(string name, ChessPlayer player, IGameMode mode, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, mode, player, socketMessage, deleteGame, userDataRepository)
+    public ChessGame4Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, mode, player, isPotion, socketMessage, deleteGame, userDataRepository)
     {
         GameName = name; 
     }
-    public ChessGame4Players(string name, ChessPlayer player, IGameMode mode, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, mode, player, isGamePrivate, socketMessage, deleteGame, userDataRepository) { }
+    public ChessGame4Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, mode, player, isPotion, isGamePrivate, socketMessage, deleteGame, userDataRepository) { }
 
     protected override int RequiredPlayers() => 4;
     
@@ -241,11 +241,18 @@ public class ChessGame4Players : BaseChessGame
             throw new ArgumentOutOfRangeException("Значение newCol или newRow должно быть в диапазоне от 0 до 16");
         
         var piece = Board[oldRow, oldCol];
+        var newPiece = Board[newRow, newCol];
 
         if (piece == null)
             return false;
 
         if (piece.OwnerId != personId)
+            return false;
+        
+        if (piece.OwnerId != personId)
+            return false;
+
+        if (newPiece != null && newPiece.OwnerId == personId && newPiece.IsProtected)
             return false;
 
         var person = Players.FirstOrDefault(p => p.Id == personId);
@@ -255,8 +262,12 @@ public class ChessGame4Players : BaseChessGame
         if (Board[newRow, newCol] != null)
         {
             person.Score += Board[newRow, newCol].Score;
+            person.DoubleScoreForNextKill = false;
             await person.AddKillPiece(Board[newRow, newCol]);
         }
+        
+        piece.Row = newRow;
+        piece.Column = newCol;
         
         Board[newRow, newCol] = piece;
         Board[oldRow, oldCol] = null;

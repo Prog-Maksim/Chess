@@ -13,6 +13,7 @@ namespace Backend.Controllers;
 public class ImageController: ControllerBase
 {
     private readonly string _basePath = "Image/Base";
+    private readonly string _basePathPotion = "Image/Potion";
     
     /// <summary>
     /// Выдает изображения фигур
@@ -35,5 +36,28 @@ public class ImageController: ControllerBase
         
         var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         return File(fileStream, "image/svg+xml");
+    }
+
+    /// <summary>
+    /// Выдает изображения зелья
+    /// </summary>
+    /// <param name="type">Тип зелья</param>
+    /// <returns></returns>
+    /// <response code="200">Изображение в формате svg</response>
+    /// <response code="404">Данное изображение не найдено</response>
+    [AllowAnonymous]
+    [HttpGet("get-image-potion")]
+    [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(NotFound), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetImagePotion([Required] [FromQuery] PotionType type)
+    {
+        string fileName = $"{char.ToUpper(type.ToString()[0])}{type.ToString().Substring(1)}.png";
+        string filePath = Path.Combine(_basePathPotion, fileName);
+        
+        if (!System.IO.File.Exists(filePath))
+            return NotFound("Файл не найден");
+        
+        var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return File(fileStream, "image/png");
     }
 }

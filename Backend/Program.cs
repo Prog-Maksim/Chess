@@ -2,6 +2,7 @@ using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Backend;
+using Backend.Game.Potion;
 using Backend.Repository;
 using Backend.Repository.Interfaces;
 using Backend.Services;
@@ -25,10 +26,12 @@ var builder = WebApplication.CreateBuilder(args);
 // Регистрация Сервисов
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<PotionService>();
 
 // Регистрация репозиториев
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IUserDataRepository, UserDataRepository>();
+builder.Services.AddSingleton<IPotionRepository, PotionRepository>();
 
 builder.Services.AddSingleton<WebSocketService>();
 builder.Services.AddSingleton<SendWebSocketMessage>();
@@ -142,6 +145,9 @@ builder.Services.AddCors();
 
 
 var app = builder.Build();
+
+var webSocketMessage = app.Services.GetRequiredService<Lazy<SendWebSocketMessage>>();
+PotionFactory.Initialize(webSocketMessage);
 
 // Настройка среды
 app.UseDeveloperExceptionPage();

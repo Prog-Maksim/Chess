@@ -24,7 +24,7 @@ public partial class GameMenu : Page
     // состояние игрока, может ли он походить
     private bool _playerTurn;
     // идентификатор карты
-    private string _gameId;
+    public string GameId;
     // меню игроков
     private Dictionary<string, PlayerTimeMenu> _players;
     // идентификатор игрока чей щяс ход
@@ -48,7 +48,7 @@ public partial class GameMenu : Page
     
     public GameMenu(string gameId, WebSocketService webSocket, MainMenu mainMenu, bool create = false): this()
     {
-        _gameId = gameId;
+        GameId = gameId;
         _players = new Dictionary<string, PlayerTimeMenu>();
         _mainMenu = mainMenu;
         _webSocketService = webSocket;
@@ -74,6 +74,7 @@ public partial class GameMenu : Page
         webSocket.OnUpdateScore += WebSocketOnUpdateScore;
         webSocket.OnNewMove += WebSocketOnNewMove;
         webSocket.OnUpdateGameState += WebSocketOnUpdateGameState;
+        webSocket.OnUsePotion += WebSocketOnUsePotion;
         
         _ = GetGameData();
         WaitingGame(create);
@@ -118,7 +119,7 @@ public partial class GameMenu : Page
         if (create)
         {
             SetTextInWaiting();
-            _gameIdControl = new GameIdControl(_gameId);
+            _gameIdControl = new GameIdControl(GameId);
             StackPanelPlayer.Children.Insert(0, _gameIdControl);
             
             _playerTurn = true;
@@ -130,6 +131,19 @@ public partial class GameMenu : Page
     {
         GameTime.Text = message;
         GameTime.Foreground = (Brush)new BrushConverter().ConvertFrom(color);
+    }
+    
+    private void WebSocketOnUsePotion(object? sender, UsePotion e)
+    {
+        UsePotionMenu potionMenu = new UsePotionMenu(e.PotionType, e.UsePersonName, e.PotionName);
+        StackPanelPlayer.Children.Add(potionMenu);
+        _ = RemoveMenu(potionMenu);
+    }
+
+    private async Task RemoveMenu(UsePotionMenu potionMenu)
+    {
+        await Task.Delay(3000);
+        StackPanelPlayer.Children.Remove(potionMenu);
     }
     
     private string _textGame = String.Empty;
@@ -187,7 +201,7 @@ public partial class GameMenu : Page
                 _joinTheRequestControl = null;
                 StackPanelPlayer.Children.Remove(menu);
             };
-            _joinTheRequestControl = new JoinTheRequestControl(_gameId, deleteMenu);
+            _joinTheRequestControl = new JoinTheRequestControl(GameId, deleteMenu);
             StackPanelPlayer.Children.Insert(0 , _joinTheRequestControl);
             
             _joinTheRequestControl.AddPlayer(e.Nickname, e.PersonId);
@@ -303,7 +317,7 @@ public partial class GameMenu : Page
 
     private async Task GetGameData()
     {
-        string url = Url.BaseUrl + "Game/playing-field?gameId=" + _gameId;
+        string url = Url.BaseUrl + "Game/playing-field?gameId=" + GameId;
         
         using (HttpClient client = new HttpClient())
         {
@@ -332,6 +346,8 @@ public partial class GameMenu : Page
                 AddPersons(gameData.Players);
                 UpdateBoard(gameData.Board);
                 
+                CreateMenuPotion(gameData.PotionAvailable);
+                
                 MainGrid.Children.Remove(ProcessingGame);
             }
             catch (HttpRequestException e)
@@ -349,6 +365,16 @@ public partial class GameMenu : Page
                 MessageBox.Show($"{e.Message} \n\n{e.StackTrace}");
                 _mainMenu.OpenMainMenu();
             }
+        }
+    }
+
+    private PotionMenuControl? PotionMenu;
+    private void CreateMenuPotion(PotionAvailable? potion)
+    {
+        if (PotionMenu == null && potion != null)
+        {
+            PotionMenu = new PotionMenuControl(this, potion);
+            RightStackPanel.Children.Add(PotionMenu);
         }
     }
 
@@ -393,20 +419,35 @@ public partial class GameMenu : Page
             .OfType<Image>()
             .ToList()
             .ForEach(img => ChessBoardGrid.Children.Remove(img));
-
         
+        
+        var enlargedPieces = new Dictionary<string, (int row, int col)>(); // Храним координаты верхнего-левого угла
+
+        for (int i = 0; i < board.Count - 1; i++)
+        {
+            for (int j = 0; j < board[i].Count - 1; j++)
+            {
+                var piece = board[i][j];
+                if (piece == null || enlargedPieces.ContainsKey(piece.PieceId)) continue;
+
+                // Проверяем, является ли эта фигура увеличенной (занимает 2×2)
+                if (IsEnlargedPiece(board, piece.PieceId, i, j))
+                {
+                    enlargedPieces[piece.PieceId] = (i, j);
+                }
+            }
+        }
+
+        // 3. Отрисовка фигур
         for (int i = 0; i < board.Count; i++)
         {
             for (int j = 0; j < board[i].Count; j++)
             {
                 var piece = board[i][j];
-                
+                if (piece == null) continue;
+
                 int rowCopy = i;
                 int colCopy = j;
-
-                if (piece == null)
-                    continue;
-
                 string color = piece.Color;
                 var type = piece.Type;
 
@@ -416,27 +457,63 @@ public partial class GameMenu : Page
                 Image image = new Image
                 {
                     Source = new BitmapImage(new Uri(fullPath, UriKind.Absolute)),
-                    Margin = new Thickness(_gameSize == 8? 7: 3),
+                    Margin = new Thickness(_gameSize == 8 ? 7 : 3),
                     Cursor = Cursors.Hand
                 };
-                
+
                 Panel.SetZIndex(image, 3);
 
                 image.MouseLeftButtonDown += (sender, args) =>
                 {
                     if (_gameState && _playerTurn) ClickTheGameBoard(piece.Type, rowCopy, colCopy);
                 };
-                
-                Grid.SetRow(image, i);
-                Grid.SetColumn(image, j);
+
+                // 4. Проверяем, нужно ли рисовать увеличенную фигуру
+                if (enlargedPieces.TryGetValue(piece.PieceId, out var topLeft) && topLeft == (i, j))
+                {
+                    Grid.SetRow(image, i);
+                    Grid.SetColumn(image, j);
+                    Grid.SetRowSpan(image, 2); // Фигура занимает 2 строки
+                    Grid.SetColumnSpan(image, 2); // Фигура занимает 2 колонки
+                }
+                else if (!enlargedPieces.ContainsKey(piece.PieceId))
+                {
+                    // Обычная фигура
+                    Grid.SetRow(image, i);
+                    Grid.SetColumn(image, j);
+                }
+                else
+                {
+                    // Это часть увеличенной фигуры, не добавляем её
+                    continue;
+                }
+
                 ChessBoardGrid.Children.Add(image);
             }
         }
     }
+    
+    private bool IsEnlargedPiece(List<List<GameBoard>> board, string pieceId, int row, int col)
+    {
+        int rows = board.Count;
+        int cols = board[0].Count;
 
+        // Проверяем, есть ли фигура на 4 клетках 2x2 с таким же ID
+        if (row + 1 < rows && col + 1 < cols &&
+            board[row + 1][col] != null && board[row][col + 1] != null && board[row + 1][col + 1] != null &&
+            board[row + 1][col].PieceId == pieceId &&
+            board[row][col + 1].PieceId == pieceId &&
+            board[row + 1][col + 1].PieceId == pieceId)
+        {
+            return true; // Фигура увеличена
+        }
+
+        return false; // Обычная фигура
+    }
+    
     private Border? _selectionHighlight;
     private bool isSelect;
-    private AddressTheBoard? StartPoint;
+    public AddressTheBoard? StartPoint;
     private void ClickTheGameBoard(PieceType? type, int row, int col)
     {
         if (isSelect && StartPoint?.Row == row && StartPoint?.Col == col)
@@ -510,7 +587,7 @@ public partial class GameMenu : Page
         MovePiece movePiece = new MovePiece
         {
             Type = "MovePiece",
-            gameId = _gameId,
+            gameId = GameId,
             token = SaveRepository.ReadToken(),
             FromRow = fromRow,
             FromCol = fromCol,
@@ -568,6 +645,7 @@ public partial class GameMenu : Page
         {
             PlayerTimeMenu playerTimeMenu = new PlayerTimeMenu(nickname, time);
             _players[personId] = playerTimeMenu;
+            Console.WriteLine($"Add person in dictionary: {personId}");
             StackPanelPlayer.Children.Add(playerTimeMenu);
         }
     }
@@ -652,7 +730,7 @@ public partial class GameMenu : Page
     {
         HttpClient httpClient = new HttpClient();
         
-        var requestUri = Url.BaseUrl + $"Game/leave-game?gameId={_gameId}";
+        var requestUri = Url.BaseUrl + $"Game/leave-game?gameId={GameId}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());

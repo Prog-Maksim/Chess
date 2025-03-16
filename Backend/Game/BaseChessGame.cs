@@ -13,6 +13,7 @@ public abstract class BaseChessGame
     public string GameId { get; set; }
     public string GameName { get; set; }
     public int BoardSize { get; set; }
+    public bool IsPotion { get; private set; }
     public ChessPiece?[,] Board { get; set; }
     public List<ChessPlayer> Players { get; set; } = new();
     private List<ChessPlayer> WaitingPlayers { get; } = new();
@@ -50,10 +51,11 @@ public abstract class BaseChessGame
     /// <param name="boardSize"></param>
     /// <param name="mode"></param>
     /// <param name="player"></param>
+    /// <param name="isPotion"></param>
     /// <param name="webSocketMessage"></param>
     /// <param name="deleteGame"></param>
     /// <param name="userDataRepository"></param>
-    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, Lazy<SendWebSocketMessage> webSocketMessage, 
+    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isPotion, Lazy<SendWebSocketMessage> webSocketMessage, 
         GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository)
     {
         Random rnd = new();
@@ -61,6 +63,7 @@ public abstract class BaseChessGame
         Mode = mode;
         
         GameName = name;
+        IsPotion = isPotion;
         
         BoardSize = boardSize;
         Board = new ChessPiece?[boardSize, boardSize];
@@ -81,13 +84,14 @@ public abstract class BaseChessGame
     /// <param name="boardSize"></param>
     /// <param name="mode"></param>
     /// <param name="player"></param>
+    /// <param name="isPotion"></param>
     /// <param name="isGamePrivate"></param>
     /// <param name="socketMessage"></param>
     /// <param name="deleteGame"></param>
     /// <param name="userDataRepository"></param>
-    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isGamePrivate, 
+    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isPotion, bool isGamePrivate, 
         Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository): 
-        this(name, boardSize, mode, player, socketMessage, deleteGame, userDataRepository)
+        this(name, boardSize, mode, player, isPotion, socketMessage, deleteGame, userDataRepository)
     {
         IsGamePrivate = isGamePrivate;
     }
@@ -221,7 +225,7 @@ public abstract class BaseChessGame
         Players[CurrentPlayerIndex].StartTurn();
     }
 
-    protected void NextTurn()
+    public void NextTurn()
     {
         if (State != GameState.InProgress)
             return;
@@ -255,9 +259,11 @@ public abstract class BaseChessGame
     /// <param name="piece"></param>
     /// <param name="col"></param>
     /// <param name="row"></param>
-    protected void AddPieceToBoard(ChessPiece piece, int col, int row)
+    protected void AddPieceToBoard(ChessPiece piece, int row, int col)
     {
-        Board[col, row] = piece;
+        piece.Row = row;
+        piece.Column = col;
+        Board[row, col] = piece;
     }
     
     /// <summary>
@@ -294,7 +300,7 @@ public abstract class BaseChessGame
     /// <summary>
     /// Рассылает сообщения пользователям при обновлении игрового поля
     /// </summary>
-    protected virtual async Task SendMessageUpdateBoard()
+    public async Task SendMessageUpdateBoard()
     {
         GameBoard?[,] gameBoards = new GameBoard?[Board.GetLength(0), Board.GetLength(1)];
 
@@ -322,6 +328,7 @@ public abstract class BaseChessGame
             }
         }
         
+        Console.WriteLine("Сообщение отправлено...");
         await WebSocketMessage.Value.SendMessageUpdateBoard(Players, gameBoards);
     }
     
@@ -351,11 +358,23 @@ public abstract class BaseChessGame
         await WebSocketMessage.Value.SendMessageNewMoving(Players, move);
     }
     protected abstract Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol);
-
+    
+    /// <summary>
+    /// Ход пользователя
+    /// </summary>
+    /// <param name="personId"></param>
+    /// <param name="oldRow"></param>
+    /// <param name="oldCol"></param>
+    /// <param name="newRow"></param>
+    /// <param name="newCol"></param>
+    /// <returns></returns>
     public async Task<bool> MakeAMove(string personId, int oldRow, int oldCol, int newRow, int newCol)
     {
         if (State == GameState.InProgress)
-            return await Moving(personId, oldRow, oldCol, newRow, newCol);
+        {
+            bool result =  await Moving(personId, oldRow, oldCol, newRow, newCol);
+            return result;
+        }
 
         return false;
     }
@@ -559,6 +578,10 @@ public abstract class BaseChessGame
         }
     }
 
+    /// <summary>
+    /// Удаляем фигуры неактивного игрока
+    /// </summary>
+    /// <param name="playerId"></param>
     private async Task DeletePieceInAnActivePlayer(string playerId)
     {
         for (int i = 0; i < Board.GetLength(0); i++)
@@ -642,6 +665,11 @@ public abstract class BaseChessGame
 
         player.State = PlayerState.Disconnected;
         return true;
+    }
+
+    public void RemovePiece(int row, int col)
+    {
+        Board[row, col] = null;
     }
     
     ~BaseChessGame()
