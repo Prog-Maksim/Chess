@@ -37,11 +37,31 @@
       <Resource Include="Image\Piece\Rook.png" />
       <None Remove="Image\Lock.png" />
       <Resource Include="Image\Lock.png" />
+      <None Remove="Image\chest.png" />
+      <Resource Include="Image\chest.png" />
     </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.5.0" />
       <PackageReference Include="MahApps.Metro.IconPacks" Version="5.1.0" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Page Update="Controls\Potion\PotionControl.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+      <Page Update="Controls\Potion\PotionMenuControl.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
+      <Page Update="Controls\Potion\UsePotionMenu.xaml">
+        <Generator>MSBuild:Compile</Generator>
+        <XamlRuntime>Wpf</XamlRuntime>
+        <SubType>Designer</SubType>
+      </Page>
     </ItemGroup>
 
 </Project>

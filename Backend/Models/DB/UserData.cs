@@ -33,4 +33,35 @@ public class UserData
     /// Кол-во сыгранных игр
     /// </summary>
     public int GamesPlayerd {get; set;}
+
+    /// <summary>
+    /// Кол-во выйгранных игр
+    /// </summary>
+    public int NumberOfWins { get; set; } = 0;
+
+    /// <summary>
+    /// Лига игрока
+    /// </summary>
+    public string League { get; set; } = "Пешечник";
+
+    /// <summary>
+    /// Рейтинг
+    /// </summary>
+    public int Rating { get; set; } = 0;
+    
+    /// <summary>
+    /// Уровень пользователя
+    /// </summary>
+    public int Level { get; set; } = 1;
+
+    /// <summary>
+    /// Доступен ли сундук для открытия
+    /// </summary>
+    public bool IsChest { get; set; } = false;
+    
+    /// <summary>
+    /// Кол-во выйгранных игр для уровня
+    /// </summary>
+    public int NumberOfWinsLevel { get; set; } = 0;
+    
 }

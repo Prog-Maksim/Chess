@@ -19,33 +19,30 @@ public class PersonData
     [JsonPropertyName("level")]
     public int Level { get; set; }
     
+    [JsonPropertyName("numberOfWinsLevel")]
+    public int NumberOfWinsLevel { get; set; }
+    
+    [JsonPropertyName("requiredNumberOfWinsLevel")]
+    public int RequiredNumberOfWinsLevel { get; set; }
+    
+    [JsonPropertyName("isChest")]
+    public bool IsChest { get; set; }
+    
     [JsonPropertyName("potions")]
     public List<PotionData>? Potions { get; set; }
 }
 
 public class PotionData
 {
-    /// <summary>
-    /// Идентификатор зелья
-    /// </summary>
     [JsonPropertyName("potionId")]
     public required string PotionId { get; set; }
     
-    /// <summary>
-    /// 
-    /// </summary>
     [JsonPropertyName("count")]
     public int Count { get; set; }
     
-    /// <summary>
-    /// 
-    /// </summary>
     [JsonPropertyName("isPurchased")]
     public bool IsPurchased { get; set; }
-    
-    /// <summary>
-    /// 
-    /// </summary>
+
     [JsonPropertyName("isUnlocked")]
     public bool IsUnlocked { get; set; }
 }

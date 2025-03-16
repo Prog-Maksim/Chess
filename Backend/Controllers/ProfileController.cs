@@ -1,5 +1,4 @@
-﻿using Backend.Models.DB;
-using Backend.Models.Response;
+﻿using Backend.Models.Response;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +10,7 @@ namespace Backend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api-chess/v{version:apiVersion}/[controller]")]
-public class ProfileController(IUserDataRepository _userDataRepository, IUserRepository _userRepository, PotionService _potionService): ControllerBase
+public class ProfileController(IUserRepository _userRepository, PotionService _potionService, PlayerDataService playerDataService): ControllerBase
 {
     /// <summary>
     /// Возвращает кол-во очков у пользователя
@@ -27,7 +26,7 @@ public class ProfileController(IUserDataRepository _userDataRepository, IUserRep
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
 
-        return Ok(await _userDataRepository.GetScore(dataToken.PersonId));
+        return Ok(await _userRepository.GetScore(dataToken.PersonId));
     }
     
     /// <summary>
@@ -51,7 +50,7 @@ public class ProfileController(IUserDataRepository _userDataRepository, IUserRep
     /// Позволяет удалить аккаунт пользователя
     /// </summary>
     /// <returns></returns>
-    /// <response code="200">Успешно, кол-во очков</response>
+    /// <response code="200">Успешно</response>
     [Authorize]
     [HttpDelete("account")]
     // [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
@@ -61,7 +60,6 @@ public class ProfileController(IUserDataRepository _userDataRepository, IUserRep
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
         
-        await _userDataRepository.DeleteAccountAsync(dataToken.PersonId);
         await _userRepository.DeleteAccountAsync(dataToken.PersonId);
         
         return Ok(new BaseResponse
@@ -70,5 +68,25 @@ public class ProfileController(IUserDataRepository _userDataRepository, IUserRep
             Success = true,
             StatusCode = 200
         });
+    }
+
+
+    /// <summary>
+    /// Позволяет игроку открыть сундук
+    /// </summary>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    [Authorize]
+    [HttpPost("chest")]
+    [ProducesResponseType(typeof(ChestReward), StatusCodes.Status200OK)]
+    public async Task<IActionResult> OpenChest()
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+
+        var result = await playerDataService.OpenChest(dataToken.PersonId);
+        
+        return Ok(result);
     }
 }

@@ -9,7 +9,7 @@ using Frontend.Models;
 using Frontend.Script;
 using Frontend.Windows.Game;
 
-namespace Frontend.Controls;
+namespace Frontend.Controls.Potion;
 
 public partial class PotionMenuControl : UserControl
 {

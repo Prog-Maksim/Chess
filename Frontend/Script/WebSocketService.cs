@@ -239,6 +239,10 @@ public class WebSocketService
     /// Событие, использование зелья
     /// </summary>
     public event EventHandler<UsePotion>? OnUsePotion;
+    /// <summary>
+    /// Событие, Результат игры
+    /// </summary>
+    public event EventHandler<ResultPlayerTheGame>? OnResultTheGame;
 
     private async Task ParseMessages(string message)
     {
@@ -396,6 +400,13 @@ public class WebSocketService
             
             if (result != null)
                 OnUsePotion?.Invoke(this, result);
+        }
+        else if (message.Contains("GamePlayerTheResult"))
+        {
+            var result = JsonSerializer.Deserialize<ResultPlayerTheGame>(message);
+            
+            if (result != null)
+                OnResultTheGame?.Invoke(this, result);
         }
     }
 }

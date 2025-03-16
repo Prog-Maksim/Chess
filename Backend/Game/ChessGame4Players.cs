@@ -1,18 +1,20 @@
 ﻿using Backend.Enums;
 using Backend.Game.GameModes;
 using Backend.Game.Shapes;
+using Backend.Models.Response.WebSocketMessage;
 using Backend.Repository.Interfaces;
+using Backend.Script;
 using Backend.Services;
 
 namespace Backend.Game;
 
 public class ChessGame4Players : BaseChessGame
 {
-    public ChessGame4Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, mode, player, isPotion, socketMessage, deleteGame, userDataRepository)
+    public ChessGame4Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserRepository userRepository, PlayerDataService playerDataService) : base(name, 16, mode, player, isPotion, socketMessage, deleteGame, userRepository, playerDataService)
     {
         GameName = name; 
     }
-    public ChessGame4Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 16, mode, player, isPotion, isGamePrivate, socketMessage, deleteGame, userDataRepository) { }
+    public ChessGame4Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserRepository userRepository, PlayerDataService playerDataService) : base(name, 16, mode, player, isPotion, isGamePrivate, socketMessage, deleteGame, userRepository, playerDataService) { }
 
     protected override int RequiredPlayers() => 4;
     
@@ -233,6 +235,7 @@ public class ChessGame4Players : BaseChessGame
         
         await SendMessageUpdateBoard();
     }
+    
     
     // Действия
     protected override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)

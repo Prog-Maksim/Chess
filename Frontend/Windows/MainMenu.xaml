@@ -132,24 +132,7 @@
                     CornerRadius="15">
                 </Border>
 
-                <Border
-                    Grid.Row="1"
-                    Background="#FFEA94"
-                    Margin="20"
-                    CornerRadius="15">
-                    <Viewbox Stretch="Uniform">
-                        <TextBlock
-                            Margin="30"
-                            Text="Battle pass"
-                            VerticalAlignment="Center"
-                            HorizontalAlignment="Center"
-                            FontFamily="Montserrat"
-                            Foreground="Black"
-                            FontWeight="Bold"
-                            FontSize="30">
-                        </TextBlock>
-                    </Viewbox>
-                </Border>
+                <frame:ChestControl x:Name="ChestControl" Grid.Row="1"/>
             </Grid>
 
             <Grid Grid.Column="1" ShowGridLines="False">

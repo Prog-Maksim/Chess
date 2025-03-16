@@ -1,9 +1,11 @@
 ﻿using Backend.Enums;
 using Backend.Game.GameModes;
 using Backend.Game.Shapes;
+using Backend.Models.DB;
 using Backend.Models.Response;
 using Backend.Models.Response.WebSocketMessage;
 using Backend.Repository.Interfaces;
+using Backend.Script;
 using Backend.Services;
 
 namespace Backend.Game;
@@ -41,7 +43,8 @@ public abstract class BaseChessGame
     
     
     protected readonly Lazy<SendWebSocketMessage> WebSocketMessage;
-    private readonly IUserDataRepository _userDataRepository;
+    private readonly PlayerDataService _playerDataService;
+    private readonly IUserRepository _userRepository;
     private GameService.DeleteGame _deleteGame;
 
     /// <summary>
@@ -54,9 +57,10 @@ public abstract class BaseChessGame
     /// <param name="isPotion"></param>
     /// <param name="webSocketMessage"></param>
     /// <param name="deleteGame"></param>
-    /// <param name="userDataRepository"></param>
-    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isPotion, Lazy<SendWebSocketMessage> webSocketMessage, 
-        GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository)
+    /// <param name="userRepository"></param>
+    /// <param name="playerDataService"></param>
+    protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isPotion, 
+        Lazy<SendWebSocketMessage> webSocketMessage, GameService.DeleteGame deleteGame, IUserRepository userRepository, PlayerDataService playerDataService)
     {
         Random rnd = new();
         GameId = $"{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}-{rnd.Next(1111, 9999)}";
@@ -73,7 +77,8 @@ public abstract class BaseChessGame
         _ = AddPlayer(player);
         
         WebSocketMessage = webSocketMessage;
-        _userDataRepository = userDataRepository;
+        _userRepository = userRepository;
+        _playerDataService = playerDataService;
         _deleteGame = deleteGame;
     }
 
@@ -88,10 +93,10 @@ public abstract class BaseChessGame
     /// <param name="isGamePrivate"></param>
     /// <param name="socketMessage"></param>
     /// <param name="deleteGame"></param>
-    /// <param name="userDataRepository"></param>
+    /// <param name="userRepository"></param>
     protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isPotion, bool isGamePrivate, 
-        Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository): 
-        this(name, boardSize, mode, player, isPotion, socketMessage, deleteGame, userDataRepository)
+        Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserRepository userRepository, PlayerDataService playerDataService): 
+        this(name, boardSize, mode, player, isPotion, socketMessage, deleteGame, userRepository, playerDataService)
     {
         IsGamePrivate = isGamePrivate;
     }
@@ -121,13 +126,14 @@ public abstract class BaseChessGame
     private async Task PlayerOnTimeIsLost(ChessPlayer arg)
     {
         await UpdateGameBoard();
-        await WebSocketMessage.Value.SendMessagePlayerGameOver(Players, arg.Id);
+        await DeclarationDefeat(arg);
     }
 
     /// <summary>
     /// Метод вызывается каждую секунду для каждого игрока активного хода 
     /// </summary>
     /// <param name="player"></param>
+    /// <param name="time"></param>
     protected abstract Task HandlePlayerTimeUpdate(ChessPlayer player, TimeSpan time);
     
     /// <summary>
@@ -382,43 +388,108 @@ public abstract class BaseChessGame
     /// <summary>
     /// Объявление победы
     /// </summary>
-    protected virtual async Task DeclarationVictory(ChessPlayer player)
+    /// <param name="player"></param>
+    private async Task DeclarationVictory(ChessPlayer player)
     {
-        State = GameState.Finished;
-        player.Score *= 2;
+        _state = GameState.Finished;
+        var data = await _userRepository.GetUserDataByIdAsync(player.Id);
+        var usedPotion = player.GetUsedPotions();
+
+        int modeScore = ChessScoreCalculator.CalculateScore(Mode, player.RemainingTime, RequiredPlayers());
+        int? potionScore = usedPotion.Count == 0 ? 50 : null;
+
+        int totalScore = player.Score * 2 + modeScore + potionScore ?? 0;
+
+        List<League> leagues = await _playerDataService.LeagueRepository.GetLeagues();
+        int rating = ChessScoreCalculator.CalculateRatingChange(data, RequiredPlayers(), true, leagues);
+        var addPotion = await _playerDataService.GetRandomPotion(player.Id);
         
-        foreach (var user in Players)
+        ScoreData scoreData = new ScoreData
         {
-            try
-            {
-                if (user.State == PlayerState.Disconnected)
-                {
-                    user.Score = 0;
-                    user.Score = -50;
-                }
-
-                FinishGame finish = new FinishGame
-                {
-                    MessageType = "Finished",
-                    Message = "Игра завершена",
-                    StatusCode = 200,
-                    Success = true,
-                    WinnerId = player.Id,
-                    IsWinner = user.Id == player.Id,
-                    Score = player.Score
-                };
-                await WebSocketMessage.Value.SendMessageFinishGame(user, finish);
-                await _userDataRepository.UpdateScore(user.Id, user.Score);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-            }
-        }
+            Score = player.Score,
+            AddScoreWine = player.Score,
+            ModeScore = modeScore,
+            PotionScore = potionScore,
+            TotalScore = totalScore
+        };
         
-        _deleteGame(GameId);
-    }
+        AddPotion? potion = null;
+        
+        if (addPotion != null)
+            potion = new AddPotion
+            {
+                Count = 1,
+                PotionName = addPotion.Name,
+                Type = addPotion.EffectType
+            };
 
+        ResultPlayerTheGame result = new ResultPlayerTheGame
+        {
+            Status = true,
+            MessageType = "GamePlayerTheResult",
+            League = data.League,
+            Score = scoreData,
+            AddPotion = potion,
+            UsedPotions = usedPotion,
+            Rating = 0,
+            Success = true,
+            StatusCode = 200,
+            Message = "Результат игры"
+        };
+
+        await _playerDataService.UpdatePlayerData(totalScore, rating, player, true);
+        await WebSocketMessage.Value.SendMessageGameResult(player, result);
+        await WebSocketMessage.Value.SendMessageFinishGame(Players, GameDurationSeconds);
+    }
+    
+    /// <summary>
+    /// Объявление поражения
+    /// </summary>
+    /// <param name="player"></param>
+    private async Task DeclarationDefeat(ChessPlayer player)
+    {
+        var data = await _userRepository.GetUserDataByIdAsync(player.Id);
+        var usedPotion = player.GetUsedPotions();
+        
+        int modeScore = ChessScoreCalculator.CalculateScore(Mode, player.RemainingTime, RequiredPlayers());
+        int? potionScore = usedPotion.Count == 0 ? 50 : null;
+        
+        int totalScore = player.Score + modeScore + potionScore ?? 0;
+
+        List<League> leagues = await _playerDataService.LeagueRepository.GetLeagues();
+        int rating = ChessScoreCalculator.CalculateRatingChange(data, RequiredPlayers(), true, leagues);
+        
+        ScoreData scoreData = new ScoreData
+        {
+            Score = player.Score,
+            AddScoreWine = 0,
+            ModeScore = modeScore,
+            PotionScore = potionScore,
+            TotalScore = totalScore
+        };
+        
+        ResultPlayerTheGame result = new ResultPlayerTheGame
+        {
+            Status = false,
+            MessageType = "GamePlayerTheResult",
+            League = data.League,
+            Score = scoreData,
+            AddPotion = null,
+            Rating = rating,
+            UsedPotions = usedPotion,
+            Success = true,
+            StatusCode = 200,
+            Message = "Результат игры"
+        };
+
+        player.State = PlayerState.Lost;
+        await _playerDataService.UpdatePlayerData(totalScore, rating, player, false);
+        await WebSocketMessage.Value.SendMessageGameResult(player, result);
+        
+        var players = Players.Where(p => p.Id != player.Id).ToList();
+        await WebSocketMessage.Value.SendMessagePlayerGameOver(players, player.Id);
+    }
+    
     /// <summary>
     /// Проверка активных игроков
     /// </summary>
@@ -562,6 +633,7 @@ public abstract class BaseChessGame
                 await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
                     
                 disconnectedPlayer.State = PlayerState.Disconnected;
+                _ = DeclarationDefeat(disconnectedPlayer);
 
                 if (Players.Where(p => p.State == PlayerState.InActive).Count() == 0)
                 {
@@ -643,28 +715,21 @@ public abstract class BaseChessGame
     /// </summary>
     /// <param name="playerId"></param>
     /// <returns></returns>
-    public virtual bool ExitTheGame(string playerId)
+    public void ExitTheGame(string playerId)
     {
         var player = Players.FirstOrDefault(p => p.Id == playerId);
-        
+
         if (player == null)
-            return false;
-        
+            return;
+
+        _ = DeclarationDefeat(player);
         _ = WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
         
         if (State == GameState.WaitingForPlayers)
         {
             Players.Remove(player);
             UpdateGameBoard();
-            
-            return true;
         }
-
-        if (player.State != PlayerState.Active)
-            return true;
-
-        player.State = PlayerState.Disconnected;
-        return true;
     }
 
     public void RemovePiece(int row, int col)

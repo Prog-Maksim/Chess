@@ -27,11 +27,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<PotionService>();
+builder.Services.AddSingleton<PlayerDataService>();
 
 // Регистрация репозиториев
-builder.Services.AddScoped<IUserRepository, UserRepository>();
-builder.Services.AddSingleton<IUserDataRepository, UserDataRepository>();
+builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IPotionRepository, PotionRepository>();
+builder.Services.AddSingleton<ILeagueRepository, LeagueRepository>();
 
 builder.Services.AddSingleton<WebSocketService>();
 builder.Services.AddSingleton<SendWebSocketMessage>();

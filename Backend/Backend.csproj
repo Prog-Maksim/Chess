@@ -51,5 +51,9 @@
       <None Remove="Image\Potion\UltimateProtectionPiece.png" />
       <Resource Include="Image\Potion\UltimateProtectionPiece.png" />
     </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Logs\" />
+    </ItemGroup>
     
 </Project>
