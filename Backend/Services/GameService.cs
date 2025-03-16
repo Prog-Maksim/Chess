@@ -17,16 +17,19 @@ public class GameService
     /// Список всех активных игр
     /// </summary>
     private List<BaseChessGame> GetAllGames { get; set; }
+    
     private readonly Lazy<SendWebSocketMessage> _sendWebSocketMessage;
-    private readonly IUserDataRepository _userDataRepository;
+    private readonly IUserRepository _userRepository;
+    private readonly PlayerDataService _playerDataService;
 
     public delegate void DeleteGame(string gameId);
     
-    public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage, IUserDataRepository userDataRepository)
+    public GameService(Lazy<SendWebSocketMessage> sendWebSocketMessage, IUserRepository userRepository, PlayerDataService playerDataService)
     {
         GetAllGames = new List<BaseChessGame>();
         _sendWebSocketMessage = sendWebSocketMessage;
-        _userDataRepository = userDataRepository;
+        _userRepository = userRepository;
+        _playerDataService = playerDataService;
     }
 
     /// <summary>
@@ -50,12 +53,12 @@ public class GameService
 
         if (players == 2)
         {
-            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPotion, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
+            ChessGame2Players chessGame2Players = new ChessGame2Players(nameGame, player, isPotion, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userRepository, _playerDataService);
             GetAllGames.Add(chessGame2Players);
             return chessGame2Players.GameId;
         }
         
-        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPotion, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userDataRepository);
+        ChessGame4Players chessGame4Players = new ChessGame4Players(nameGame, player, isPotion, mode, isPrivate, _sendWebSocketMessage, deleteGame, _userRepository, _playerDataService);
         GetAllGames.Add(chessGame4Players);
         return chessGame4Players.GameId;
     }

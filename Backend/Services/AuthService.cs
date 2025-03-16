@@ -10,14 +10,12 @@ namespace Backend.Services;
 public class AuthService
 {
     private readonly IUserRepository _userRepository;
-    private readonly IUserDataRepository _userDataRepository;
     
     private readonly PasswordHasher<Person> _passwordHasher = new();
 
-    public AuthService(IUserRepository userRepository, IUserDataRepository userDataRepository)
+    public AuthService(IUserRepository userRepository)
     {
         _userRepository = userRepository;
-        _userDataRepository = userDataRepository;
     }
 
     public async Task<BaseResponse> RegisterUserAsync(RegistrationUser user)
@@ -32,7 +30,6 @@ public class AuthService
             PersonId = Guid.NewGuid().ToString(),
             Nickname = user.Nickname,
             Email = user.Email,
-            Level = 1
         };
         person.Password = _passwordHasher.HashPassword(person, user.Password);
 
@@ -41,11 +38,13 @@ public class AuthService
             PersonId = person.PersonId,
             Score = 0,
             UnlockedPotions = new List<string>(),
-            GamesPlayerd = 0
+            GamesPlayerd = 0,
+            Level = 1,
+            Rating = 0,
+            NumberOfWins = 0
         };
         
-        await _userRepository.AddUserAsync(person);
-        await _userDataRepository.AddUserDataAsync(data);
+        await _userRepository.AddUserAsync(person, data);
 
         var accessToken = JwtService.GenerateJwtToken(person.PersonId, person.Nickname);
 

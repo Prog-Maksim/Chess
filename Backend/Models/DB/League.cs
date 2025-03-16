@@ -4,7 +4,7 @@ using MongoDB.Bson.Serialization.Attributes;
 
 namespace Backend.Models.DB;
 
-public class Person
+public class League
 {
     /// <summary>
     /// Уникальный идентификатор записи
@@ -15,22 +15,28 @@ public class Person
     public string Id { get; set; } = ObjectId.GenerateNewId().ToString();
     
     /// <summary>
-    /// Идентификатор пользователя
+    /// Идентификатор лиги
     /// </summary>
-    public required string PersonId { get; set; }
+    public int LeagueId { get; set; }
     
     /// <summary>
-    /// Никнейм пользователя
+    /// Базовое кол-во очков за победу или поражение
     /// </summary>
-    public required string Nickname { get; set; }
+    public int RatingIsWinner { get; set; }
     
     /// <summary>
-    /// Почта пользователя
+    /// Название лиги
     /// </summary>
-    public required string Email { get; set; }
+    public required string LeagueName { get; set; }
     
     /// <summary>
-    /// Пароль пользователя
+    /// Минимальное кол-во рейтинга для лиги
     /// </summary>
-    public string? Password { get; set; }
+    public int MinRating { get; set; }
+    
+    /// <summary>
+    /// Максимальное кол-во рейтинга для лиги
+    /// </summary>
+    public int MaxRating { get; set; }
+    
 }

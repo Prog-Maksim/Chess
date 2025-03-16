@@ -3,9 +3,8 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Media;
 using Frontend.Controls;
+using Frontend.Controls.Potion;
 using Frontend.Controls.Message;
 using Frontend.Enums;
 using Frontend.Models;
@@ -82,14 +81,18 @@ public partial class MainMenu : Page
     private CreateGameControl? _createGameControl;
     private void CreateGame_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_createGameControl != null)
-            return;
-        
         CloseMenu closeMenu = () =>
         {
             MainGrid.Children.Remove(_createGameControl);
             _createGameControl = null;
         };
+
+        if (_createGameControl != null)
+        {
+            closeMenu();
+            return;
+        }
+        
         _createGameControl = new CreateGameControl(mainWindow, this, closeMenu);
         
         Grid.SetRowSpan(_createGameControl, 4);
@@ -102,14 +105,18 @@ public partial class MainMenu : Page
     private SetGameIdControl? _setGameIdControl;
     private void JoinTheGame_OnClick(object sender, RoutedEventArgs e)
     {
-        if (_setGameIdControl != null)
-            return;
-        
         CloseMenu closeMenu = () =>
         {
             MainGrid.Children.Remove(_setGameIdControl);
             _setGameIdControl = null;
         };
+        
+        if (_setGameIdControl != null)
+        {
+            closeMenu();
+            return;
+        }
+        
         _setGameIdControl = new SetGameIdControl(closeMenu);
         
         Grid.SetRowSpan(_setGameIdControl, 4);
@@ -160,6 +167,8 @@ public partial class MainMenu : Page
                     LevelText.Text = $"Уровень: {data.Level}";
                     ScoreText.Text = data.Score.ToString();
                     
+                    ChestControl.StateChest(data.IsChest, data.RequiredNumberOfWinsLevel, data.NumberOfWinsLevel);
+                    
                     if (data.Potions != null)
                         InitializePotion(data.Potions);
                 }
@@ -173,7 +182,7 @@ public partial class MainMenu : Page
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Request failed: {ex.Message}");
+            MessageBox.Show($"Request failed: {ex}");
         }
     }
 

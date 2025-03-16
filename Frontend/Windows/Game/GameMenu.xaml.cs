@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using Frontend.Controls;
+using Frontend.Controls.Potion;
 using Frontend.Controls.Message;
 using Frontend.Enums;
 using Frontend.Models;
@@ -233,18 +234,8 @@ public partial class GameMenu : Page
     
     private void WebSocketOnGameFinished(object? sender, FinishGame e)
     {
-        if (e.IsWinner)
-            MessageBox.Show($"Поздравляем \n\nИгра была завершена. Вы победили \n\nВы заработали: {e.Score} очков", "Игра завершена");
-        else
-        {
-            if (_players.ContainsKey(e.WinnerId))
-            {
-                string nickname = _players[e.WinnerId].GetNickname();
-                MessageBox.Show($"Игра завершена. \n\nВы проиграли!\nПобедил игрок: {nickname}. \n\nВы заработали: {e.Score} очков", "Игра завершена");
-            }
-            else
-                MessageBox.Show($"Игра завершена. \n\nВы проиграли! \n\nВы заработали: {e.Score} очков", "Игра завершена");
-        }
+        string time = $"{e.DurationGame.Hours:D2}:{e.DurationGame.Minutes:D2}:{e.DurationGame.Seconds:D2}";
+        MessageBox.Show($"Поздравляем \n\nИгра была завершена. \n\nДлительность игры: {time}", "Игра завершена");
         _mainMenu.OpenMainMenu();
     }
 

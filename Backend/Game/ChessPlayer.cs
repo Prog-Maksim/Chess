@@ -13,7 +13,7 @@ public class ChessPlayer: IDisposable
 {
     public string Id { get; } 
     public string Name { get; }
-    public string? Color { get; set; }
+    public string Color { get; set; }
     
     public bool IsApproved { get; private set; } // Ждет подтверждения
     public List<ChessPiece> Pieces { get; } = new(); // Список фигур игрока
@@ -25,6 +25,7 @@ public class ChessPlayer: IDisposable
 
     private List<ChessPiece> KillPiece = new ();
     public bool DoubleScoreForNextKill { get; set; } = false;
+    
     private List<PotionType> UsedPotion { get; set; } = new();
     public List<PotionType> AvailablePotion { get; set; } = new();
 
@@ -56,6 +57,11 @@ public class ChessPlayer: IDisposable
     public bool CheckUsedPotion(IPotion potion)
     {
         return !UsedPotion.Contains(potion.Type);
+    }
+    
+    public List<PotionType> GetUsedPotions()
+    {
+        return AvailablePotion.Except(UsedPotion).ToList();
     }
     
     // Событие, которое вызывается, когда время обновляется

@@ -5,6 +5,7 @@ using Backend.Game.Shapes;
 using Backend.Models.DB;
 using Backend.Models.Response;
 using Backend.Repository.Interfaces;
+using Backend.Script;
 using MongoDB.Driver;
 
 namespace Backend.Services;
@@ -13,14 +14,12 @@ public class PotionService
 {
     private readonly IPotionRepository _potionRepository;
     private readonly GameService _gameService;
-    private readonly IUserDataRepository _userDataRepository;
     private readonly IUserRepository _userRepository;
 
-    public PotionService(IPotionRepository potionRepository, GameService gameService, IUserDataRepository userDataRepository, IUserRepository userRepository)
+    public PotionService(IPotionRepository potionRepository, GameService gameService, IUserRepository userRepository)
     {
         _potionRepository = potionRepository;
         _gameService = gameService;
-        _userDataRepository = userDataRepository;
         _userRepository = userRepository;
     }
 
@@ -53,7 +52,7 @@ public class PotionService
     public async Task<PersonData> GetPersonData(string personId)
     {
         var personTask = _userRepository.GetUserByIdAsync(personId);
-        var userDataTask = _userDataRepository.GetUserDataByIdAsync(personId);
+        var userDataTask = _userRepository.GetUserDataByIdAsync(personId);
         var dataPotionTask = _potionRepository.GetPotionDataByUserIdAsync(personId);
         var allPotionsTask = _potionRepository.GetAllPotionsAsync();
         
@@ -68,9 +67,11 @@ public class PotionService
         {
             PersonId = person.PersonId,
             Name = person.Nickname,
-            League = "Пешечник",
-            Level = person.Level,
+            League = userData.League,
+            Level = userData.Level,
             Score = userData.Score,
+            NumberOfWinsLevel = userData.NumberOfWinsLevel,
+            RequiredNumberOfWinsLevel = LevelSystem.WinsRequiredForLevel(userData.Level + 1),
             Potions = allPotions.Select(potion =>
             {
                 var potionUserData = dataPotion.FirstOrDefault(x => x.PotionId == potion.PotionId);
@@ -80,7 +81,7 @@ public class PotionService
                     Type = potion.EffectType,
                     Count = potionUserData?.Quantity ?? 0,
                     IsPurchased = userData.UnlockedPotions.Contains(potion.PotionId),
-                    IsUnlocked = person.Level >= potion.UnlockLevel
+                    IsUnlocked = userData.Level >= potion.UnlockLevel
                 };
             }).ToList()
         };
@@ -91,12 +92,12 @@ public class PotionService
     public async Task<bool> BuyPotion(string potionId, string personId)
     {
         var person = await _userRepository.GetUserByIdAsync(personId);
-        var userData = await _userDataRepository.GetUserDataByIdAsync(personId);
+        var userData = await _userRepository.GetUserDataByIdAsync(personId);
         var potion = await _potionRepository.GetPotionByIdAsync(potionId);
         
         // Проверяем, разблокировано ли зелье
         Console.WriteLine("Проверка разблокировки зелья");
-        bool isUnlocked = person.Level >= potion.UnlockLevel;
+        bool isUnlocked = userData.Level >= potion.UnlockLevel;
         if (!isUnlocked)
             return false;
         
@@ -112,7 +113,7 @@ public class PotionService
         if (!isPurchased)
             return false;
         
-        await _userDataRepository.DeductScoreAsync(personId, potionCost);
+        await _userRepository.DeductScoreAsync(personId, potionCost);
         await _potionRepository.BuyPotion(personId, potionId);
 
         return true;
@@ -121,12 +122,12 @@ public class PotionService
     public async Task<bool> UnlockPotion(string potionId, string personId)
     {
         var person = await _userRepository.GetUserByIdAsync(personId);
-        var userData = await _userDataRepository.GetUserDataByIdAsync(personId);
+        var userData = await _userRepository.GetUserDataByIdAsync(personId);
         var potion = await _potionRepository.GetPotionByIdAsync(potionId);
         
         // Проверяем, разблокировано ли зелье
         Console.WriteLine("Проверка разблокировки зелья");
-        bool isUnlocked = person.Level >= potion.UnlockLevel;
+        bool isUnlocked = userData.Level >= potion.UnlockLevel;
         if (!isUnlocked)
             return false;
         
@@ -142,8 +143,8 @@ public class PotionService
         if (userData.Score < potionCost)
             return false;
         
-        await _userDataRepository.UnlockPotionAsync(personId, potionId);
-        await _userDataRepository.DeductScoreAsync(personId, potionCost);
+        await _userRepository.UnlockPotionAsync(personId, potionId);
+        await _userRepository.DeductScoreAsync(personId, potionCost);
 
         return true;
     }

@@ -3,7 +3,7 @@ using System.Windows.Controls;
 using System.Windows.Media.Imaging;
 using Frontend.Enums;
 
-namespace Frontend.Controls;
+namespace Frontend.Controls.Potion;
 
 public partial class UsePotionMenu : UserControl
 {

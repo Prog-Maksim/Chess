@@ -35,9 +35,9 @@ public interface IPotionRepository
     Task DeductPotionCountAsync(string playerId, string potionId);
     
     /// <summary>
-    /// Возвращает данные зелья по id
+    /// Возвращает список зельев по id
     /// </summary>
-    /// <param name="potionIds">Идентификатор зелья</param>
+    /// <param name="potionIds">Идентификаторы зельев</param>
     /// <returns></returns>
     public Task<List<PotionEntity>> GetPotionsByIdsAsync(List<string>? potionIds);
 
