@@ -11,6 +11,11 @@ public class GameData
     public string PersonId { get; set; }
     
     /// <summary>
+    /// Доступные зелья
+    /// </summary>
+    public required PotionAvailable PotionAvailable { get; set; }
+    
+    /// <summary>
     /// Идентификатор игры
     /// </summary>
     public string GameId { get; set; }

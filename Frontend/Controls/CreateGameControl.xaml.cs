@@ -32,13 +32,14 @@ public partial class CreateGameControl : UserControl
     }
     
     
-    private async Task SendCreateGame(string name, GameMode mode, int players = 2, bool isPrivate = false)
+    private async Task SendCreateGame(string name, GameMode mode, int players = 2, bool isPrivate = false, bool isPotion = true)
     {
+        Console.WriteLine($"Potion: {isPotion}");
         Click.Content = "загрузка...";
         Click.IsEnabled = false;
         
         HttpClient client = new HttpClient();
-        var url = Url.BaseUrl + $"Game/create-game?name={name}&players={players}&isPrivate={isPrivate}&mode={mode}";
+        var url = Url.BaseUrl + $"Game/create-game?name={name}&players={players}&isPotion={isPotion}&isPrivate={isPrivate}&mode={mode}";
         
         client.DefaultRequestHeaders.Clear();
         client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
@@ -76,9 +77,10 @@ public partial class CreateGameControl : UserControl
         
         int players = ToggleButton.IsChecked == true ? 4 : 2;
         bool isPrivate = CheckBox.IsChecked?? false;
+        bool isPotion = PotionCheckBox.IsChecked?? false;
         var gameMode = (GameMode)ComboBox.SelectedIndex;
         
-        _ = SendCreateGame(name, gameMode, players, isPrivate);
+        _ = SendCreateGame(name, gameMode, players, isPrivate, isPotion);
     }
     
     private async void RemoveWarningAfterDelay(int time = 1500)

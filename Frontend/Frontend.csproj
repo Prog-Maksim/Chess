@@ -35,6 +35,8 @@
       <Resource Include="Image\Piece\Queen.png" />
       <None Remove="Image\Piece\Rook.png" />
       <Resource Include="Image\Piece\Rook.png" />
+      <None Remove="Image\Lock.png" />
+      <Resource Include="Image\Lock.png" />
     </ItemGroup>
 
     <ItemGroup>

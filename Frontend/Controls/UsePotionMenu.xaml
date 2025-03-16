@@ -1,0 +1,44 @@
+﻿<UserControl x:Class="Frontend.Controls.UsePotionMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Frontend.Controls"
+             mc:Ignorable="d"
+             Background="Transparent"
+             d:DesignWidth="300">
+    
+    <Border
+        CornerRadius="10"
+        Background="#7074D5"
+        Margin="10 10 10 0"
+        Height="45">
+        
+        <Grid ShowGridLines="False">
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="45"/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+            
+            <Image
+                x:Name="ImagePotion"
+                Grid.Column="0"
+                Margin="5">
+            </Image>
+            
+            <TextBlock
+                Grid.Column="1"
+                Foreground="#D2D2D2"
+                VerticalAlignment="Center"
+                FontWeight="SemiBold">
+                <Run x:Name="PlayerName">___</Run>
+                <Run>применил зелье:</Run>
+                <LineBreak/>
+                <Run x:Name="PotionName" FontSize="15" FontWeight="Bold" Foreground="White">___</Run>
+            </TextBlock>
+        </Grid>
+        
+    </Border>
+    
+</UserControl>

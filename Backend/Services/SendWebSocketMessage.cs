@@ -2,6 +2,7 @@
 using System.Text;
 using Backend.Enums;
 using Backend.Game;
+using Backend.Game.Potion;
 using Backend.Game.Shapes;
 using Backend.Models.Response;
 using Backend.Models.Response.WebSocketMessage;
@@ -569,5 +570,47 @@ public class SendWebSocketMessage
             }
         }
     }
+
+    /// <summary>
+    /// Сообщение, Использование зелья
+    /// </summary>
+    /// <param name="players"></param>
+    /// <param name="potion"></param>
+    /// <param name="user"></param>
+    public async Task SendMessageUsePotion(List<ChessPlayer> players, IPotion potion, ChessPlayer user)
+    {
+        UsePotion removePlayer = new UsePotion
+        {
+            MessageType = "PotionUse",
+            Message = "Использование зелья",
+            PotionType = potion.Type,
+            PotionName = potion.Name,
+            UsePersonId = user.Id,
+            UsePersonName = user.Name,
+            StatusCode = 200,
+            Success = true
+        };
         
+        var message = JsonConvert.SerializeObject(removePlayer);
+        var buffer = Encoding.UTF8.GetBytes(message);
+        
+        foreach (var player in players)
+        {
+            try
+            {
+                var ws = _webSocketService.GetWebSocket(player.Id);
+                if (ws != null && ws.State == WebSocketState.Open)
+                {
+                    await ws.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true,
+                        CancellationToken.None);
+                }
+                else
+                    Console.WriteLine($"Невозможно отправить сообщение пользователю: {player.Name}");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine("Error: " + e);
+            }
+        }
+    }
 }

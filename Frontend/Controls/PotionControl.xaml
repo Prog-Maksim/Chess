@@ -1,0 +1,90 @@
+﻿<UserControl x:Class="Frontend.Controls.PotionControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Frontend.Controls"
+             mc:Ignorable="d"
+             Background="Transparent" d:DesignWidth="300">
+
+    <Viewbox>
+        <Border
+            CornerRadius="10"
+            Background="#D3D3D3"
+            Padding="5"
+            Width="300"
+            Margin="0 0 0 10">
+            <Grid ShowGridLines="False">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="75"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                </Grid.RowDefinitions>
+                
+                <Border
+                    x:Name="BorderCount"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Height="25"
+                    Width="25"
+                    Visibility="Hidden"
+                    Background="#DD4CEE"
+                    CornerRadius="90"
+                    Panel.ZIndex="1"
+                    VerticalAlignment="Top"
+                    HorizontalAlignment="Left">
+                    <TextBlock
+                        x:Name="CountText"
+                        Text="0"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Foreground="White"
+                        FontFamily="Montserrat"
+                        FontWeight="Bold"
+                        FontSize="13">
+                    </TextBlock>
+                </Border>
+
+                <Image
+                    x:Name="ImagePotion"
+                    Grid.Row="0"
+                    Grid.Column="0"
+                    Grid.RowSpan="2"
+                    Margin="0 0 10 0"
+                    Source="../Image/image 1.png">
+                </Image>
+
+                <TextBlock
+                    Grid.Row="0"
+                    Grid.Column="1"
+                    Foreground="Black"
+                    FontFamily="Montserrat"
+                    FontWeight="Bold"
+                    FontSize="17"
+                    TextWrapping="Wrap"
+                    Margin="0 0 0 10">
+                    <Run x:Name="Title">Амброзия Гибели</Run>
+                    <LineBreak></LineBreak>
+                    <Run x:Name="Description" FontSize="13" Foreground="Gray">Убивает фигуру на поле</Run>
+                </TextBlock>
+
+                <Button
+                    x:Name="MainButton"
+                    Grid.Row="1"
+                    Grid.Column="1"
+                    Content="Купить"
+                    Height="35"
+                    Background="#7074D5"
+                    Click="MainButton_OnClick"
+                    Style="{StaticResource ClickButtonStyle}">
+                </Button>
+
+            </Grid>
+        </Border>
+    </Viewbox>
+
+</UserControl>

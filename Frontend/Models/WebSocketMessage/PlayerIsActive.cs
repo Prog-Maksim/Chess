@@ -1,5 +1,8 @@
 ﻿namespace Frontend.Models.WebSocketMessage;
 
+/// <summary>
+/// Событие статуса пользователя (активен не активен)
+/// </summary>
 public class PlayerIsActive: BaseWebSocketMessage
 {
     public required string PlayerId { get; set; }

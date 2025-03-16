@@ -8,11 +8,11 @@ namespace Backend.Game;
 
 public class ChessGame2Players: BaseChessGame
 {
-    public ChessGame2Players(string name, ChessPlayer player, IGameMode mode, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 8, mode, player, socketMessage, deleteGame, userDataRepository)
+    public ChessGame2Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 8, mode, player, isPotion, socketMessage, deleteGame, userDataRepository)
     {
         GameName = "Игра 2x2"; 
     }
-    public ChessGame2Players(string name, ChessPlayer player, IGameMode mode, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 8, mode, player, isGamePrivate, socketMessage, deleteGame, userDataRepository) { }
+    public ChessGame2Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserDataRepository userDataRepository) : base(name, 8, mode, player, isPotion, isGamePrivate, socketMessage, deleteGame, userDataRepository) { }
 
     protected override int RequiredPlayers() => 2;
     
@@ -56,8 +56,8 @@ public class ChessGame2Players: BaseChessGame
             Pawn pawn6 = new Pawn(player.Id);
             Pawn pawn7 = new Pawn(player.Id);
             Pawn pawn8 = new Pawn(player.Id);
-            AddPieceToBoard(pawn1, 6, 0);
-            AddPieceToBoard(pawn2, 6, 1);
+            // AddPieceToBoard(pawn1, 6, 0);
+            // AddPieceToBoard(pawn2, 6, 1);
             AddPieceToBoard(pawn3, 6, 2);
             AddPieceToBoard(pawn4, 6, 3);
             AddPieceToBoard(pawn5, 6, 4);
@@ -134,9 +134,10 @@ public class ChessGame2Players: BaseChessGame
     protected override async Task<bool> Moving(string personId, int oldRow, int oldCol, int newRow, int newCol)
     {
         if (newRow > 7 || newCol > 7 || newRow < 0 || newCol < 0)
-            throw new ArgumentOutOfRangeException("Значение newCol или newRow должно быть в диапазоне от 0 до 8");
-        
+            throw new ArgumentOutOfRangeException("Значение newCol или newRow должно быть в диапазоне от 0 до 7");
+    
         var piece = Board[oldRow, oldCol];
+        var newPiece = Board[newRow, newCol];
 
         if (piece == null)
             return false;
@@ -144,23 +145,127 @@ public class ChessGame2Players: BaseChessGame
         if (piece.OwnerId != personId)
             return false;
 
-        var person = Players.FirstOrDefault(p => p.Id == personId);
-        if (piece.OwnerId != person.Id)
+        if (newPiece != null && newPiece.OwnerId == personId && newPiece.IsProtected)
             return false;
 
+        var person = Players.FirstOrDefault(p => p.Id == personId);
+        if (person == null || piece.OwnerId != person.Id)
+            return false;
+        
+        if (piece.IsEnlarged || piece is EnlargedPieceClone)
+        {
+            bool result =  await MoveEnlargedPieceAsync(person, piece, oldRow, oldCol, newRow, newCol);
+            if (result)
+                return result;
+        }
+        
         if (Board[newRow, newCol] != null)
         {
             person.Score += Board[newRow, newCol].Score;
+            person.DoubleScoreForNextKill = false;
             await person.AddKillPiece(Board[newRow, newCol]);
         }
-        
+
+        piece.Row = newRow;
+        piece.Column = newCol;
+
         Board[newRow, newCol] = piece;
         Board[oldRow, oldCol] = null;
 
         NextTurn();
         await SendMessageUpdateBoard();
         await AddNewMoveAsync(personId, oldRow, oldCol, newRow, newCol, person.GetRemainingTime());
-        
+
         return true;
+    }
+    
+    private async Task<bool> MoveEnlargedPieceAsync(ChessPlayer person, ChessPiece piece, int oldRow, int oldCol, int newRow, int newCol)
+    {
+        var parts = GetEnlargedPieceParts(piece.ChessPieceId);
+        if (parts.Count != 4)
+        {
+            return false;
+        }
+        
+        var minRow = parts.Min(p => p.Row);
+        var minCol = parts.Min(p => p.Column);
+        
+        var deltaRow = newRow - oldRow;
+        var deltaCol = newCol - oldCol;
+        
+        var newMinRow = minRow + deltaRow;
+        var newMinCol = minCol + deltaCol;
+        
+        var newPositions = new List<(int Row, int Col)>
+        {
+            (newMinRow, newMinCol),
+            (newMinRow, newMinCol + 1),
+            (newMinRow + 1, newMinCol),
+            (newMinRow + 1, newMinCol + 1)
+        };
+        
+        if (newPositions.Any(pos => pos.Row < 0 || pos.Row > 7 || pos.Col < 0 || pos.Col > 7))
+            return false;
+        
+        foreach (var pos in newPositions)
+        {
+            var targetPiece = Board[pos.Row, pos.Col];
+
+            if (targetPiece != null && targetPiece.ChessPieceId != piece.ChessPieceId)
+            {
+                // Если это враг - съедаем его
+                person.Score += targetPiece.Score;
+                person.DoubleScoreForNextKill = false;
+                await person.AddKillPiece(targetPiece);
+            }
+            // else if (targetPiece != null)
+            // {
+            //     return false; // Если там своя фигура, отменяем ход
+            // }
+        }
+
+        Console.WriteLine("Удаляем старые позиции");
+
+        // Очищаем старые позиции
+        foreach (var p in parts)
+        {
+            Board[p.Row, p.Column] = null;
+        }
+
+        Console.WriteLine("Обновляем новые позиции");
+
+        // Обновляем новые позиции
+        foreach (var pos in newPositions)
+        {
+            Board[pos.Row, pos.Col] = new EnlargedPieceClone(piece, pos.Row, pos.Col, piece.Type, piece.OwnerId, piece.Score);
+        }
+
+        // Обновляем координаты оригинальной фигуры (верхний левый угол)
+        piece.Row = newMinRow;
+        piece.Column = newMinCol;
+
+        NextTurn();
+        await SendMessageUpdateBoard();
+        await AddNewMoveAsync(person.Id, oldRow, oldCol, newRow, newCol, person.GetRemainingTime());
+
+        return true;
+    }
+    private List<ChessPiece> GetEnlargedPieceParts(string pieceId)
+    {
+        var parts = new List<ChessPiece>();
+
+        for (int i = 0; i < 8; i++)
+        {
+            for (int j = 0; j < 8; j++)
+            {
+                var piece = Board[i, j];
+                if (piece != null && piece.ChessPieceId == pieceId)
+                {
+                    parts.Add(piece);
+                }
+            }
+        }
+
+        return parts;
     }
 }

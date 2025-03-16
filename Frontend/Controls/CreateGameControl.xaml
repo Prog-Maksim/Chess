@@ -25,6 +25,7 @@
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition Height="Auto"></RowDefinition>
+                <RowDefinition Height="Auto"></RowDefinition>
                 <RowDefinition></RowDefinition>
             </Grid.RowDefinitions>
             
@@ -113,33 +114,6 @@
                     FontFamily="Montserrat"
                     FontSize="18"
                     FontWeight="Bold"
-                    Margin="0 10"
-                    Text="Приватная игра: ">
-                </TextBlock>
-            
-                <CheckBox
-                    x:Name="CheckBox"
-                    Grid.Column="1"
-                    Width="25"
-                    Height="25"
-                    HorizontalAlignment="Right"
-                    Style="{StaticResource CheckBoxStyle}">
-                </CheckBox>
-            </Grid>
-            
-            <Grid Grid.Row="5"  Margin="0 3">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                    <ColumnDefinition Width="*"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                
-                <TextBlock
-                    Grid.Column="0"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Left"
-                    FontFamily="Montserrat"
-                    FontSize="18"
-                    FontWeight="Bold"
                     Margin="0 10 30 10"
                     Text="Тип игры: ">
                 </TextBlock>
@@ -156,9 +130,64 @@
                 </ComboBox>
             </Grid>
             
+            <Grid Grid.Row="5"  Margin="0 3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    FontFamily="Montserrat"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Margin="0 10"
+                    Text="Приватная игра: ">
+                </TextBlock>
+            
+                <CheckBox
+                    x:Name="CheckBox"
+                    Grid.Column="1"
+                    Width="25"
+                    Height="25"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource CheckBoxStyle}">
+                </CheckBox>
+            </Grid>
+            
+            <Grid Grid.Row="6"  Margin="0 3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"></ColumnDefinition>
+                    <ColumnDefinition Width="*"></ColumnDefinition>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Left"
+                    FontFamily="Montserrat"
+                    FontSize="18"
+                    FontWeight="Bold"
+                    Margin="0 10"
+                    Text="Использование зелий: ">
+                </TextBlock>
+            
+                <CheckBox
+                    x:Name="PotionCheckBox"
+                    Grid.Column="1"
+                    Width="25"
+                    Height="25"
+                    IsChecked="True"
+                    HorizontalAlignment="Right"
+                    Style="{StaticResource CheckBoxStyle}">
+                </CheckBox>
+            </Grid>
+            
             <Button
                 x:Name="Click"
-                Grid.Row="6"
+                Grid.Row="7"
                 Height="50"
                 Background="#7074D5"
                 VerticalAlignment="Bottom"

@@ -1,5 +1,6 @@
 ﻿using Backend.Enums;
 using Backend.Game.GameModes;
+using Backend.Game.Potion;
 using Backend.Game.Shapes;
 using Backend.Services;
 
@@ -23,6 +24,9 @@ public class ChessPlayer: IDisposable
     private IGameMode _gameMode;
 
     private List<ChessPiece> KillPiece = new ();
+    public bool DoubleScoreForNextKill { get; set; } = false;
+    private List<PotionType> UsedPotion { get; set; } = new();
+    public List<PotionType> AvailablePotion { get; set; } = new();
 
     private int _score;
 
@@ -31,9 +35,27 @@ public class ChessPlayer: IDisposable
         get => _score;
         set
         {
-            _score = value;
+            if (DoubleScoreForNextKill)
+            {
+                _score = value * 2;
+                DoubleScoreForNextKill = false;
+            }
+            else
+                _score = value;
             _ = _message.SendMessageUpdateScore(this, _score);
         }
+    }
+
+    public void AddUsedPotion(IPotion potion)
+    {
+        
+        if (UsedPotion.Contains(potion.Type))
+            UsedPotion.Remove(potion.Type);
+    }
+
+    public bool CheckUsedPotion(IPotion potion)
+    {
+        return !UsedPotion.Contains(potion.Type);
     }
     
     // Событие, которое вызывается, когда время обновляется
@@ -42,12 +64,14 @@ public class ChessPlayer: IDisposable
     public event Func<ChessPlayer, Task>? OnTimeIsLost;
     private readonly SendWebSocketMessage _message;
     
-    public ChessPlayer(string id, string name, SendWebSocketMessage message, IGameMode mode)
+    public ChessPlayer(string id, string name, SendWebSocketMessage message, IGameMode mode, List<PotionType> potions)
     {
         Id = id;
         Name = name;
         _message = message;
         _gameMode = mode;
+        UsedPotion = potions;
+        AvailablePotion = potions;
 
         RemainingTime = mode.GetPlayerTimeDuration();
     }

@@ -18,10 +18,14 @@ public class ProgramInitializer
             Directory.CreateDirectory("Image/Static");
 
         _ = InstallBaseImage();
+        _ = InstallImagePotion();
     }
 
     private const string BaseUrl = Url.BaseUrl + "Image/get-image?type=";
     private const string SaveDirectory = "Image/Static/Piece/Base";
+    
+    private const string BaseUrlPotion = Url.BaseUrl + "Image/get-image-potion?type=";
+    private const string SaveDirectoryPotion = "Image/Potion";
 
     private static async Task InstallBaseImage()
     {
@@ -56,6 +60,39 @@ public class ProgramInitializer
         }
         
         PieceConversion();
+    }
+
+    private static async Task InstallImagePotion()
+    {
+        if (!Directory.Exists(SaveDirectoryPotion))
+            Directory.CreateDirectory(SaveDirectoryPotion);
+        
+        using (HttpClient client = new HttpClient())
+        {
+            foreach (PotionType type in Enum.GetValues(typeof(PotionType)))
+            {
+                string url = BaseUrlPotion + type;
+                string savePath = Path.Combine(SaveDirectoryPotion, $"{type}.png");
+                
+                if (File.Exists(savePath))
+                    continue;
+
+                try
+                {
+                    HttpResponseMessage response = await client.GetAsync(url);
+                    response.EnsureSuccessStatusCode();
+
+                    await using FileStream fileStream = new FileStream(savePath, FileMode.Create, FileAccess.Write, FileShare.None);
+                    await response.Content.CopyToAsync(fileStream);
+
+                    Console.WriteLine($"Файл сохранён: {savePath}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Ошибка при скачивании {type}: {ex.Message}");
+                }
+            }
+        }
     }
 
     private static void PieceConversion()

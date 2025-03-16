@@ -235,6 +235,10 @@ public class WebSocketService
     /// Событие, новое состояние игры
     /// </summary>
     public event EventHandler<GameStateMessage>? OnUpdateGameState;
+    /// <summary>
+    /// Событие, использование зелья
+    /// </summary>
+    public event EventHandler<UsePotion>? OnUsePotion;
 
     private async Task ParseMessages(string message)
     {
@@ -385,6 +389,13 @@ public class WebSocketService
             
             if (result != null)
                 OnUpdateGameState?.Invoke(this, result);
+        }
+        else if (message.Contains("PotionUse"))
+        {
+            var result = JsonSerializer.Deserialize<UsePotion>(message);
+            
+            if (result != null)
+                OnUsePotion?.Invoke(this, result);
         }
     }
 }

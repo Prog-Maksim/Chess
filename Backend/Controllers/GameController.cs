@@ -13,7 +13,7 @@ namespace Backend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api-chess/v{version:apiVersion}/[controller]")]
-public class GameController(WebSocketService webSocketService, GameService gameService, ILogger<GameController> logger): ControllerBase
+public class GameController(WebSocketService webSocketService, GameService gameService, ILogger<GameController> logger, PotionService _potionService): ControllerBase
 {
     /// <summary>
     /// Подключение пользователей по WebSocket
@@ -52,6 +52,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// </summary>
     /// <param name="name">Название игры</param>
     /// <param name="players">Кол-во игроков</param>
+    /// <param name="isPotion">Разрешены ли зелья</param>
     /// <param name="isPrivate">Приватная ли игра</param>
     /// <param name="mode">Тип игры</param>
     /// <returns></returns>
@@ -59,13 +60,18 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     [Authorize]
     [HttpPost("create-game")]
     [ProducesResponseType(typeof(CreateGame), StatusCodes.Status200OK)]
-    public async Task<IActionResult> CreateGame([Required] string name, [Required] int players, [Required] bool isPrivate, GameMode mode = GameMode.Rapid)
+    public async Task<IActionResult> CreateGame(
+        [Required][FromQuery] string name, 
+        [Required][FromQuery] int players, 
+        [Required][FromQuery] bool isPotion, 
+        [Required][FromQuery] bool isPrivate, 
+        GameMode mode = GameMode.Rapid)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
         
-        string gameId = gameService.CreateGame(name, players, dataToken.PersonId, dataToken.Nickname, isPrivate, mode);
+        string gameId = gameService.CreateGame(name, players, dataToken.PersonId, dataToken.Nickname, isPrivate, isPotion, mode);
         
         return Ok(new CreateGame
         {
@@ -134,7 +140,8 @@ public class GameController(WebSocketService webSocketService, GameService gameS
 
         try
         {
-            var board = gameService.GetBoard(gameId, dataToken.PersonId);
+            var result = await _potionService.GetPersonData(dataToken.PersonId);
+            var board = await gameService.GetBoard(gameId, dataToken.PersonId, result);
             var boardStr = JsonConvert.SerializeObject(board);
 
             return new ContentResult

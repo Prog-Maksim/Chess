@@ -33,4 +33,9 @@ public class Person
     /// Пароль пользователя
     /// </summary>
     public string? Password { get; set; }
+
+    /// <summary>
+    /// Уровень пользователя
+    /// </summary>
+    public int Level { get; set; } = 1;
 }
