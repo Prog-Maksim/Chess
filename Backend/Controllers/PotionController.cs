@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Backend.Enums;
 using Backend.Models.DB;
+using Backend.Models.Response;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -14,9 +15,19 @@ namespace Backend.Controllers;
 [Route("api-chess/v{version:apiVersion}/[controller]")]
 public class PotionController(PotionService potionService, IPotionRepository potionRepository): ControllerBase
 {
+    /// <summary>
+    /// Создание информации о зелье
+    /// </summary>
+    /// <param name="potionType"></param>
+    /// <param name="name"></param>
+    /// <param name="description"></param>
+    /// <param name="purchasePrice"></param>
+    /// <param name="unlockPrice"></param>
+    /// <param name="unlockLevel"></param>
+    /// <returns></returns>
     [AllowAnonymous]
     [HttpPost("create-potion")]
-    public async Task<IActionResult> CreatePotion(PotionType potionType, string name, string description, int purchasePrice,
+    public async Task<IActionResult> CreatePotion([Required][FromQuery] PotionType potionType, [Required][FromQuery] string name, [Required][FromQuery] string description, [Required][FromQuery] int purchasePrice,
         int unlockPrice, int unlockLevel)
     {
         PotionEntity entity = new()
@@ -35,19 +46,76 @@ public class PotionController(PotionService potionService, IPotionRepository pot
     }
     
     
+    /// <summary>
+    /// Использование зелья
+    /// </summary>
+    /// <param name="gameId">Идентификатор игры</param>
+    /// <param name="potionType">Тип используемого зелья</param>
+    /// <param name="row">Столбец применения зелья</param>
+    /// <param name="column">Строка применения зелья</param>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    /// <response code="400">Некорректный вызов зелья</response>
+    /// <response code="401">Не авторизован</response>
+    /// <response code="403">Запрещено использование зелья</response>
     [Authorize]
     [HttpPost("use-potion")]
-    public async Task<IActionResult> UsePotion(string gameId, PotionType potionType, int? row = null, int? column = null)
+    [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> UsePotion([Required][FromQuery] string gameId, [Required][FromQuery] PotionType potionType, [FromQuery] int? row = null, [FromQuery] int? column = null)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
         var token = authHeader.Substring("Bearer ".Length);
         var dataToken = JwtService.GetJwtTokenData(token);
-        
-        await potionService.UsePotion(gameId, potionType, dataToken.PersonId, row, column);
-        return Ok();
+
+        try
+        {
+            await potionService.UsePotion(gameId, potionType, dataToken.PersonId, row, column);
+            return Ok(true);
+        }
+        catch (InvalidOperationException error)
+        {
+            return StatusCode(403, new BaseResponse
+            {
+                Message = error.Message,
+                StatusCode = 403,
+                Success = false,
+                Error = "Forbidden"
+            });
+        }
+        catch (UnauthorizedAccessException error)
+        {
+            return StatusCode(403, new BaseResponse
+            {
+                Message = error.Message,
+                StatusCode = 403,
+                Success = false,
+                Error = "Forbidden"
+            });
+        }
+        catch (ArgumentNullException error)
+        {
+            return StatusCode(400, new BaseResponse
+            {
+                Message = error.Message,
+                StatusCode = 400,
+                Success = false,
+                Error = "Bad Request"
+            });
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
     }
     
-    
+    /// <summary>
+    /// Выдача информации о зельях
+    /// </summary>
+    /// <returns></returns>
     [AllowAnonymous]
     [HttpGet("get-data-potion")]
     public async Task<IActionResult> GetPotionsData()
