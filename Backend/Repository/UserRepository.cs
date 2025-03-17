@@ -8,6 +8,7 @@ public class UserRepository: IUserRepository
 {
     private readonly IMongoCollection<Person> _usersCollection;
     private readonly IMongoCollection<UserData> _usersDataCollection;
+    private readonly IMongoCollection<TokenDb> _usersTokenCollection;
 
     public UserRepository(IMongoClient mongoClient)
     {
@@ -15,6 +16,7 @@ public class UserRepository: IUserRepository
         
         _usersCollection = database.GetCollection<Person>("users");
         _usersDataCollection = database.GetCollection<UserData>("userData");
+        _usersTokenCollection = database.GetCollection<TokenDb>("userToken");
     }
     
     public async Task<Person?> GetUserByEmailAsync(string email)
@@ -36,15 +38,22 @@ public class UserRepository: IUserRepository
     public async Task UpdatePasswordAsync(string playerId, string newPassword)
     {
         var filter = Builders<Person>.Filter.Eq(p => p.PersonId, playerId);
-        var update = Builders<Person>.Update.Set(p => p.Password, newPassword);
+        var result = await _usersCollection.Find(filter).FirstOrDefaultAsync();
+        
+        if (result == null)
+            throw new NullReferenceException("Пользователь не найден");
+        
+        var update = Builders<Person>.Update.Set(p => p.Password, newPassword)
+            .Set(p => p.PasswordVersion, result.PasswordVersion++);
 
         await _usersCollection.UpdateOneAsync(filter, update);
     }
 
-    public async Task AddUserAsync(Person user, UserData data)
+    public async Task AddUserAsync(Person user, UserData data, TokenDb tokens)
     {
         await _usersCollection.InsertOneAsync(user);
         await _usersDataCollection.InsertOneAsync(data);
+        await _usersTokenCollection.InsertOneAsync(tokens);
     }
     
     public async Task<UserData> GetUserDataByIdAsync(string personId)
@@ -87,6 +96,32 @@ public class UserRepository: IUserRepository
         var filter = Builders<UserData>.Filter.Eq(u => u.PersonId, playerId);
         var update = Builders<UserData>.Update.AddToSet(u => u.UnlockedPotions, potionId);
         await _usersDataCollection.UpdateOneAsync(filter, update);
+    }
+
+    public async Task<TokenDb> GetTokenDbAsync(string playerId)
+    {
+        var filter = Builders<TokenDb>.Filter.Eq(u => u.PersonId, playerId);
+        var result = await _usersTokenCollection.Find(filter).FirstOrDefaultAsync();
+
+        return result;
+    }
+
+    public async Task UpdateToken(string playerId, TokenDb tokenDb)
+    {
+        var filter = Builders<TokenDb>.Filter.Eq(u => u.PersonId, playerId);
+        var update = Builders<TokenDb>.Update
+            .Set(u => u.AccessToken, tokenDb.AccessToken)
+            .Set(u => u.RefreshToken, tokenDb.RefreshToken);
+
+        await _usersTokenCollection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
+    }
+
+    public async Task BlockedPersonAsync(string playerId, bool status)
+    {
+        var filter = Builders<Person>.Filter.Eq(u => u.PersonId, playerId);
+        var update = Builders<Person>.Update.Set(u => u.IsBanned, status);
+
+        await _usersCollection.UpdateOneAsync(filter, update, new UpdateOptions { IsUpsert = true });
     }
 
     public async Task UpdateUserDataAsync(UserData user)

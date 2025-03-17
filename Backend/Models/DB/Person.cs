@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Backend.Enums;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
@@ -28,6 +29,21 @@ public class Person
     /// Почта пользователя
     /// </summary>
     public required string Email { get; set; }
+
+    /// <summary>
+    /// Версия пароля
+    /// </summary>
+    public required int PasswordVersion { get; set; } = 1;
+    
+    /// <summary>
+    /// Статус игрока
+    /// </summary>
+    public bool IsBanned { get; set; } = false;
+
+    /// <summary>
+    /// Роль игрока
+    /// </summary>
+    public PersonRole Role { get; set; } = PersonRole.Player;
     
     /// <summary>
     /// Пароль пользователя

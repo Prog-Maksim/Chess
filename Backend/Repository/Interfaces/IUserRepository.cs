@@ -25,13 +25,15 @@ public interface IUserRepository
     /// <param name="newPassword">Новый пароль</param>
     /// <returns></returns>
     Task UpdatePasswordAsync(string playerId, string newPassword);
-    
+
     /// <summary>
     /// Добавляет пользователя в БД
     /// </summary>
     /// <param name="user">Пользователь</param>
+    /// <param name="data">Данные пользователя</param>
+    /// <param name="tokens">Токены пользователя</param>
     /// <returns></returns>
-    Task AddUserAsync(Person user, UserData data);
+    Task AddUserAsync(Person user, UserData data, TokenDb tokens);
     
     /// <summary>
     /// Удаление аккаунта
@@ -80,6 +82,13 @@ public interface IUserRepository
     /// <param name="potionId">Идентификатор зелья</param>
     /// <returns></returns>
     Task UnlockPotionAsync(string playerId, string potionId);
+    
+    
+    Task<TokenDb> GetTokenDbAsync(string playerId);
+    Task UpdateToken(string playerId, TokenDb tokenDb);
+    
+    Task BlockedPersonAsync(string playerId, bool status);
+    
 
     /// <summary>
     /// Обновляет данные пользователя в БД

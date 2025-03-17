@@ -1,4 +1,5 @@
-﻿using Backend.Models.Response;
+﻿using Backend.Filters;
+using Backend.Models.Response;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +20,7 @@ public class ProfileController(IUserRepository _userRepository, PotionService _p
     /// <response code="200">Успешно, кол-во очков</response>
     [Authorize]
     [HttpGet("get-score")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetScore()
     {
@@ -36,6 +38,7 @@ public class ProfileController(IUserRepository _userRepository, PotionService _p
     /// <response code="200">Успешно</response>
     [Authorize]
     [HttpGet("get-player-data")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(PersonData), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetPlayerData()
     {
@@ -53,6 +56,7 @@ public class ProfileController(IUserRepository _userRepository, PotionService _p
     /// <response code="200">Успешно</response>
     [Authorize]
     [HttpDelete("account")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     // [ProducesResponseType(typeof(int), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteAccount()
     {
@@ -78,6 +82,7 @@ public class ProfileController(IUserRepository _userRepository, PotionService _p
     /// <response code="200">Успешно</response>
     [Authorize]
     [HttpPost("chest")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(ChestReward), StatusCodes.Status200OK)]
     public async Task<IActionResult> OpenChest()
     {
