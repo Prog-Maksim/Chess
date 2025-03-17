@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Net.WebSockets;
 using Backend.Enums;
+using Backend.Filters;
 using Backend.Models.Response;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -23,6 +24,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <response code="400">Запрос не является Web Socket</response>
     [Authorize]
     [HttpGet("connect")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConnectChess()
@@ -59,6 +61,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <response code="200">Успешное создание игры</response>
     [Authorize]
     [HttpPost("create-game")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(CreateGame), StatusCodes.Status200OK)]
     public async Task<IActionResult> CreateGame(
         [Required][FromQuery] string name, 
@@ -91,6 +94,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <response code="400">Пользователь не подключен к Web Socket</response>
     [Authorize]
     [HttpPost("login-game")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
@@ -129,6 +133,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <response code="403">У игрока нет доступа к этой игре</response>
     [Authorize]
     [HttpGet("playing-field")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(ContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
@@ -193,6 +198,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <response code="404">Данная игра не найдена</response>
     [Authorize]
     [HttpPost("approve-player")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ApprovePlayerTheGame(string gameId, string personId)
@@ -228,6 +234,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <response code="404">Данная игра не найдена</response>
     [Authorize]
     [HttpPost("reject-player")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> RejectPlayerTheGame(string gameId, string personId)
@@ -262,6 +269,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <response code="404">Данная игра не найдена</response>
     [Authorize]
     [HttpPost("leave-game")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> ExitTheGame(string gameId)

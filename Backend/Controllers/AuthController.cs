@@ -93,4 +93,31 @@ public class AuthController(AuthService authService): ControllerBase
 
         return Ok(result);
     }
+    
+    
+    /// <summary>
+    /// Обновляет access токен пользователя
+    /// </summary>
+    /// <returns>Успешное обновление токена</returns>
+    /// <response code="200">Успешное обновление токена</response>
+    /// <response code="403">Некорректный токен</response>
+    /// <response code="423">Аккаунт пользователя был заблокирован</response>
+    [Authorize]
+    [HttpPut("refresh-token")]
+    [ProducesResponseType(typeof(Token), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status423Locked)]
+    public async Task<IActionResult> RefreshToken()
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+        
+        var response = await authService.RefreshAccessTokenAsync(dataToken);
+        
+        if (!response.Success)
+            return StatusCode(response.StatusCode, response);
+        
+        return Ok(response);
+    }
 }

@@ -2,6 +2,7 @@ using System.Net;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Backend;
+using Backend.Filters;
 using Backend.Game.Potion;
 using Backend.Repository;
 using Backend.Repository.Interfaces;
@@ -17,17 +18,21 @@ using Microsoft.OpenApi.Models;
 using MongoDB.Driver;
 using Serilog;
 using Serilog.Events;
+using StackExchange.Redis;
 
 DotEnv.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Регистрация фильтров
+builder.Services.AddScoped<ValidateJwtAccessTokenFilter>();
 
 // Регистрация Сервисов
 builder.Services.AddSingleton<GameService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<PotionService>();
 builder.Services.AddSingleton<PlayerDataService>();
+builder.Services.AddSingleton<AuthorizationService>();
 
 // Регистрация репозиториев
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
@@ -111,6 +116,10 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
 var mongoDbConnectionString = builder.Configuration.GetConnectionString("MongoDBConnection");
 builder.Services.AddSingleton(new MongoClient(mongoDbConnectionString));
 builder.Services.AddSingleton<IMongoClient>(new MongoClient(mongoDbConnectionString));
+
+// Подключаем Redis
+var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException("Redis connection string is not configured.");
+builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConnectionString));
 
 
 // Добавляем контроллеры

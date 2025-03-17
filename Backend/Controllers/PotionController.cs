@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Backend.Enums;
+using Backend.Filters;
 using Backend.Models.DB;
 using Backend.Models.Response;
 using Backend.Repository.Interfaces;
@@ -25,7 +26,7 @@ public class PotionController(PotionService potionService, IPotionRepository pot
     /// <param name="unlockPrice"></param>
     /// <param name="unlockLevel"></param>
     /// <returns></returns>
-    [AllowAnonymous]
+    [Authorize(Roles = "Admin")]
     [HttpPost("create-potion")]
     public async Task<IActionResult> CreatePotion([Required][FromQuery] PotionType potionType, [Required][FromQuery] string name, [Required][FromQuery] string description, [Required][FromQuery] int purchasePrice,
         int unlockPrice, int unlockLevel)
@@ -60,6 +61,7 @@ public class PotionController(PotionService potionService, IPotionRepository pot
     /// <response code="403">Запрещено использование зелья</response>
     [Authorize]
     [HttpPost("use-potion")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
@@ -138,6 +140,7 @@ public class PotionController(PotionService potionService, IPotionRepository pot
     /// <returns></returns>
     [Authorize]
     [HttpPost("buy-potion")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     public async Task<IActionResult> BuyPotion([Required][FromQuery] string potionId)
     {
         var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
@@ -153,6 +156,7 @@ public class PotionController(PotionService potionService, IPotionRepository pot
     /// <returns></returns>
     [Authorize]
     [HttpPost("unlock-potion")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     public async Task<IActionResult> UnlockPotion([Required][FromQuery] string potionId)
     {
         var token = HttpContext.Request.Headers["Authorization"].ToString().Replace("Bearer ", "");
