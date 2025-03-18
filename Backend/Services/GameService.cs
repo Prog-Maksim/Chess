@@ -326,7 +326,7 @@ public class GameService
         if (game == null)
             throw new KeyNotFoundException("Данная игра не найдена");
 
-        game.ExitTheGame(personId);
+        await game.ExitTheGame(personId);
     }
 
     /// <summary>
@@ -358,7 +358,7 @@ public class GameService
                 game.SetPlayerActive(playerId);
         }
     }
-
+    
     public BaseChessGame GetChessGame(string gameId)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
@@ -383,5 +383,51 @@ public class GameService
             throw new NullReferenceException("Данный игрок не найден");
 
         return player;
+    }
+    
+    /// <summary>
+    /// Возвращает все публичные игры
+    /// </summary>
+    public List<PublicGame>? GetAllPublicGames()
+    {
+        var games = GetAllGames.Where(g => g.IsGamePrivate == false).ToList();
+
+        if (games.Count == 0)
+            return null;
+        
+        List<PublicGame> publicGames = new();
+
+        foreach (var game in games)
+        {
+            PublicGame publicGame = new PublicGame
+            {
+                Title = game.GameName,
+                GameId = game.GameId,
+                PlayerCount = game.Players.Count,
+                TotalPlayers = game.RequiredPlayers(),
+                GameMode = game.Mode.GameMode,
+                IsPotion = game.IsPotion
+            };
+            publicGames.Add(publicGame);
+        }
+
+        return publicGames;
+    }
+
+    /// <summary>
+    /// Возвращает одну рандомную публичную игру
+    /// </summary>
+    /// <returns>Идентификатор игры</returns>
+    public string? GetRandomGames()
+    {
+        var games = GetAllGames.Where(g => g.IsGamePrivate == false).ToList();
+        
+        if (games.Count == 0)
+            return null;
+
+        var random = new Random();
+        var randomGame = games[random.Next(games.Count)];
+
+        return randomGame.GameId;
     }
 }
