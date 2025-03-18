@@ -47,7 +47,7 @@ public class ScoreData
     /// Очки за победу
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int? AddScoreWine { get; set; }
+    public int AddScoreWine { get; set; }
     
     /// <summary>
     /// Очки за неиспользуемые зелья

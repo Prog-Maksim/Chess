@@ -94,6 +94,7 @@ public abstract class BaseChessGame
     /// <param name="socketMessage"></param>
     /// <param name="deleteGame"></param>
     /// <param name="userRepository"></param>
+    /// <param name="playerDataService"></param>
     protected BaseChessGame(string name, int boardSize, IGameMode mode, ChessPlayer player, bool isPotion, bool isGamePrivate, 
         Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserRepository userRepository, PlayerDataService playerDataService): 
         this(name, boardSize, mode, player, isPotion, socketMessage, deleteGame, userRepository, playerDataService)
@@ -440,6 +441,9 @@ public abstract class BaseChessGame
         await _playerDataService.UpdatePlayerData(totalScore, rating, player, true);
         await WebSocketMessage.Value.SendMessageGameResult(player, result);
         await WebSocketMessage.Value.SendMessageFinishGame(Players, GameDurationSeconds);
+
+        await SaveGameAsync(player.Id);
+        _deleteGame(GameId);
     }
     
     /// <summary>
@@ -735,6 +739,40 @@ public abstract class BaseChessGame
     public void RemovePiece(int row, int col)
     {
         Board[row, col] = null;
+    }
+
+    protected async Task SaveGameAsync(string playerId)
+    {
+        List<Moves> moves = new List<Moves>();
+
+        foreach (var move in Moves)
+        {
+            Moves currentMove = new Moves
+            {
+                PlayerId = move.PlayerId,
+                StartRow = move.StartRow,
+                StartColumn = move.StartColumn,
+                EndRow = move.EndRow,
+                EndColumn = move.EndColumn,
+                DurationMoves = move.Duration?? TimeSpan.Zero,
+            };
+            moves.Add(currentMove);
+        }
+        
+        Games game = new Games
+        {
+            Title = GameName,
+            GameMode = Mode.GameMode,
+            WinePersonId = playerId,
+            IsPrivate = IsGamePrivate,
+            IsPotion = IsPotion,
+            DurationGame = GameDurationSeconds,
+            DateCreated = DateTime.Now - GameDurationSeconds,
+            ListParticipants = Players.Select(p => p.Id).ToList(),
+            Moves = moves
+        };
+        
+        await _playerDataService.SaveGame(game);
     }
     
     ~BaseChessGame()
