@@ -1,5 +1,6 @@
 ﻿using Backend.Filters;
 using Backend.Models.Response;
+using Backend.Repository;
 using Backend.Repository.Interfaces;
 using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -11,7 +12,7 @@ namespace Backend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api-chess/v{version:apiVersion}/[controller]")]
-public class ProfileController(IUserRepository _userRepository, PotionService _potionService, PlayerDataService playerDataService): ControllerBase
+public class ProfileController(IUserRepository _userRepository, PotionService _potionService, PlayerDataService playerDataService, GameRepository gameRepository): ControllerBase
 {
     /// <summary>
     /// Возвращает кол-во очков у пользователя
@@ -93,5 +94,42 @@ public class ProfileController(IUserRepository _userRepository, PotionService _p
         var result = await playerDataService.OpenChest(dataToken.PersonId);
         
         return Ok(result);
+    }
+
+    /// <summary>
+    /// Возвращает игроку все игры
+    /// </summary>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    [Authorize]
+    [HttpGet("games")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
+    [ProducesResponseType(typeof(List<GamesHistory>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetGames()
+    {
+        var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
+        var token = authHeader.Substring("Bearer ".Length);
+        var dataToken = JwtService.GetJwtTokenData(token);
+
+        List<GamesHistory> games = new List<GamesHistory>();
+        var gamesData = await gameRepository.GetGamesAsync(dataToken.PersonId);
+
+        foreach (var game in gamesData)
+        {
+            GamesHistory gameHistory = new GamesHistory
+            {
+                GameName = game.Title,
+                GameDuration = game.DurationGame,
+                IsWinner = game.WinePersonId == dataToken.PersonId,
+                PlayerCount = game.ListParticipants.Count,
+                GameMode = game.GameMode,
+                IsPrivate = game.IsPrivate,
+                IsPotion = game.IsPotion,
+                DateCreated = game.DateCreated,
+            };
+            games.Add(gameHistory);
+        }
+        
+        return Ok(games);
     }
 }

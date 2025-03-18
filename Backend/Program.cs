@@ -38,6 +38,7 @@ builder.Services.AddSingleton<AuthorizationService>();
 builder.Services.AddSingleton<IUserRepository, UserRepository>();
 builder.Services.AddSingleton<IPotionRepository, PotionRepository>();
 builder.Services.AddSingleton<ILeagueRepository, LeagueRepository>();
+builder.Services.AddSingleton<IGameRepository, GameRepository>();
 
 builder.Services.AddSingleton<WebSocketService>();
 builder.Services.AddSingleton<SendWebSocketMessage>();

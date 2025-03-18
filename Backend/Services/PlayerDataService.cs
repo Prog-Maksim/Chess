@@ -12,12 +12,14 @@ public class PlayerDataService
     public readonly ILeagueRepository LeagueRepository;
     private readonly IPotionRepository _potionRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IGameRepository _gameRepository;
 
-    public PlayerDataService(ILeagueRepository leagueRepository, IUserRepository userRepository, IPotionRepository potionRepository)
+    public PlayerDataService(ILeagueRepository leagueRepository, IUserRepository userRepository, IPotionRepository potionRepository, IGameRepository gameRepository)
     {
         LeagueRepository = leagueRepository;
         _userRepository = userRepository;
         _potionRepository = potionRepository;
+        _gameRepository = gameRepository;
     }
 
     /// <summary>
@@ -176,7 +178,6 @@ public class PlayerDataService
         return reward;
     }
     
-    
     /// <summary>
     /// Определяет количество выпадаемых зелий (чем больше — тем ниже шанс)
     /// </summary>
@@ -187,5 +188,10 @@ public class PlayerDataService
         if (roll < 70) return 1; // 70% шанс на 1 зелье
         if (roll < 90) return 2; // 20% шанс на 2 зелья
         return 3;                // 10% шанс на 3 зелья
+    }
+
+    public async Task SaveGame(Games game)
+    {
+        await _gameRepository.AddGameAsync(game);
     }
 }
