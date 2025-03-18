@@ -28,9 +28,7 @@
                 <ProgressBar
                     x:Name="ChestProgressBar"
                     Grid.Row="1"
-                    Value="3"
                     Minimum="0"
-                    Tag="4"
                     Style="{StaticResource ProgressBarStyle}"
                     Margin="10 0 10 10">
                 </ProgressBar>

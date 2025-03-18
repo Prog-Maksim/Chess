@@ -53,8 +53,8 @@ public class AdminController(IUserRepository userRepository, IConnectionMultiple
             {
                 Success = false,
                 Message = "Данного пользователя нельзя заблокировать",
-                StatusCode = 403,
-                Error = "Forbidden"
+                StatusCode = 409,
+                Error = "Conflict"
             };
 
             return StatusCode(error.StatusCode, error);

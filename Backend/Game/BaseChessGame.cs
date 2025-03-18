@@ -786,5 +786,7 @@ public abstract class BaseChessGame
         
         Players.Clear();
         Players = null;
+        
+        Console.WriteLine("Вызов финализатора игры");
     }
 }

@@ -42,7 +42,7 @@ public partial class CreateGameControl : UserControl
         var url = Url.BaseUrl + $"Game/create-game?name={name}&players={players}&isPotion={isPotion}&isPrivate={isPrivate}&mode={mode}";
         
         client.DefaultRequestHeaders.Clear();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
         
         var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
         HttpResponseMessage response = await client.PostAsync(url, content);

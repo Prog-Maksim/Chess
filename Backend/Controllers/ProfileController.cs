@@ -12,7 +12,7 @@ namespace Backend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api-chess/v{version:apiVersion}/[controller]")]
-public class ProfileController(IUserRepository _userRepository, PotionService _potionService, PlayerDataService playerDataService, GameRepository gameRepository): ControllerBase
+public class ProfileController(IUserRepository _userRepository, PotionService _potionService, PlayerDataService playerDataService, IGameRepository gameRepository): ControllerBase
 {
     /// <summary>
     /// Возвращает кол-во очков у пользователя

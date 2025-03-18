@@ -37,7 +37,7 @@ public partial class SetGameIdControl : UserControl
         var url = Url.BaseUrl + $"Game/login-game?gameId={gameId}";
         
         client.DefaultRequestHeaders.Clear();
-        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
+        client.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
         
         var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
         var response = await client.PostAsync(url, content);

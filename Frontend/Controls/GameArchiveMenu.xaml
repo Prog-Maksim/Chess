@@ -1,0 +1,89 @@
+﻿<UserControl x:Class="Frontend.Controls.GameArchiveMenu"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Frontend.Controls"
+             mc:Ignorable="d"
+             Background="Transparent"
+             d:DesignHeight="50" d:DesignWidth="1850">
+    <Border
+        x:Name="MainBorder"
+        Background="#ECECEC"
+        CornerRadius="10"
+        Height="40"
+        Padding="10 0 20  0"
+        Margin="0 0 0 10">
+        <Grid ShowGridLines="False">
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="200"></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            
+            <TextBlock
+                x:Name="Title"
+                Grid.Column="0"
+                Text="Круги терпения"
+                FontFamily="Montserrat"
+                FontSize="15"
+                FontWeight="Bold"
+                Margin="10 0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Left">
+            </TextBlock>
+            
+            <TextBlock
+                Grid.Column="1"
+                FontFamily="Montserrat"
+                FontSize="13"
+                FontWeight="Bold"
+                Margin="10 0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+                <Run>Длительность:</Run>
+                <Run x:Name="DurationGame">01:30:10</Run>
+            </TextBlock>
+            
+            <TextBlock
+                Grid.Column="2"
+                FontFamily="Montserrat"
+                FontSize="13"
+                FontWeight="Bold"
+                Margin="10 0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+                <Run>Кол-во игроков:</Run>
+                <Run x:Name="RequiredPlayer">2</Run>
+            </TextBlock>
+            
+            <TextBlock
+                Grid.Column="3"
+                FontFamily="Montserrat"
+                FontSize="13"
+                FontWeight="Bold"
+                Margin="10 0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+                <Run>Тип игры:</Run>
+                <Run x:Name="GameType">Rapid</Run>
+            </TextBlock>
+            
+            <TextBlock
+                Grid.Column="4"
+                FontFamily="Montserrat"
+                FontSize="13"
+                FontWeight="Bold"
+                Margin="10 0"
+                VerticalAlignment="Center"
+                HorizontalAlignment="Center">
+                <Run>Дата создания:</Run>
+                <Run x:Name="CreateGame">07:18:27 18.03.2025</Run>
+            </TextBlock>
+            
+        </Grid>
+    </Border>
+</UserControl>

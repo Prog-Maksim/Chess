@@ -56,8 +56,8 @@ public class ChessGame2Players: BaseChessGame
             Pawn pawn6 = new Pawn(player.Id);
             Pawn pawn7 = new Pawn(player.Id);
             Pawn pawn8 = new Pawn(player.Id);
-            // AddPieceToBoard(pawn1, 6, 0);
-            // AddPieceToBoard(pawn2, 6, 1);
+            AddPieceToBoard(pawn1, 6, 0);
+            AddPieceToBoard(pawn2, 6, 1);
             AddPieceToBoard(pawn3, 6, 2);
             AddPieceToBoard(pawn4, 6, 3);
             AddPieceToBoard(pawn5, 6, 4);

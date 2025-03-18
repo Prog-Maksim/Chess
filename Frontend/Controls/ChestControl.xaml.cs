@@ -18,6 +18,8 @@ public partial class ChestControl : UserControl
     public ChestControl()
     {
         InitializeComponent();
+
+        BlackoutImage();
     }
 
     public void StateChest(bool isChest, int max, int current)
@@ -80,7 +82,7 @@ public partial class ChestControl : UserControl
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         
         request.Headers.Add("Accept", "application/json");
-        request.Headers.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
+        request.Headers.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
         
         request.Content = new StringContent("", Encoding.UTF8, "application/json");
         HttpResponseMessage response = await client.SendAsync(request);

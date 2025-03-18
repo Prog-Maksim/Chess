@@ -1,0 +1,89 @@
+﻿<UserControl x:Class="Frontend.Controls.Games.Game"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:local="clr-namespace:Frontend.Controls.Games"
+             xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+             mc:Ignorable="d"
+             Background="Transparent">
+    
+    <Border 
+        Width="350"
+        Height="130"
+        CornerRadius="10"
+        Margin="0"
+        Background="Transparent">
+        
+        <Grid ShowGridLines="False">
+            
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition></ColumnDefinition>
+                <ColumnDefinition Width="0.2*"></ColumnDefinition>
+            </Grid.ColumnDefinitions>
+            
+            <Rectangle
+                Grid.Column="0"
+                Grid.ColumnSpan="2"
+                Stroke="#7074D5" 
+                StrokeThickness="3" 
+                RadiusX="10" 
+                RadiusY="10"
+                StrokeDashArray="5,3">
+            </Rectangle>
+            
+            <StackPanel Grid.Column="0" Margin="10">
+                
+                <TextBlock
+                    x:Name="TitleGame"
+                    Text="Круги терпения"
+                    FontFamily="Montserrat"
+                    FontWeight="Bold"
+                    FontSize="25">
+                </TextBlock>
+                
+                <TextBlock
+                    x:Name="DescriptionGame"
+                    Text="Тип: Блиц; 4 игрока; Без зелий"
+                    FontFamily="Montserrat"
+                    TextWrapping="Wrap"
+                    FontWeight="SemiBold"
+                    FontSize="20"
+                    Foreground="Gray">
+                </TextBlock>
+                
+            </StackPanel>
+            
+            <TextBlock
+                x:Name="CurrentPlayerGame"
+                Grid.Column="0"
+                FontFamily="Montserrat"
+                FontWeight="SemiBold"
+                FontSize="25"
+                Margin="10"
+                Foreground="#7074D5"
+                VerticalAlignment="Bottom">
+                <Run>Игроков:</Run>
+                <Run>2</Run>
+            </TextBlock>
+            
+            <Button
+                Grid.Column="1"
+                Margin="10"
+                Style="{StaticResource ClickButtonStyle}"
+                Click="ButtonBase_OnClick">
+                <Button.Content>
+                    <iconPacks:PackIconUnicons 
+                        Kind="AngleRightLine"
+                        Foreground="White"
+                        Width="20"
+                        Height="20">
+                    </iconPacks:PackIconUnicons>
+                </Button.Content>
+            </Button>
+            
+        </Grid>
+        
+    </Border>
+    
+</UserControl>

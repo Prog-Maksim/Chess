@@ -58,14 +58,14 @@ public class PotionController(PotionService potionService, IPotionRepository pot
     /// <response code="200">Успешно</response>
     /// <response code="400">Некорректный вызов зелья</response>
     /// <response code="401">Не авторизован</response>
-    /// <response code="403">Запрещено использование зелья</response>
+    /// <response code="409">Запрещено использование зелья</response>
     [Authorize]
     [HttpPost("use-potion")]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> UsePotion([Required][FromQuery] string gameId, [Required][FromQuery] PotionType potionType, [FromQuery] int? row = null, [FromQuery] int? column = null)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
@@ -79,22 +79,22 @@ public class PotionController(PotionService potionService, IPotionRepository pot
         }
         catch (InvalidOperationException error)
         {
-            return StatusCode(403, new BaseResponse
+            return StatusCode(409, new BaseResponse
             {
                 Message = error.Message,
-                StatusCode = 403,
+                StatusCode = 409,
                 Success = false,
-                Error = "Forbidden"
+                Error = "Conflict"
             });
         }
         catch (UnauthorizedAccessException error)
         {
-            return StatusCode(403, new BaseResponse
+            return StatusCode(409, new BaseResponse
             {
                 Message = error.Message,
-                StatusCode = 403,
+                StatusCode = 409,
                 Success = false,
-                Error = "Forbidden"
+                Error = "Conflict"
             });
         }
         catch (ArgumentNullException error)

@@ -72,7 +72,7 @@ public class AuthService
         if (person == null)
             return new BaseResponse { Message = "Данный пользователь не найден", Error = "NotFound", StatusCode = 404 };
         if (_passwordHasher.VerifyHashedPassword(person, person.Password, user.Password) != PasswordVerificationResult.Success)
-            return new BaseResponse { Message = "Логин или пароль не верен!", Error = "Forbidden", StatusCode = 403 };
+            return new BaseResponse { Message = "Логин или пароль не верен!", Error = "Conflict", StatusCode = 409 };
 
         var accessToken = JwtService.GenerateJwtAccessToken(person.PersonId, person.Nickname, person.Role);
         var refreshToken = JwtService.GenerateJwtRefreshToken(person.PersonId, person.PasswordVersion, person.Role);
@@ -88,7 +88,7 @@ public class AuthService
             return new BaseResponse { Message = "Данный пользователь не найден", Error = "NotFound", StatusCode = 404 };
         
         if (_passwordHasher.VerifyHashedPassword(person, person.Password, oldPassword) != PasswordVerificationResult.Success)
-            return new BaseResponse { Message = "Пароль не верен!", Error = "Forbidden", StatusCode = 403 };
+            return new BaseResponse { Message = "Пароль не верен!", Error = "Conflict", StatusCode = 409 };
 
         
         await _userRepository.UpdatePasswordAsync(playerId, newPassword);

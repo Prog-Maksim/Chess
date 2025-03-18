@@ -18,7 +18,7 @@ using Frontend.Script;
 
 namespace Frontend.Windows.Game;
 
-public partial class GameMenu : Page
+public partial class GameMenu : Page, IDisposable
 {
     // состояние игры
     private bool _gameState;
@@ -54,31 +54,58 @@ public partial class GameMenu : Page
         _mainMenu = mainMenu;
         _webSocketService = webSocket;
         
-        webSocket.OnIsConnected += ClientOnIsConnected;
-        webSocket.OnConnectRetry += ClientOnConnectRetry;
-        webSocket.OnFailedConnect += ClientOnFailedConnect;
-        
-        
-        webSocket.OnJoinTheGame += WebSocketOnJoinTheGame;
-        webSocket.OnDurationGame += UpdateGameTime;
-        webSocket.OnAddPerson += WebSocketOnAddPerson; 
-        webSocket.OnRemainingTimePerson += WebSocketOnRemainingTimePerson;
-        webSocket.OnUpdateBoard += WebSocketOnUpdateBoard;
-        webSocket.OnReverseTimer += WebSocketOnReverseTimer;
-        webSocket.OnGameOverPlayer += WebSocketOnGameOverPlayer;
-        webSocket.OnIsActivePlayer += WebSocketOnIsActivePlayer;
-        webSocket.OnReverseTimeAnActivePlayer += WebSocketOnReverseTimeAnActivePlayer;
-        webSocket.OnGameFinished += WebSocketOnGameFinished;
-        webSocket.OnRemovePlayer += WebSocketOnRemovePlayer;
-        webSocket.OnUpdateColor += WebSocketOnUpdateColor;
-        webSocket.OnUpdateKillPiece += WebSocketOnUpdateKillPiece;
-        webSocket.OnUpdateScore += WebSocketOnUpdateScore;
-        webSocket.OnNewMove += WebSocketOnNewMove;
-        webSocket.OnUpdateGameState += WebSocketOnUpdateGameState;
-        webSocket.OnUsePotion += WebSocketOnUsePotion;
+        SubscribeEvents();
         
         _ = GetGameData();
         WaitingGame(create);
+    }
+    
+    private void SubscribeEvents()
+    {
+        _webSocketService.OnIsConnected += ClientOnIsConnected;
+        _webSocketService.OnConnectRetry += ClientOnConnectRetry;
+        _webSocketService.OnFailedConnect += ClientOnFailedConnect;
+        
+        _webSocketService.OnJoinTheGame += WebSocketOnJoinTheGame;
+        _webSocketService.OnDurationGame += UpdateGameTime;
+        _webSocketService.OnAddPerson += WebSocketOnAddPerson;
+        _webSocketService.OnRemainingTimePerson += WebSocketOnRemainingTimePerson;
+        _webSocketService.OnUpdateBoard += WebSocketOnUpdateBoard;
+        _webSocketService.OnReverseTimer += WebSocketOnReverseTimer;
+        _webSocketService.OnGameOverPlayer += WebSocketOnGameOverPlayer;
+        _webSocketService.OnIsActivePlayer += WebSocketOnIsActivePlayer;
+        _webSocketService.OnReverseTimeAnActivePlayer += WebSocketOnReverseTimeAnActivePlayer;
+        _webSocketService.OnGameFinished += WebSocketOnGameFinished;
+        _webSocketService.OnRemovePlayer += WebSocketOnRemovePlayer;
+        _webSocketService.OnUpdateColor += WebSocketOnUpdateColor;
+        _webSocketService.OnUpdateKillPiece += WebSocketOnUpdateKillPiece;
+        _webSocketService.OnUpdateScore += WebSocketOnUpdateScore;
+        _webSocketService.OnNewMove += WebSocketOnNewMove;
+        _webSocketService.OnUpdateGameState += WebSocketOnUpdateGameState;
+        _webSocketService.OnUsePotion += WebSocketOnUsePotion;
+    }
+    private void UnsubscribeEvents()
+    {
+        _webSocketService.OnIsConnected -= ClientOnIsConnected;
+        _webSocketService.OnConnectRetry -= ClientOnConnectRetry;
+        _webSocketService.OnFailedConnect -= ClientOnFailedConnect;
+        _webSocketService.OnJoinTheGame -= WebSocketOnJoinTheGame;
+        _webSocketService.OnDurationGame -= UpdateGameTime;
+        _webSocketService.OnAddPerson -= WebSocketOnAddPerson;
+        _webSocketService.OnRemainingTimePerson -= WebSocketOnRemainingTimePerson;
+        _webSocketService.OnUpdateBoard -= WebSocketOnUpdateBoard;
+        _webSocketService.OnReverseTimer -= WebSocketOnReverseTimer;
+        _webSocketService.OnGameOverPlayer -= WebSocketOnGameOverPlayer;
+        _webSocketService.OnIsActivePlayer -= WebSocketOnIsActivePlayer;
+        _webSocketService.OnReverseTimeAnActivePlayer -= WebSocketOnReverseTimeAnActivePlayer;
+        _webSocketService.OnGameFinished -= WebSocketOnGameFinished;
+        _webSocketService.OnRemovePlayer -= WebSocketOnRemovePlayer;
+        _webSocketService.OnUpdateColor -= WebSocketOnUpdateColor;
+        _webSocketService.OnUpdateKillPiece -= WebSocketOnUpdateKillPiece;
+        _webSocketService.OnUpdateScore -= WebSocketOnUpdateScore;
+        _webSocketService.OnNewMove -= WebSocketOnNewMove;
+        _webSocketService.OnUpdateGameState -= WebSocketOnUpdateGameState;
+        _webSocketService.OnUsePotion -= WebSocketOnUsePotion;
     }
 
     private void ClientOnFailedConnect(object? sender, EventArgs e)
@@ -86,7 +113,7 @@ public partial class GameMenu : Page
         MainMenu.RetryConnect deleteNotify = () =>
         {
             RemoveWarningAfterDelay(0);
-            _ = _webSocketService.ConnectAsync(SaveRepository.ReadToken());
+            _ = _webSocketService.ConnectAsync(SaveRepository.LoadTokenFromFile().AccessToken);
         };
         FailedMessageConnect warningRetryConnect = new FailedMessageConnect(deleteNotify);
         warningRetryConnect.Margin = new Thickness(0, 10, 0, 35);
@@ -124,7 +151,7 @@ public partial class GameMenu : Page
             StackPanelPlayer.Children.Insert(0, _gameIdControl);
             
             _playerTurn = true;
-            _playerIdTern = SaveRepository.ReadId();
+            _playerIdTern = SaveRepository.LoadTokenFromFile().PersonId;
         }
     }
 
@@ -277,7 +304,7 @@ public partial class GameMenu : Page
         if (_players.ContainsKey(e.PersonId))
             _players[e.PersonId].IsGameOver();
 
-        if (e.PersonId == SaveRepository.ReadId())
+        if (e.PersonId == SaveRepository.LoadTokenFromFile().PersonId)
         {
             ContinueGame continueGame = () => { MainGrid.Children.Remove(GameOver); };
             ExitGame exitGame = () => { _mainMenu.OpenMainMenu(); };
@@ -313,7 +340,7 @@ public partial class GameMenu : Page
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
 
             try
             {
@@ -379,7 +406,7 @@ public partial class GameMenu : Page
 
                 if (piece != null)
                 {
-                    if (piece.PersonId == SaveRepository.ReadId())
+                    if (piece.PersonId == SaveRepository.LoadTokenFromFile().PersonId)
                     {
                         CreateColorMenu(piece.Color);
                         return;
@@ -579,7 +606,7 @@ public partial class GameMenu : Page
         {
             Type = "MovePiece",
             gameId = GameId,
-            token = SaveRepository.ReadToken(),
+            token = SaveRepository.LoadTokenFromFile().AccessToken,
             FromRow = fromRow,
             FromCol = fromCol,
             ToRow = toRow,
@@ -605,7 +632,7 @@ public partial class GameMenu : Page
         
         _players[_playerIdTern].UpdateTime(e.Time);
 
-        if (_playerIdTern == SaveRepository.ReadId())
+        if (_playerIdTern == SaveRepository.LoadTokenFromFile().PersonId)
         {
             _players[_playerIdTern].IsTern(true);
             _playerTurn = true;
@@ -708,12 +735,13 @@ public partial class GameMenu : Page
 
     private void LeaveGame_OnMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
-        var result = MessageBox.Show("Вы уверены что хотите выйти из игры! \nЕсли вы продолжите, то покинете игру и сможете вернуться только в качестве зрителя, так как будете дисквалифицированы. \n\nПосле завершения игры возможна потеря очков.", "Предупреждение", MessageBoxButton.YesNo, MessageBoxImage.Information);
+        var result = MessageBox.Show("Вы уверены что хотите выйти из игры?", "Chess-online", MessageBoxButton.YesNo, MessageBoxImage.Information);
         
         if (result == MessageBoxResult.Yes)
         {
             _ = SendRequestExitGame();
             _mainMenu.OpenMainMenu();
+            Dispose();
         }
     }
 
@@ -724,10 +752,22 @@ public partial class GameMenu : Page
         var requestUri = Url.BaseUrl + $"Game/leave-game?gameId={GameId}";
 
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
         
         request.Content = new StringContent(string.Empty);
         await httpClient.SendAsync(request);
+    }
+    
+    
+    private bool _disposed = false;
+    
+    public void Dispose()
+    {
+        if (!_disposed)
+        {
+            UnsubscribeEvents();
+            _disposed = true;
+        }
     }
 }
 
