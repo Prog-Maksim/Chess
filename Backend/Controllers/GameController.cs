@@ -14,7 +14,7 @@ namespace Backend.Controllers;
 [ApiVersion("1.0")]
 [Produces("application/json")]
 [Route("api-chess/v{version:apiVersion}/[controller]")]
-public class GameController(WebSocketService webSocketService, GameService gameService, ILogger<GameController> logger, PotionService _potionService): ControllerBase
+public class GameController(WebSocketService webSocketService, GameService gameService, ILogger<GameController> logger, PotionService potionService): ControllerBase
 {
     /// <summary>
     /// Подключение пользователей по WebSocket
@@ -145,7 +145,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
 
         try
         {
-            var result = await _potionService.GetPersonData(dataToken.PersonId);
+            var result = await potionService.GetPersonData(dataToken.PersonId);
             var board = await gameService.GetBoard(gameId, dataToken.PersonId, result);
             var boardStr = JsonConvert.SerializeObject(board);
 
@@ -293,5 +293,64 @@ public class GameController(WebSocketService webSocketService, GameService gameS
                 Message = e.Message
             });
         }
+    }
+
+
+    /// <summary>
+    /// Выдает все публичные игры
+    /// </summary>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    /// <response code="404">Игры не найдены</response>
+    [Authorize]
+    [HttpGet("games")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
+    [ProducesResponseType(typeof(List<PublicGame>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetAllPublicGame()
+    {
+        var games = gameService.GetAllPublicGames();
+
+        if (games == null)
+        {
+            return StatusCode(404, new BaseResponse
+            {
+                Success = false,
+                Message = "Игры не найдены",
+                StatusCode = 404,
+                Error = "Not Found"
+            });
+        }
+        
+        return Ok(games);
+    }
+    
+    /// <summary>
+    /// Выдает одну рандомную игру
+    /// </summary>
+    /// <returns></returns>
+    /// <response code="200">Успешно</response>
+    /// <response code="404">Игры не найдены</response>
+    [Authorize]
+    [HttpGet("game")]
+    [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetRandomGame()
+    {
+        var games = gameService.GetRandomGames();
+
+        if (games == null)
+        {
+            return StatusCode(404, new BaseResponse
+            {
+                Success = false,
+                Message = "Игры не найдены",
+                StatusCode = 404,
+                Error = "Not Found"
+            });
+        }
+        
+        return Ok(games);
     }
 }

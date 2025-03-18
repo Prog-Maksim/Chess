@@ -16,7 +16,7 @@ public class ChessGame4Players : BaseChessGame
     }
     public ChessGame4Players(string name, ChessPlayer player, bool isPotion, IGameMode mode, bool isGamePrivate, Lazy<SendWebSocketMessage> socketMessage, GameService.DeleteGame deleteGame, IUserRepository userRepository, PlayerDataService playerDataService) : base(name, 16, mode, player, isPotion, isGamePrivate, socketMessage, deleteGame, userRepository, playerDataService) { }
 
-    protected override int RequiredPlayers() => 4;
+    public override int RequiredPlayers() => 4;
     
     protected override async Task HandlePlayerTimeUpdate(ChessPlayer player, TimeSpan time)
     {

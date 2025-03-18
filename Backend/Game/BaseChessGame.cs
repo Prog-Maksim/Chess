@@ -277,7 +277,7 @@ public abstract class BaseChessGame
     /// Максимально кол-во игроков
     /// </summary>
     /// <returns></returns>
-    protected abstract int RequiredPlayers();
+    public abstract int RequiredPlayers();
     
     /// <summary>
     /// Счетчик отчета время игры
@@ -719,20 +719,20 @@ public abstract class BaseChessGame
     /// </summary>
     /// <param name="playerId"></param>
     /// <returns></returns>
-    public void ExitTheGame(string playerId)
+    public async Task ExitTheGame(string playerId)
     {
         var player = Players.FirstOrDefault(p => p.Id == playerId);
 
         if (player == null)
             return;
 
-        _ = DeclarationDefeat(player);
-        _ = WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
+        await DeclarationDefeat(player);
+        await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
         
         if (State == GameState.WaitingForPlayers)
         {
             Players.Remove(player);
-            UpdateGameBoard();
+            await UpdateGameBoard();
         }
     }
 
