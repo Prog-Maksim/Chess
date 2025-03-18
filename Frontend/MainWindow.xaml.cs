@@ -22,7 +22,7 @@ public partial class MainWindow : Window
 
     private void CheckAuth()
     {
-        if (!SaveRepository.CheckToken())
+        if (!SaveRepository.FileExists())
         {
             OpenMainWindowDelegate func = OpenMainWindow;
             MainFrame.Content = new Auth(func);
@@ -30,7 +30,7 @@ public partial class MainWindow : Window
         else
         {
             CheckApiVersion();
-            string token = SaveRepository.ReadToken();
+            string token = SaveRepository.LoadTokenFromFile().AccessToken;
             WebSocketService webSocketService = WebSocketService.Instance;
             _ = webSocketService.ConnectAsync(token);
             
@@ -40,7 +40,7 @@ public partial class MainWindow : Window
 
     public void OpenMainWindow()
     {
-        string token = SaveRepository.ReadToken();
+        string token = SaveRepository.LoadTokenFromFile().AccessToken;
         WebSocketService webSocketService = WebSocketService.Instance;
         _ = webSocketService.ConnectAsync(token);
             
@@ -50,6 +50,11 @@ public partial class MainWindow : Window
     public void OpenGameWindow(string gameId, MainMenu mainMenu, bool create = false)
     {
         MainFrame.Content = new GameMenu(gameId, WebSocketService.Instance, mainMenu, create);
+    }
+
+    public void OpenGameArchive(MainMenu mainMenu)
+    {
+        MainFrame.Content = new GameArchive(mainMenu);
     }
 
     private void MainWindow_OnClosing(object? sender, CancelEventArgs e)

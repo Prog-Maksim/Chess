@@ -28,7 +28,7 @@ public partial class Settings : UserControl
 
     private void Exit_OnClick(object sender, RoutedEventArgs e)
     {
-        SaveRepository.DeleteSave();
+        SaveRepository.DeleteFile();
 
         Application.Current.Shutdown();
         Process.Start(Path.GetFullPath(Process.GetCurrentProcess().MainModule.FileName));
@@ -48,7 +48,7 @@ public partial class Settings : UserControl
         var url = Url.BaseUrl + "Profile/account";
 
         using var request = new HttpRequestMessage(HttpMethod.Delete, url);
-        request.Headers.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
+        request.Headers.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
         request.Headers.Add("Accept", "application/json");
 
         using var response = await client.SendAsync(request);
@@ -56,7 +56,7 @@ public partial class Settings : UserControl
         if (response.StatusCode != HttpStatusCode.OK)
             MessageBox.Show("Не удалось удалить аккаунт!");
         
-        SaveRepository.DeleteSave();
+        SaveRepository.DeleteFile();
         
         Application.Current.Shutdown();
         Process.Start(Path.GetFullPath(Process.GetCurrentProcess().MainModule.FileName));
@@ -95,7 +95,7 @@ public partial class Settings : UserControl
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             using var request = new HttpRequestMessage(HttpMethod.Put, url);
-            request.Headers.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
+            request.Headers.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
             request.Headers.Add("Accept", "application/json");
             request.Content = content;
 

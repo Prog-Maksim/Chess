@@ -138,7 +138,7 @@ public partial class PotionControl : UserControl
         var requestUrl = Url.BaseUrl + $"Potion/buy-potion?potionId={_potionId}";
         
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", $"{SaveRepository.ReadToken()}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", $"{SaveRepository.LoadTokenFromFile().AccessToken}");
         
         var response = await client.SendAsync(request);
 
@@ -162,7 +162,7 @@ public partial class PotionControl : UserControl
         var requestUrl = Url.BaseUrl + $"Potion/unlock-potion?potionId={_potionId}";
         
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", $"{SaveRepository.ReadToken()}");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", $"{SaveRepository.LoadTokenFromFile().AccessToken}");
         
         var response = await client.SendAsync(request);
         

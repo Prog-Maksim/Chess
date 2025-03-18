@@ -202,7 +202,7 @@ public partial class PotionMenuControl : UserControl
             
 
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUrl);
-        request.Headers.Add("Authorization", $"Bearer {SaveRepository.ReadToken()}");
+        request.Headers.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
         
         HttpResponseMessage response = await client.SendAsync(request);
         var result = await response.Content.ReadAsStringAsync();

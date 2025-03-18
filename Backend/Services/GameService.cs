@@ -390,7 +390,7 @@ public class GameService
     /// </summary>
     public List<PublicGame>? GetAllPublicGames()
     {
-        var games = GetAllGames.Where(g => g.IsGamePrivate == false).ToList();
+        var games = GetAllGames.Where(g => g.IsGamePrivate == false && g.State == GameState.WaitingForPlayers).ToList();
 
         if (games.Count == 0)
             return null;
@@ -420,7 +420,7 @@ public class GameService
     /// <returns>Идентификатор игры</returns>
     public string? GetRandomGames()
     {
-        var games = GetAllGames.Where(g => g.IsGamePrivate == false).ToList();
+        var games = GetAllGames.Where(g => g.IsGamePrivate == false && g.State == GameState.WaitingForPlayers).ToList();
         
         if (games.Count == 0)
             return null;

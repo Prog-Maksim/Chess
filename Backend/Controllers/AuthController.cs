@@ -24,7 +24,7 @@ public class AuthController(AuthService authService): ControllerBase
     [MapToApiVersion("1.0")]
     [HttpPost("registration")]
     [ProducesResponseType(typeof(Token), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RegistrationUser(RegistrationUser user)
     {
@@ -42,14 +42,14 @@ public class AuthController(AuthService authService): ControllerBase
     /// <param name="user">Информация о пользователе</param>
     /// <returns></returns>
     /// <response code="200">Успешная авторизация пользователя</response>
-    /// <response code="403">Логин или пароль не верен!</response>
+    /// <response code="409">Логин или пароль не верен!</response>
     /// <response code="404">Данный пользователь не найден</response>
     /// <response code="400">Невалидные данные</response>
     [AllowAnonymous]
     [MapToApiVersion("1.0")]
     [HttpPost("authorization")]
     [ProducesResponseType(typeof(Token), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> AuthorizationUser(AuthUser user)
@@ -69,14 +69,14 @@ public class AuthController(AuthService authService): ControllerBase
     /// <param name="password">Информация о пароле</param>
     /// <returns></returns>
     /// <response code="200">Успешное обновление пароля</response>
-    /// <response code="403">Пароль не верен</response>
+    /// <response code="409">Пароль не верен</response>
     /// <response code="404">Данный пользователь не найден</response>
     /// <response code="400">Невалидные данные</response>
     [Authorize]
     [MapToApiVersion("1.0")]
     [HttpPut("password")]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status409Conflict)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdatePassword(UpdatePassword password)

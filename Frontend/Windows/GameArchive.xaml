@@ -1,0 +1,59 @@
+﻿<Page x:Class="Frontend.Windows.GameArchive"
+      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+      xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+      xmlns:local="clr-namespace:Frontend.Windows"
+      xmlns:iconPacks="http://metro.mahapps.com/winfx/xaml/iconpacks"
+      mc:Ignorable="d"
+      Background="White"
+      Title="GameArchive" d:DesignHeight="1080" d:DesignWidth="1920">
+    <Grid>
+        
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="*"></RowDefinition>
+        </Grid.RowDefinitions>
+        
+        <TextBlock
+            Grid.Row="0"
+            Text="Архив игр"
+            HorizontalAlignment="Center"
+            FontFamily="Montserrat"
+            FontSize="40"
+            FontWeight="Bold"
+            Margin="0 20">
+        </TextBlock>
+        
+        <Button
+            x:Name="Close"
+            Grid.Row="0"
+            Cursor="Hand"
+            Background="Transparent"
+            BorderThickness="0"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Center"
+            Click="Close_OnClick"
+            Margin="0 0 20 20">
+            <iconPacks:PackIconEvaIcons 
+                Kind="Close"
+                Width="30"
+                Height="30"
+                Foreground="Red">
+            </iconPacks:PackIconEvaIcons>
+        </Button>
+        
+        <ScrollViewer 
+            Grid.Row="1"
+            Margin="20 0"
+            VerticalAlignment="Top"
+            VerticalScrollBarVisibility="Auto">
+            <Viewbox>
+                <StackPanel x:Name="Menu">
+            
+                </StackPanel>
+            </Viewbox>
+        </ScrollViewer>
+        
+    </Grid>
+</Page>

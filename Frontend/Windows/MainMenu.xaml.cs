@@ -1,5 +1,6 @@
 ﻿using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,9 +17,7 @@ namespace Frontend.Windows;
 public partial class MainMenu : Page
 {
     public delegate void GetGameId(string gameId);
-
     private readonly WebSocketService client;
-    
     private MainWindow mainWindow;
     
     public MainMenu()
@@ -40,7 +39,7 @@ public partial class MainMenu : Page
         RetryConnect deleteNotify = () =>
         {
             RemoveWarningAfterDelay(0);
-            _ = client.ConnectAsync(SaveRepository.ReadToken());
+            _ = client.ConnectAsync(SaveRepository.LoadTokenFromFile().AccessToken);
         };
         FailedMessageConnect warningRetryConnect = new FailedMessageConnect(deleteNotify);
         warningRetryConnect.Margin = new Thickness(0, 10, 0, 35);
@@ -62,6 +61,7 @@ public partial class MainMenu : Page
     {
         CreateGame.IsEnabled = e;
         JoinTheGame.IsEnabled = e;
+        GetRandomGame.IsEnabled = e;
     }
     
     private async void RemoveWarningAfterDelay(int time = 1500)
@@ -150,7 +150,7 @@ public partial class MainMenu : Page
         using HttpClient client = new HttpClient();
         
         string url = Url.BaseUrl + "Profile/get-player-data";
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
         
         try
         {
@@ -177,7 +177,7 @@ public partial class MainMenu : Page
             }
             else
             {
-                Console.WriteLine($"Error: {response.StatusCode}");
+                Console.WriteLine($"Error: {response.StatusCode} || {response}");
             }
         }
         catch (Exception ex)
@@ -222,7 +222,6 @@ public partial class MainMenu : Page
         try
         {
             using var request = new HttpRequestMessage(HttpMethod.Get, url);
-            request.Headers.Add("Accept", "*/*");
 
             using HttpResponseMessage response = await client.SendAsync(request);
             response.EnsureSuccessStatusCode();
@@ -265,5 +264,58 @@ public partial class MainMenu : Page
             if (_potionControls.ContainsKey(potion.PotionId))
                 _potionControls[potion.PotionId].UnlockPotion(potion.Count, potion.IsPurchased, potion.IsUnlocked);
         }
+    }
+
+    private void GetRandomGame_OnClick(object sender, RoutedEventArgs e)
+    {
+        GetRandomGame.IsEnabled = false;
+        GetRandomGame.Content = "Загрузка...";
+        _ = SendRequestRandomGameAsync();
+    }
+
+    private async Task SendRequestRandomGameAsync()
+    {
+        using HttpClient httpClient = new HttpClient();
+        
+        string url = Url.BaseUrl + "Game/game";
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
+
+        using var response = await httpClient.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadAsStringAsync();
+            var gameId = JsonSerializer.Deserialize<string>(result);
+
+            if (gameId != null)
+                await SendRequestInGame(gameId);
+            else
+                MessageBox.Show("Не удалось получить id игры");
+        }
+        else
+            MessageBox.Show($"Ошибка запроса: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+        
+        GetRandomGame.IsEnabled = true;
+        GetRandomGame.Content = "В БОЙ!";
+    }
+    
+    private async Task SendRequestInGame(string gameId)
+    {
+        HttpClient httpClient = new HttpClient();
+        
+        var url = Url.BaseUrl + $"Game/login-game?gameId={gameId}";
+        
+        httpClient.DefaultRequestHeaders.Clear();
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
+        
+        var content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+        await httpClient.PostAsync(url, content);
+    }
+
+    
+    private void ArchiveGame_OnClick(object sender, RoutedEventArgs e)
+    {
+        mainWindow.OpenGameArchive(this);
     }
 }

@@ -40,7 +40,7 @@ public partial class MenuJoinTheRequest : UserControl
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
             
             HttpResponseMessage response = await client.PostAsync(url, null);
             response.EnsureSuccessStatusCode();
@@ -63,7 +63,7 @@ public partial class MenuJoinTheRequest : UserControl
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.ReadToken());
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
             
             HttpResponseMessage response = await client.PostAsync(url, null);
             response.EnsureSuccessStatusCode();

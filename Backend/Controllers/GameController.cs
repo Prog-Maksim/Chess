@@ -130,13 +130,13 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     /// <returns></returns>
     /// <response code="200">Успешно</response>
     /// <response code="404">Данная игра или игрок не найдена</response>
-    /// <response code="403">У игрока нет доступа к этой игре</response>
+    /// <response code="409">У игрока нет доступа к этой игре</response>
     [Authorize]
     [HttpGet("playing-field")]
     [ServiceFilter(typeof(ValidateJwtAccessTokenFilter))]
     [ProducesResponseType(typeof(ContentResult), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status404NotFound)]
-    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(BaseResponse), StatusCodes.Status409Conflict)]
     public async Task<IActionResult> GetPlayingField(string gameId)
     {
         var authHeader = HttpContext.Request.Headers["Authorization"].ToString();
@@ -181,9 +181,9 @@ public class GameController(WebSocketService webSocketService, GameService gameS
             return StatusCode(403, new BaseResponse
             {
                 Success = false,
-                StatusCode = 403,
+                StatusCode = 409,
                 Message = e.Message,
-                Error = "Forbidden"
+                Error = "Conflict"
             });
         }
     }

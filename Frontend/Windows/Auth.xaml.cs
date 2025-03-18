@@ -119,8 +119,7 @@ public partial class Auth : Page
             
                 if (!token.success)
                     ErrorTextBlock.Text = token.message;
-                SaveRepository.SaveToken(token.accessToken);
-                SaveRepository.SaveId(token.personId);
+                SaveRepository.SaveDataToFile(token);
                 
                 if (func != null)
                     func();
@@ -155,8 +154,7 @@ public partial class Auth : Page
 
                 if (!token.success)
                     ErrorTextBlock.Text = token.message;
-                SaveRepository.SaveToken(token.accessToken);
-                SaveRepository.SaveId(token.personId);
+                SaveRepository.SaveDataToFile(token);
                 
                 if (func != null)
                     func();
