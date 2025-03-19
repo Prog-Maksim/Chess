@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Http;
+using System.Runtime.InteropServices.JavaScript;
 using System.Text;
 using System.Text.Json;
 using System.Windows;
@@ -124,8 +125,20 @@ public partial class Auth : Page
                 if (func != null)
                     func();
             }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                var errorMessage = JsonSerializer.Deserialize<ApiErrorResponse>(responseContent);
+                
+                if (errorMessage != null)
+                    ErrorTextBlock.Text = errorMessage.Errors.First().Value[0];
+            }
             else
-                ErrorTextBlock.Text = responseContent;
+            {
+                var errorMessage = JsonSerializer.Deserialize<BaseResponse>(responseContent);
+                
+                if (errorMessage != null)
+                    ErrorTextBlock.Text = errorMessage.message;
+            }
         }
         catch (Exception ex)
         {
@@ -159,8 +172,20 @@ public partial class Auth : Page
                 if (func != null)
                     func();
             }
+            else if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                var errorMessage = JsonSerializer.Deserialize<ApiErrorResponse>(responseContent);
+                
+                if (errorMessage != null)
+                    ErrorTextBlock.Text = errorMessage.Errors.First().Value[0];
+            }
             else
-                ErrorTextBlock.Text = responseContent;
+            {
+                var errorMessage = JsonSerializer.Deserialize<BaseResponse>(responseContent);
+
+                if (errorMessage != null)
+                    ErrorTextBlock.Text = errorMessage.message;
+            }
 
         }
         catch (Exception ex)

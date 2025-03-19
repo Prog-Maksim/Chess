@@ -103,6 +103,8 @@ public class GameService
         
         if (game != null)
             GetAllGames.Remove(game);
+        
+        Console.WriteLine($"Игра: {gameId} была удалена!");
     }
 
     /// <summary>
@@ -162,9 +164,11 @@ public class GameService
     public async Task<GameData> GetBoard(string gameId, string playerId, PersonData potionData)
     {
         var game = GetAllGames.Find(x => x.GameId == gameId);
-        
+
         if (game == null)
+        {
             throw new KeyNotFoundException("Данная игра не найдена");
+        }
         
         var player = game.Players.Find(x => x.Id == playerId);
 
@@ -206,9 +210,28 @@ public class GameService
             Score = player.Score,
             Moves = game.Moves,
             KillPiece = player.GetListKillPiece(),
-            CurrentPlayer = game.Players[game.CurrentPlayerIndex].Id,
+            CurrentPlayer = game.Players[game.CurrentPlayerIndex].Id
         };
         data.Players = new List<GamePlayer>();
+
+        if (game.OwnerId == playerId)
+        {
+            List<GamePlayer> players = new List<GamePlayer>();
+
+            foreach (var chessPlayer in game.WaitingPlayers)
+            {
+                GamePlayer gamePlayer = new GamePlayer
+                {
+                    PlayerId = chessPlayer.Id,
+                    Nickname = chessPlayer.Name,
+                    Time = chessPlayer.RemainingTime,
+                    Color = chessPlayer.Color,
+                };
+                players.Add(gamePlayer);
+            }
+            
+            data.WaitingPlayers = players;
+        }
 
         foreach (var gamePlayer in game.Players)
         {

@@ -18,7 +18,7 @@ public abstract class BaseChessGame
     public bool IsPotion { get; private set; }
     public ChessPiece?[,] Board { get; set; }
     public List<ChessPlayer> Players { get; set; } = new();
-    private List<ChessPlayer> WaitingPlayers { get; } = new();
+    public List<ChessPlayer> WaitingPlayers { get; private set; } = new();
 
     
     private GameState _state = GameState.WaitingForPlayers;
@@ -34,7 +34,7 @@ public abstract class BaseChessGame
     public IGameMode Mode { get; set; }
     
     
-    private string OwnerId { get; set; }
+    public string OwnerId { get; private set; }
     public bool IsGamePrivate { get; set; }
     public int CurrentPlayerIndex; 
     private Timer? _gameTimer;
@@ -144,14 +144,15 @@ public abstract class BaseChessGame
     public async Task RequestJoin(ChessPlayer player)
     {
         var user = Players.FirstOrDefault(p => p.Id == player.Id);
-
+        
         if (user != null && user.IsApproved)
         {
             await WebSocketMessage.Value.SendMessageResultJoinTheGame(player, GameId, true);
             await WebSocketMessage.Value.SendMessageAddNewPlayer(Players, player);
             return;
         }
-        if (!IsGamePrivate)
+        
+        if (!IsGamePrivate || OwnerId == player.Id)
         {
             player.Approve();
             await AddPlayer(player);
@@ -163,7 +164,9 @@ public abstract class BaseChessGame
         }
         
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
-        await WebSocketMessage.Value.SendMessageJoinTheGame(player, owner);
+        
+        if (owner != null)
+            await WebSocketMessage.Value.SendMessageJoinTheGame(player, owner);
         
         WaitingPlayers.Add(player);
     }
@@ -319,11 +322,18 @@ public abstract class BaseChessGame
                 else
                 {
                     var dataChessPiece = Board[i, j];
-                    var color = Players.Find(p => p.Id == dataChessPiece.OwnerId).Color;
+                    
+                    var color = Players.Find(p => p.Id == dataChessPiece.OwnerId);
+
+                    if (color == null)
+                    {
+                        gameBoards[i, j] = null;
+                        return;
+                    }
                     
                     GameBoard gameBoard = new GameBoard
                     {
-                        Color = color,
+                        Color = color.Color,
                         Type = dataChessPiece.Type,
                         PieceId = dataChessPiece.ChessPieceId,
                         PersonId = dataChessPiece.OwnerId
@@ -395,7 +405,7 @@ public abstract class BaseChessGame
         var usedPotion = player.GetUsedPotions();
 
         int modeScore = ChessScoreCalculator.CalculateScore(Mode, player.RemainingTime, RequiredPlayers());
-        int? potionScore = usedPotion.Count == 0 ? 50 : null;
+        int? potionScore = usedPotion.Count == 0 ? 30 : null;
 
         int totalScore = player.Score * 2 + modeScore + potionScore ?? 0;
 
@@ -722,11 +732,13 @@ public abstract class BaseChessGame
         
         if (State == GameState.WaitingForPlayers)
         {
+            await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
             Players.Remove(player);
             await UpdateGameBoard();
             return;
         }
         
+        await UpdateGameBoard();
         await DeclarationDefeat(player);
         await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
     }

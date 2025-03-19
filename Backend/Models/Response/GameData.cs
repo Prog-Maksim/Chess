@@ -56,6 +56,11 @@ public class GameData
     /// Состояние игры
     /// </summary>
     public required GameState GameState { get; set; }
+    
+    /// <summary>
+    /// Список пользователей ожидающих вход в игру
+    /// </summary>
+    public List<GamePlayer>? WaitingPlayers { get; set; }
 }
 
 public class GameBoard
