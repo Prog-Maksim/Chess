@@ -167,11 +167,33 @@ public class ChessGame2Players: BaseChessGame
             await person.AddKillPiece(Board[newRow, newCol]);
         }
 
+        
+        if (piece.Type == PieceType.Pawn && person.Color == "#000000" && newRow == 7)
+        {
+            var temporary = new Queen(piece.OwnerId);
+            piece = temporary;
+        }
+        else if (piece.Type == PieceType.Pawn && person.Color == "#eeeeee" && newRow == 0)
+        {
+            var temporary = new Queen(piece.OwnerId);
+            piece = temporary;
+        }
+        
         piece.Row = newRow;
         piece.Column = newCol;
 
         Board[newRow, newCol] = piece;
         Board[oldRow, oldCol] = null;
+        
+
+        if (newPiece != null && newPiece.Type == PieceType.King)
+        {
+            var killPlayer = Players.FirstOrDefault(p => p.Id == newPiece.OwnerId);
+
+            if (killPlayer != null)
+                await DeclarationDefeat(killPlayer);
+        }
+        
 
         NextTurn();
         await SendMessageUpdateBoard();

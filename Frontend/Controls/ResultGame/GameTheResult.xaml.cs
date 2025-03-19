@@ -62,23 +62,26 @@ public partial class GameTheResult : UserControl
             Count.Text = addPotion.Count.ToString();
         }
         else
-        {
             MyGrid.RowDefinitions[2].Height = new GridLength(0);
-        }
 
-        for (int i = 0; i < usedPotions.Count; i++)
+        if (usedPotions != null || usedPotions.Count != 0)
         {
-            if (i == 0)
-                Potion1.Source = GetPotionImage(usedPotions[i]);
-            else if (i == 1)
-                Potion2.Source = GetPotionImage(usedPotions[i]);
-            else if (i == 2)
-                Potion3.Source = GetPotionImage(usedPotions[i]);
-            else if (i == 3)
-                Potion4.Source = GetPotionImage(usedPotions[i]);
-            else if (i == 4)
-                Potion5.Source = GetPotionImage(usedPotions[i]);
+            for (int i = 0; i < usedPotions.Count; i++)
+            {
+                if (i == 0)
+                    Potion1.Source = GetPotionImage(usedPotions[i]);
+                else if (i == 1)
+                    Potion2.Source = GetPotionImage(usedPotions[i]);
+                else if (i == 2)
+                    Potion3.Source = GetPotionImage(usedPotions[i]);
+                else if (i == 3)
+                    Potion4.Source = GetPotionImage(usedPotions[i]);
+                else if (i == 4)
+                    Potion5.Source = GetPotionImage(usedPotions[i]);
+            }
         }
+        else
+            MyGrid.RowDefinitions[3].Height = new GridLength(0);
     }
 
     private BitmapImage GetPotionImage(PotionType type)
