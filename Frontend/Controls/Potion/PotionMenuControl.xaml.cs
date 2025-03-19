@@ -51,7 +51,6 @@ public partial class PotionMenuControl : UserControl
                     Image1.Source = GetPotionImage(potion.Type);
                     Border1.MouseLeftButtonDown += (sender, args) =>
                     {
-                        Console.WriteLine($"Potion type: {potion.Type}");
                         _ = UsePotionAsync(potion.Type);
                     };
                 }
@@ -71,7 +70,6 @@ public partial class PotionMenuControl : UserControl
                     Image2.Source = GetPotionImage(potion.Type);
                     Border2.MouseLeftButtonDown += (sender, args) =>
                     {
-                        Console.WriteLine($"Potion type: {potion.Type}");
                         _ = UsePotionAsync(potion.Type);
                     };
                 }
@@ -91,7 +89,6 @@ public partial class PotionMenuControl : UserControl
                     Image3.Source = GetPotionImage(potion.Type);
                     Border3.MouseLeftButtonDown += (sender, args) =>
                     {
-                        Console.WriteLine($"Potion type: {potion.Type}");
                         _ = UsePotionAsync(potion.Type);
                     };
                 }
@@ -111,7 +108,6 @@ public partial class PotionMenuControl : UserControl
                     Image4.Source = GetPotionImage(potion.Type);
                     Border4.MouseLeftButtonDown += (sender, args) =>
                     {
-                        Console.WriteLine($"Potion type: {potion.Type}");
                         _ = UsePotionAsync(potion.Type);
                     };
                 }
@@ -131,7 +127,6 @@ public partial class PotionMenuControl : UserControl
                     Image5.Source = GetPotionImage(potion.Type);
                     Border5.MouseLeftButtonDown += (sender, args) =>
                     {
-                        Console.WriteLine($"Potion type: {potion.Type}");
                         _ = UsePotionAsync(potion.Type);
                     };
                 }
@@ -205,7 +200,12 @@ public partial class PotionMenuControl : UserControl
         request.Headers.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
         
         HttpResponseMessage response = await client.SendAsync(request);
-        var result = await response.Content.ReadAsStringAsync();
-        Console.WriteLine(result);
+        
+        if (response.IsSuccessStatusCode)
+        {
+            _gameMenu.StartPoint = null;
+            var result = await response.Content.ReadAsStringAsync();
+        }
+        
     }
 }

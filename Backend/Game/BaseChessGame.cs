@@ -398,7 +398,7 @@ public abstract class BaseChessGame
     /// Объявление победы
     /// </summary>
     /// <param name="player"></param>
-    private async Task DeclarationVictory(ChessPlayer player)
+    protected async Task DeclarationVictory(ChessPlayer player)
     {
         _state = GameState.Finished;
         var data = await _userRepository.GetUserDataByIdAsync(player.Id);
@@ -459,7 +459,7 @@ public abstract class BaseChessGame
     /// Объявление поражения
     /// </summary>
     /// <param name="player"></param>
-    private async Task DeclarationDefeat(ChessPlayer player)
+    protected async Task DeclarationDefeat(ChessPlayer player)
     {
         var data = await _userRepository.GetUserDataByIdAsync(player.Id);
         var usedPotion = player.GetUsedPotions();
@@ -738,7 +738,6 @@ public abstract class BaseChessGame
             return;
         }
         
-        await UpdateGameBoard();
         await DeclarationDefeat(player);
         await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
     }
