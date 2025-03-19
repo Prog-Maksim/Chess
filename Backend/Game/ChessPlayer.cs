@@ -61,6 +61,7 @@ public class ChessPlayer: IDisposable
     
     public List<PotionType> GetUsedPotions()
     {
+        Console.WriteLine($"A: {AvailablePotion.Count} || U: {UsedPotion.Count}");
         return AvailablePotion.Except(UsedPotion).ToList();
     }
     
@@ -76,8 +77,9 @@ public class ChessPlayer: IDisposable
         Name = name;
         _message = message;
         _gameMode = mode;
-        UsedPotion = potions;
-        AvailablePotion = potions;
+        
+        UsedPotion = new List<PotionType>(potions);
+        AvailablePotion = new List<PotionType>(potions);
 
         RemainingTime = mode.GetPlayerTimeDuration();
     }

@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using Frontend.Controls;
 using Frontend.Controls.Potion;
 using Frontend.Controls.Message;
+using Frontend.Controls.ResultGame;
 using Frontend.Enums;
 using Frontend.Models;
 using Frontend.Models.Request;
@@ -83,12 +84,15 @@ public partial class GameMenu : Page, IDisposable
         _webSocketService.OnNewMove += WebSocketOnNewMove;
         _webSocketService.OnUpdateGameState += WebSocketOnUpdateGameState;
         _webSocketService.OnUsePotion += WebSocketOnUsePotion;
+        _webSocketService.OnResultTheGame += WebSocketServiceOnResultTheGame;
     }
+
     private void UnsubscribeEvents()
     {
         _webSocketService.OnIsConnected -= ClientOnIsConnected;
         _webSocketService.OnConnectRetry -= ClientOnConnectRetry;
         _webSocketService.OnFailedConnect -= ClientOnFailedConnect;
+        
         _webSocketService.OnJoinTheGame -= WebSocketOnJoinTheGame;
         _webSocketService.OnDurationGame -= UpdateGameTime;
         _webSocketService.OnAddPerson -= WebSocketOnAddPerson;
@@ -106,6 +110,7 @@ public partial class GameMenu : Page, IDisposable
         _webSocketService.OnNewMove -= WebSocketOnNewMove;
         _webSocketService.OnUpdateGameState -= WebSocketOnUpdateGameState;
         _webSocketService.OnUsePotion -= WebSocketOnUsePotion;
+        _webSocketService.OnResultTheGame -= WebSocketServiceOnResultTheGame;
     }
 
     private void ClientOnFailedConnect(object? sender, EventArgs e)
@@ -140,6 +145,20 @@ public partial class GameMenu : Page, IDisposable
     {
         await Task.Delay(time);
         Notify.Children.Clear();
+    }
+    
+    private void WebSocketServiceOnResultTheGame(object? sender, ResultPlayerTheGame e)
+    {
+        GameTheResult result = new GameTheResult(e.Status, e.League, e.ScoreData.Score, e.ScoreData.AddScoreWine ?? 0, e.ScoreData.PotionScore ?? 0,
+            e.ScoreData.ModeScore, e.ScoreData.TotalScore, e.Rating, e.AddPotion, e.UsedPotions, _mainMenu);
+
+        result.Margin = new Thickness(0, 20, 0, 20);
+        
+        Grid.SetRowSpan(result, 3);
+        Grid.SetColumnSpan(result, 3);
+            
+        MainGrid.Children.Add(result);
+        Panel.SetZIndex(result, 2);
     }
 
     private void WaitingGame(bool create)
@@ -261,9 +280,9 @@ public partial class GameMenu : Page, IDisposable
     
     private void WebSocketOnGameFinished(object? sender, FinishGame e)
     {
-        string time = $"{e.DurationGame.Hours:D2}:{e.DurationGame.Minutes:D2}:{e.DurationGame.Seconds:D2}";
-        MessageBox.Show($"Поздравляем \n\nИгра была завершена. \n\nДлительность игры: {time}", "Игра завершена");
-        _mainMenu.OpenMainMenu();
+        // string time = $"{e.DurationGame.Hours:D2}:{e.DurationGame.Minutes:D2}:{e.DurationGame.Seconds:D2}";
+        // MessageBox.Show($"Поздравляем \n\nИгра была завершена. \n\nДлительность игры: {time}", "Игра завершена");
+        // _mainMenu.OpenMainMenu();
     }
 
     private Dictionary<string, PlayerTimeMenu> _anActivePlayers = new ();
@@ -738,11 +757,7 @@ public partial class GameMenu : Page, IDisposable
         var result = MessageBox.Show("Вы уверены что хотите выйти из игры?", "Chess-online", MessageBoxButton.YesNo, MessageBoxImage.Information);
         
         if (result == MessageBoxResult.Yes)
-        {
             _ = SendRequestExitGame();
-            _mainMenu.OpenMainMenu();
-            Dispose();
-        }
     }
 
     private async Task SendRequestExitGame()
@@ -755,11 +770,17 @@ public partial class GameMenu : Page, IDisposable
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
         
         request.Content = new StringContent(string.Empty);
-        await httpClient.SendAsync(request);
+        var result =  await httpClient.SendAsync(request);
+
+        if (!result.IsSuccessStatusCode)
+        {
+            Dispose();
+            _mainMenu.OpenMainMenu();
+        }
     }
     
     
-    private bool _disposed = false;
+    private bool _disposed;
     
     public void Dispose()
     {
@@ -768,6 +789,12 @@ public partial class GameMenu : Page, IDisposable
             UnsubscribeEvents();
             _disposed = true;
         }
+        GC.SuppressFinalize(this);
+    }
+
+    ~GameMenu()
+    {
+        Dispose();
     }
 }
 

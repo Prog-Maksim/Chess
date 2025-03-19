@@ -32,6 +32,19 @@
                     Style="{StaticResource ProgressBarStyle}"
                     Margin="10 0 10 10">
                 </ProgressBar>
+                
+                <TextBlock
+                    x:Name="TextProgressBar"
+                    Grid.Row="1"
+                    Foreground="Black"
+                    FontWeight="Bold"
+                    FontSize="12"
+                    FontFamily="Montserrat"
+                    VerticalAlignment="Center"
+                    Panel.ZIndex="1"
+                    HorizontalAlignment="Center"
+                    Margin="0 0 0 8">
+                </TextBlock>
             </Grid>
     </Border>
 </UserControl>

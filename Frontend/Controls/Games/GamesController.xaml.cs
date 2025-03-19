@@ -14,20 +14,38 @@ public partial class GamesController : UserControl
     {
         InitializeComponent();
 
-        _ = InitializeGames();
+        _httpClient.BaseAddress = new Uri(Url.BaseUrl);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
+        
+        _ = StartGameUpdatesAsync();
     }
     
+    private readonly HttpClient _httpClient = new ();
     private Dictionary<string, Game> _games = new ();
+    private bool _isGameRunning = true;
+    
+    private async Task StartGameUpdatesAsync()
+    {
+        while (_isGameRunning)
+        {
+            await InitializeGames();
+            await Task.Delay(60000);
+        }
+    }
+
+    private void StopGameUpdates()
+    {
+        _isGameRunning = false;
+    }
 
     private async Task InitializeGames()
     {
-        HttpClient client = new HttpClient();
+        WrapPanel.Children.Clear();
+        _games.Clear();
         
-        string url = Url.BaseUrl + "Game/games";
+        string url = "Game/games";
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", SaveRepository.LoadTokenFromFile().AccessToken);
-        
-        using var response = await client.SendAsync(request);
+        using var response = await _httpClient.SendAsync(request);
 
         if (response.IsSuccessStatusCode)
         {
@@ -40,6 +58,7 @@ public partial class GamesController : UserControl
         else
             MessageBox.Show($"Ошибка запроса: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
     }
+    
 
     private void CreateMenu(List<PublicGame> games)
     {
@@ -48,7 +67,6 @@ public partial class GamesController : UserControl
             Game gameMenu = new Game(game.GameId, game.Title, game.GameMode, game.TotalPlayers, game.PlayerCount, game.IsPotion);
             WrapPanel.Children.Add(gameMenu);
             _games[game.GameId] = gameMenu;
-            Console.WriteLine(_games.Count);
         }
     }
 }

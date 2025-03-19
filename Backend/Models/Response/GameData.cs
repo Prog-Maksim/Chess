@@ -92,4 +92,9 @@ public class GamePlayer
     /// Время, которое осталось у игрока на игру
     /// </summary>
     public TimeSpan Time { get; set; }
+    
+    /// <summary>
+    /// Цвет игрока
+    /// </summary>
+    public required string Color { get; set; }
 }

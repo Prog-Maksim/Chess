@@ -18,7 +18,7 @@ public class ResultPlayerTheGame: BaseWebSocketMessage
     /// <summary>
     /// Заработанные очки
     /// </summary>
-    public required ScoreData Score { get; set; }
+    public required ScoreData ScoreData { get; set; }
     
     /// <summary>
     /// Начисление рейтинга за игру
@@ -47,7 +47,7 @@ public class ScoreData
     /// Очки за победу
     /// </summary>
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-    public int AddScoreWine { get; set; }
+    public int? AddScoreWine { get; set; }
     
     /// <summary>
     /// Очки за неиспользуемые зелья

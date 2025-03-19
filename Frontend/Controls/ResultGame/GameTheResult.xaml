@@ -7,48 +7,342 @@
              mc:Ignorable="d"
              Background="Transparent"
              d:DesignHeight="700" d:DesignWidth="500">
-    
-    <Border
-        CornerRadius="20"
-        Background="White"
-        Padding="10">
-        
-        <Grid ShowGridLines="True">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="Auto"></RowDefinition>
-                <RowDefinition Height="*"></RowDefinition>
-            </Grid.RowDefinitions>
-            
-            <StackPanel Grid.Row="0" Margin="0 10">
-                <TextBlock
-                    Text="ПОБЕДА"
-                    FontSize="35"
-                    FontWeight="Bold"
-                    Foreground="#57B300"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center">
-                </TextBlock>
-            
-                <TextBlock
-                    Text="Пешечник"
-                    FontSize="20"
-                    FontWeight="Bold"
-                    Foreground="#7074D5"
-                    VerticalAlignment="Center"
-                    HorizontalAlignment="Center"
-                    Margin="0 -8 0 0">
-                </TextBlock>
-            </StackPanel>
-            
-            <StackPanel Grid.Row="1" Margin="0 10">
-                
-            </StackPanel>
-            
-        </Grid>
-        
-    </Border>
-    
+
+    <Viewbox>
+        <Border
+            CornerRadius="20"
+            Background="White"
+            Padding="10"
+            Width="450" Height="700">
+
+            <Border.Effect>
+                <DropShadowEffect Color="Black" BlurRadius="10" ShadowDepth="0" Opacity="0.35"></DropShadowEffect>
+            </Border.Effect>
+
+            <Grid x:Name="MyGrid" ShowGridLines="False">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="Auto"></RowDefinition>
+                    <RowDefinition Height="*"></RowDefinition>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Margin="0 10">
+                    <TextBlock
+                        x:Name="MainText"
+                        Text="ПОБЕДА"
+                        FontSize="35"
+                        FontWeight="Bold"
+                        Foreground="#57B300"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center">
+                    </TextBlock>
+
+                    <TextBlock
+                        x:Name="LeagueName"
+                        Text="Пешечник"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="#7074D5"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Center"
+                        Margin="0 -8 0 0">
+                    </TextBlock>
+                </StackPanel>
+
+                <StackPanel Grid.Row="1" Margin="0 10">
+                    <Grid Margin="0 0 0 10">
+                        <TextBlock
+                            Text="Заработано очков:"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#808080"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left">
+                        </TextBlock>
+
+                        <TextBlock
+                            x:Name="ScoreText"
+                            Text="0"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="Black"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                        </TextBlock>
+                    </Grid>
+                    <Grid Margin="0 0 0 10">
+                        <TextBlock
+                            Text="Начислено за победу:"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#808080"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left">
+                        </TextBlock>
+
+                        <TextBlock
+                            x:Name="AddScoreText"
+                            Text="0"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="Black"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                        </TextBlock>
+                    </Grid>
+                    <Grid Margin="0 0 0 10">
+                        <TextBlock
+                            Text="Очки за неиспользованные зелья:"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#808080"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left">
+                        </TextBlock>
+
+                        <TextBlock
+                            x:Name="PotionScore"
+                            Text="0"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="Black"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                        </TextBlock>
+                    </Grid>
+                    <Grid Margin="0 0 0 10">
+                        <TextBlock
+                            Text="Очки за оставшееся время:"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#808080"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left">
+                        </TextBlock>
+
+                        <TextBlock
+                            x:Name="DurationScore"
+                            Text="0"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="Black"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                        </TextBlock>
+                    </Grid>
+                    <Grid Margin="0 0 0 10">
+                        <TextBlock
+                            Text="Итого:"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#808080"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left">
+                        </TextBlock>
+
+                        <TextBlock
+                            x:Name="Total"
+                            Text="0"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#65D000"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                        </TextBlock>
+                    </Grid>
+                    <Grid Margin="0 0 0 10">
+                        <TextBlock
+                            Text="Очки ранга:"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#808080"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Left">
+                        </TextBlock>
+
+                        <TextBlock
+                            x:Name="Range"
+                            Text="0"
+                            FontFamily="Montserrat"
+                            FontSize="20"
+                            FontWeight="Bold"
+                            Foreground="#65D000"
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right">
+                        </TextBlock>
+                    </Grid>
+                </StackPanel>
+
+                <StackPanel Grid.Row="2" Margin="0 10">
+                    <TextBlock
+                        Text="Бонус за победу:"
+                        FontFamily="Montserrat"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="#808080"
+                        Margin="0 0 0 10"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left">
+                    </TextBlock>
+
+                    <Border
+                        Height="70"
+                        CornerRadius="10"
+                        Background="#E7E7E7">
+
+                        <Grid ShowGridLines="False">
+
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="70" />
+                                <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+
+                            <Image
+                                x:Name="ImagePotion"
+                                Grid.Column="0"
+                                Margin="10"
+                                Source="../../Image/chest.png">
+                            </Image>
+
+                            <TextBlock
+                                Grid.Column="1"
+                                Foreground="Black"
+                                VerticalAlignment="Center"
+                                FontWeight="SemiBold"
+                                FontSize="15"
+                                Margin="10 0">
+                                <Run x:Name="PotionName" FontSize="20" FontWeight="Bold"></Run>
+
+                                <LineBreak />
+
+                                <Run FontWeight="SemiBold" Foreground="Gray">Количество:</Run>
+                                <Run x:Name="Count" FontWeight="SemiBold" Foreground="Gray">0</Run>
+                                <Run FontWeight="SemiBold" Foreground="Gray">шт</Run>
+                            </TextBlock>
+
+                        </Grid>
+
+                    </Border>
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Margin="0 10">
+                    <TextBlock
+                        Text="Использовано:"
+                        FontFamily="Montserrat"
+                        FontSize="20"
+                        FontWeight="Bold"
+                        Foreground="#808080"
+                        Margin="0 0 0 10"
+                        VerticalAlignment="Center"
+                        HorizontalAlignment="Left">
+                    </TextBlock>
+
+                    <Border
+                        Height="85"
+                        CornerRadius="10"
+                        Padding="10"
+                        Background="#E7E7E7">
+
+                        <Grid ShowGridLines="False">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                                <ColumnDefinition></ColumnDefinition>
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                Grid.Column="0"
+                                CornerRadius="10"
+                                Margin="10 0"
+                                Background="#D9D9D9">
+                                <Image
+                                    x:Name="Potion1"
+                                    Margin="5"
+                                    Source="../../Image/chest.png">
+                                </Image>
+                            </Border>
+
+                            <Border
+                                Grid.Column="1"
+                                CornerRadius="10"
+                                Margin="10 0"
+                                Background="#D9D9D9">
+                                <Image
+                                    x:Name="Potion2"
+                                    Margin="5"
+                                    Source="../../Image/chest.png">
+                                </Image>
+                            </Border>
+
+                            <Border
+                                Grid.Column="2"
+                                CornerRadius="10"
+                                Margin="10 0"
+                                Background="#D9D9D9">
+                                <Image
+                                    x:Name="Potion3"
+                                    Margin="5"
+                                    Source="../../Image/chest.png">
+                                </Image>
+                            </Border>
+
+                            <Border
+                                Grid.Column="3"
+                                CornerRadius="10"
+                                Margin="10 0"
+                                Background="#D9D9D9">
+                                <Image
+                                    x:Name="Potion4"
+                                    Margin="5"
+                                    Source="../../Image/chest.png">
+                                </Image>
+                            </Border>
+
+                            <Border
+                                Grid.Column="4"
+                                CornerRadius="10"
+                                Margin="10 0"
+                                Background="#D9D9D9">
+                                <Image
+                                    x:Name="Potion5"
+                                    Margin="5"
+                                    Source="../../Image/chest.png">
+                                </Image>
+                            </Border>
+                        </Grid>
+
+                    </Border>
+                </StackPanel>
+
+                <Button
+                    Grid.Row="4"
+                    Height="50"
+                    Width="300"
+                    VerticalAlignment="Bottom"
+                    Margin="0 10"
+                    Content="Хорошо"
+                    Click="ButtonBase_OnClick"
+                    Style="{StaticResource ClickButtonStyle}">
+                </Button>
+
+            </Grid>
+
+        </Border>
+    </Viewbox>
+
 </UserControl>

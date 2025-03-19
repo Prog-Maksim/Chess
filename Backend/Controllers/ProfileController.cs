@@ -92,7 +92,6 @@ public class ProfileController(IUserRepository _userRepository, PotionService _p
         var dataToken = JwtService.GetJwtTokenData(token);
 
         var result = await playerDataService.OpenChest(dataToken.PersonId);
-        
         return Ok(result);
     }
 

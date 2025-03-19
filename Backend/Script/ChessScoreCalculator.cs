@@ -12,6 +12,7 @@ public class ChessScoreCalculator
     /// </summary>
     /// <param name="gameType">Тип игры (Классика, Рапид, Блиц, Буллит)</param>
     /// <param name="timeLeftSeconds">Оставшееся время игрока в секундах</param>
+    /// <param name="playerCount">Кол-во игроков</param>
     /// <returns>Количество начисленных очков</returns>
     public static int CalculateScore(IGameMode gameType, TimeSpan timeLeftSeconds, int playerCount)
     {
@@ -32,7 +33,7 @@ public class ChessScoreCalculator
             return baseScore;
 
         // Бонусные очки за оставшееся время (например, 1 очко за каждые 30 секунд)
-        int timeBonus = (int)timeLeftSeconds.TotalSeconds / 10;
+        int timeBonus = (int)timeLeftSeconds.TotalSeconds / 30;
         
         // Коэффициент сложности: если больше 2 игроков, бонус выше
         double difficultyMultiplier = playerCount > 2 ? 1.5 : 1.0;
@@ -62,14 +63,24 @@ public class ChessScoreCalculator
 
         // Базовое значение рейтинга
         int baseRating = currentLeague.RatingIsWinner;
+        Console.WriteLine($"Базовый рейтинг: {baseRating}");
 
         if (!isWinner)
+        {
+            Console.WriteLine("Игрок проиграл!");
+            if (playerData.Rating < baseRating)
+                return -playerData.Rating;
+            
             return -baseRating;
+        }
 
         // Коэффициент сложности (чем больше игроков, тем выше бонус)
         double difficultyMultiplier = 1.0 + (playerCount - 2) * 0.1;
+        Console.WriteLine($"Коэффицент сложности: {difficultyMultiplier}");
 
         // Итоговый рейтинг с округлением
-        return (int)Math.Round(baseRating * difficultyMultiplier);
+        int result = (int)Math.Round(baseRating * difficultyMultiplier);
+        Console.WriteLine($"Итоговый рассчет: {result}");
+        return result;
     }
 }
