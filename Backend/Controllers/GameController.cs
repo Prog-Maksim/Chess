@@ -124,7 +124,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
     }
 
     /// <summary>
-    /// Возвращает игровое поле
+    /// Возвращает данные игры
     /// </summary>
     /// <param name="gameId">Идентификатор игры</param>
     /// <returns></returns>
@@ -178,7 +178,7 @@ public class GameController(WebSocketService webSocketService, GameService gameS
         }
         catch (UnauthorizedAccessException e)
         {
-            return StatusCode(403, new BaseResponse
+            return StatusCode(409, new BaseResponse
             {
                 Success = false,
                 StatusCode = 409,

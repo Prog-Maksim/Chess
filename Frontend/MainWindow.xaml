@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Frontend"
         xmlns:auth="clr-namespace:Frontend.Windows"
         mc:Ignorable="d"
-        Title="Chess"
+        Title="Chess-online"
         Height="700"
         Width="1300"
         MinWidth="1000"

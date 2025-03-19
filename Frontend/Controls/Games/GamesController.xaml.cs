@@ -56,7 +56,7 @@ public partial class GamesController : UserControl
                 CreateMenu(games);
         }
         else
-            MessageBox.Show($"Ошибка запроса: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
+            Console.WriteLine($"Ошибка запроса: {response.StatusCode} - {await response.Content.ReadAsStringAsync()}");
     }
     
 

@@ -34,7 +34,6 @@ public partial class CreateGameControl : UserControl
     
     private async Task SendCreateGame(string name, GameMode mode, int players = 2, bool isPrivate = false, bool isPotion = true)
     {
-        Console.WriteLine($"Potion: {isPotion}");
         Click.Content = "загрузка...";
         Click.IsEnabled = false;
         
@@ -51,8 +50,6 @@ public partial class CreateGameControl : UserControl
         {
             string responseBody = await response.Content.ReadAsStringAsync();
             var data = JsonSerializer.Deserialize<CreateGame>(responseBody);
-
-            Console.WriteLine($"GameId: {data.gameId}");
             _mainWindow.OpenGameWindow(data.gameId, _mainMenu, true);
         }
         else

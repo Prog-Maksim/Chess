@@ -32,8 +32,8 @@ public class ChessScoreCalculator
         if (timeLeftSeconds.TotalSeconds <= 0)
             return baseScore;
 
-        // Бонусные очки за оставшееся время (например, 1 очко за каждые 30 секунд)
-        int timeBonus = (int)timeLeftSeconds.TotalSeconds / 30;
+        // Бонусные очки за оставшееся время (например, 1 очко за каждые 1 минуту)
+        int timeBonus = (int)timeLeftSeconds.TotalSeconds / 60;
         
         // Коэффициент сложности: если больше 2 игроков, бонус выше
         double difficultyMultiplier = playerCount > 2 ? 1.5 : 1.0;

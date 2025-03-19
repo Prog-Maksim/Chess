@@ -163,8 +163,6 @@ public partial class MainMenu : Page
 
                 if (data != null)
                 {
-                    Console.WriteLine(responseBody);
-                    
                     LeagueText.Text = data.League;
                     LevelText.Text = $"Уровень: {data.Level}";
                     ScoreText.Text = data.Score.ToString();
