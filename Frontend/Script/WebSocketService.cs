@@ -331,6 +331,21 @@ public class WebSocketService
             if (result != null)
                 OnGameFinished?.Invoke(this, result);
         }
+        else if (message.Contains("GamePlayerTheResult"))
+        {
+            try
+            {
+                var result = JsonSerializer.Deserialize<ResultPlayerTheGame>(message);
+                Console.WriteLine($"Successfully: {result != null}");
+                
+                if (result != null)
+                    OnResultTheGame?.Invoke(this, result);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.ToString());
+            }
+        }
         else if (message.Contains("GameOver"))
         {
             var result = JsonSerializer.Deserialize<GameOverPlayer>(message);
@@ -400,13 +415,6 @@ public class WebSocketService
             
             if (result != null)
                 OnUsePotion?.Invoke(this, result);
-        }
-        else if (message.Contains("GamePlayerTheResult"))
-        {
-            var result = JsonSerializer.Deserialize<ResultPlayerTheGame>(message);
-            
-            if (result != null)
-                OnResultTheGame?.Invoke(this, result);
         }
     }
 }

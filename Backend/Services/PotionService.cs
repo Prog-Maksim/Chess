@@ -70,6 +70,7 @@ public class PotionService
             League = userData.League,
             Level = userData.Level,
             Score = userData.Score,
+            IsChest = userData.IsChest,
             NumberOfWinsLevel = userData.NumberOfWinsLevel,
             RequiredNumberOfWinsLevel = LevelSystem.WinsRequiredForLevel(userData.Level + 1),
             Potions = allPotions.Select(potion =>

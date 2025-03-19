@@ -216,7 +216,8 @@ public class GameService
             {
                 PlayerId = gamePlayer.Id,
                 Nickname = gamePlayer.Name,
-                Time = gamePlayer.RemainingTime
+                Time = gamePlayer.RemainingTime,
+                Color = gamePlayer.Color
             };
             data.Players.Add(gamePlayerData);
         }

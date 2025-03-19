@@ -134,6 +134,7 @@ public class UserRepository: IUserRepository
             .Set(u => u.NumberOfWins, user.NumberOfWins)
             .Set(u => u.League, user.League)
             .Set(u => u.Level, user.Level)
+            .Set(u => u.IsChest, user.IsChest)
             .Set(u => u.NumberOfWinsLevel, user.NumberOfWinsLevel);
 
         await _usersDataCollection.UpdateOneAsync(filter, update);

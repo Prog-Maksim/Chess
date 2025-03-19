@@ -14,6 +14,8 @@ namespace Frontend.Controls;
 public partial class ChestControl : UserControl
 {
     private bool _isChest;
+    private int _max;
+    private int _current;
     
     public ChestControl()
     {
@@ -25,6 +27,8 @@ public partial class ChestControl : UserControl
     public void StateChest(bool isChest, int max, int current)
     {
         _isChest = isChest;
+        _max = max;
+        _current = current;
         
         if (isChest)
         {
@@ -42,7 +46,7 @@ public partial class ChestControl : UserControl
             
             ChestProgressBar.Maximum = max;
             ChestProgressBar.Value = current;
-            ChestProgressBar.Tag = $"{current}/{max}";
+            TextProgressBar.Text = $"{current}/{max}";
             MainBorder.Background = (Brush)new BrushConverter().ConvertFrom("#FFEA94");
             MainBorder.Cursor = Cursors.Arrow;
         }
@@ -80,18 +84,17 @@ public partial class ChestControl : UserControl
         string url = Url.BaseUrl + "Profile/chest";
         
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        
-        request.Headers.Add("Accept", "application/json");
         request.Headers.Add("Authorization", $"Bearer {SaveRepository.LoadTokenFromFile().AccessToken}");
         
         request.Content = new StringContent("", Encoding.UTF8, "application/json");
         HttpResponseMessage response = await client.SendAsync(request);
         var result = await response.Content.ReadAsStringAsync();
-        MessageBox.Show(result);
 
         if (response.IsSuccessStatusCode)
         {
+            StateChest(false, _max, _current);
             ChestReward? reward = JsonSerializer.Deserialize<ChestReward>(result);
+            // TODO: Показывать игроку награды
         }
         else
         {

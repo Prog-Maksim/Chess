@@ -18,7 +18,7 @@ public class ResultPlayerTheGame: BaseWebSocketMessage
     /// <summary>
     /// Заработанные очки
     /// </summary>
-    public required ScoreData Score { get; set; }
+    public required ScoreData ScoreData { get; set; }
     
     /// <summary>
     /// Начисление рейтинга за игру

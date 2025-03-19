@@ -67,30 +67,39 @@ public class PlayerDataService
 
     public async Task<PotionEntity?> GetRandomPotion(string playerId)
     {
-        var userData = await _userRepository.GetUserDataByIdAsync(playerId);
-        
-        Random random = new Random();
-        
-        // Выбираем случайное зелье из списка разблокированных
-        int index = random.Next(userData.UnlockedPotions.Count);
-        string potionId = userData.UnlockedPotions[index];
-
-        // Получаем объект зелья из базы данных
-        List<PotionEntity> potions = await _potionRepository.GetPotionsByIdsAsync(new List<string> { potionId });
-    
-        // Если зелье найдено
-        if (potions.Count > 0)
+        try
         {
-            PotionEntity potion = potions[0];
+            var userData = await _userRepository.GetUserDataByIdAsync(playerId);
+        
+            Random random = new Random();
+        
+            // Выбираем случайное зелье из списка разблокированных
+            int index = random.Next(userData.UnlockedPotions.Count);
+            string potionId = userData.UnlockedPotions[index];
 
-            // Добавляем зелье в инвентарь пользователя
-            await _potionRepository.BuyPotion(playerId, potion.PotionId);
-            Console.WriteLine($"Игроку {playerId} добавлено зелье: {potion.Name}");
+            // Получаем объект зелья из базы данных
+            List<PotionEntity> potions = await _potionRepository.GetPotionsByIdsAsync(new List<string> { potionId });
+    
+            // Если зелье найдено
+            if (potions.Count > 0)
+            {
+                PotionEntity potion = potions[0];
 
-            return potion;
+                // Добавляем зелье в инвентарь пользователя
+                await _potionRepository.BuyPotion(playerId, potion.PotionId);
+                Console.WriteLine($"Игроку {playerId} добавлено зелье: {potion.Name}");
+
+                return potion;
+            }
+
+            return null; // Если зелье не найдено
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
         }
 
-        return null; // Если зелье не найдено
+        return null;
     }
 
     /// <summary>
@@ -103,7 +112,6 @@ public class PlayerDataService
     public async Task<ChestReward> OpenChest(string playerId)
     {
         var userData = await _userRepository.GetUserDataByIdAsync(playerId);
-        var player = await _userRepository.GetUserByIdAsync(playerId);
         
         if (userData == null)
             throw new NullReferenceException("Игрок не найден");
@@ -113,30 +121,28 @@ public class PlayerDataService
 
 
 
-        return await OpenChest(userData, player);
+        return await OpenChest(userData);
     }
 
-    private async Task<ChestReward> OpenChest(UserData userData, Person player)
+    private async Task<ChestReward> OpenChest(UserData userData)
     {
         
         Random random = new();
         int rewardType = random.Next(100);
         ChestReward reward = new();
-        
-        // 70% шанс получить очки или если нет доступных зелий
+
         if (rewardType < 70 || userData.UnlockedPotions.Count == 0) 
         {
             int points = random.Next(10, 101);
             userData.Score += points;
-            
-            userData.Score = reward.Score;
-            Console.WriteLine($"Игрок {player.Nickname} получил {points} очков!");
+
+            reward.Score = points;
+            reward.IsOnlyScore = true;
         }
         else
         {
             List<PotionEntity> allPotions = await _potionRepository.GetPotionsByIdsAsync(null);
-        
-            // Фильтруем зелья, которые игрок еще не разблокировал
+            
             List<PotionEntity> unopenedPotions = allPotions
                 .Where(p => !userData.UnlockedPotions.Contains(p.PotionId) && userData.Level >= p.UnlockLevel)
                 .ToList();
@@ -150,7 +156,6 @@ public class PlayerDataService
                 for (int i = 0; i < potionCount; i++)
                     await _potionRepository.BuyPotion(userData.PersonId, newPotion.PotionId);
                 
-                
                 reward.Potion = new PotionReward
                 {
                     PotionId = newPotion.PotionId,
@@ -159,20 +164,19 @@ public class PlayerDataService
                     Type = newPotion.EffectType,
                     Description = newPotion.Description
                 };
-                
-                Console.WriteLine($"Игрок {player.Nickname} получил новое зелье: {newPotion.Name}, {potionCount} шт!");
+                reward.IsPotionRewarded = true;
+                reward.IsOnlyScore = false;
             }
             else
             {
                 int points = random.Next(10, 101);
                 userData.Score += points;
-                
-                userData.Score = reward.Score;
-                Console.WriteLine($"Игрок {player.Nickname} получил {points} очков вместо зелья!");
+
+                reward.Score = points;
+                reward.IsOnlyScore = true;
             }
         }
-
-        // Обновляем данные игрока в базе
+        
         userData.IsChest = false;
         await _userRepository.UpdateUserDataAsync(userData);
         return reward;

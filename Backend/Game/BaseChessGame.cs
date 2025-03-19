@@ -200,11 +200,10 @@ public abstract class BaseChessGame
     /// <returns></returns>
     public async Task<bool> RejectPlayer(string ownerId, string playerId)
     {
-        if (ownerId != OwnerId) return false; // Только владелец может отклонить игроков
+        if (ownerId != OwnerId) return false;
         var player = WaitingPlayers.Find(p => p.Id == playerId);
-        if (player == null) return false; // Игрок не найден в списке ожидания
-
-        // Удаляем игрока из списка ожидания
+        if (player == null) return false;
+        
         WaitingPlayers.Remove(player);
         
         var owner = Players.FirstOrDefault(p => p.Id == OwnerId);
@@ -335,7 +334,6 @@ public abstract class BaseChessGame
             }
         }
         
-        Console.WriteLine("Сообщение отправлено...");
         await WebSocketMessage.Value.SendMessageUpdateBoard(Players, gameBoards);
     }
     
@@ -402,6 +400,7 @@ public abstract class BaseChessGame
         int totalScore = player.Score * 2 + modeScore + potionScore ?? 0;
 
         List<League> leagues = await _playerDataService.LeagueRepository.GetLeagues();
+        
         int rating = ChessScoreCalculator.CalculateRatingChange(data, RequiredPlayers(), true, leagues);
         var addPotion = await _playerDataService.GetRandomPotion(player.Id);
         
@@ -429,15 +428,15 @@ public abstract class BaseChessGame
             Status = true,
             MessageType = "GamePlayerTheResult",
             League = data.League,
-            Score = scoreData,
+            ScoreData = scoreData,
             AddPotion = potion,
             UsedPotions = usedPotion,
-            Rating = 0,
+            Rating = rating,
             Success = true,
             StatusCode = 200,
             Message = "Результат игры"
         };
-
+        
         await _playerDataService.UpdatePlayerData(totalScore, rating, player, true);
         await WebSocketMessage.Value.SendMessageGameResult(player, result);
         await WebSocketMessage.Value.SendMessageFinishGame(Players, GameDurationSeconds);
@@ -457,11 +456,9 @@ public abstract class BaseChessGame
         
         int modeScore = ChessScoreCalculator.CalculateScore(Mode, player.RemainingTime, RequiredPlayers());
         int? potionScore = usedPotion.Count == 0 ? 50 : null;
-        
         int totalScore = player.Score + modeScore + potionScore ?? 0;
-
         List<League> leagues = await _playerDataService.LeagueRepository.GetLeagues();
-        int rating = ChessScoreCalculator.CalculateRatingChange(data, RequiredPlayers(), true, leagues);
+        int rating = ChessScoreCalculator.CalculateRatingChange(data, RequiredPlayers(), false, leagues);
         
         ScoreData scoreData = new ScoreData
         {
@@ -477,7 +474,7 @@ public abstract class BaseChessGame
             Status = false,
             MessageType = "GamePlayerTheResult",
             League = data.League,
-            Score = scoreData,
+            ScoreData = scoreData,
             AddPotion = null,
             Rating = rating,
             UsedPotions = usedPotion,
@@ -627,7 +624,6 @@ public abstract class BaseChessGame
                     Time = TimeSpan.FromSeconds(remainingTime)
                 };
                 await WebSocketMessage.Value.SendMessageStateReverseTimeInActivePlayer(Players, reversTime);
-                Console.WriteLine("Сообщение отправлено");
             }
                 
             var disconnectedPlayer = Players.FirstOrDefault(p => p.Id == playerId);
@@ -709,8 +705,6 @@ public abstract class BaseChessGame
                 State = GameState.InProgress;
                 ResumeAllPlayers();
             }
-            
-            Console.WriteLine($"Игрок {playerId} снова активен.");
         }
     }
 
@@ -725,15 +719,16 @@ public abstract class BaseChessGame
 
         if (player == null)
             return;
-
-        await DeclarationDefeat(player);
-        await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
         
         if (State == GameState.WaitingForPlayers)
         {
             Players.Remove(player);
             await UpdateGameBoard();
+            return;
         }
+        
+        await DeclarationDefeat(player);
+        await WebSocketMessage.Value.SendMessageRemovePlayer(Players, playerId);
     }
 
     public void RemovePiece(int row, int col)
